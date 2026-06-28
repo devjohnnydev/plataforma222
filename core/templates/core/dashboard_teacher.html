@@ -105,13 +105,62 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="text-center py-5">
-    <div class="display-1 mb-3 opacity-15"><i class="bi bi-collection"></i></div>
-    <h5 class="text-muted">Você ainda não criou nenhuma turma</h5>
-    <p class="text-muted small mb-4">Crie sua primeira turma e adicione alunos através do código de acesso.</p>
-    <a href="{% url 'classes:create' %}" class="btn btn-brand rounded-pill px-5">
-        <i class="bi bi-plus-lg me-2"></i>Criar Primeira Turma
-    </a>
+<div class="row justify-content-center py-4">
+    <div class="col-md-10 col-lg-8">
+        <div class="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4 p-md-5 text-center">
+            <div class="display-3 mb-3 text-brand"><i class="bi bi-rocket-takeoff-fill"></i></div>
+            <h3 class="fw-bold text-white mb-2">Bem-vindo ao Johnny Corporate!</h3>
+            <p class="text-secondary mb-5">Parece que você ainda não tem turmas. Siga os passos abaixo para configurar seu ambiente de ensino em poucos minutos.</p>
+            
+            <div class="d-flex flex-column gap-3 text-start mb-4">
+                <div class="p-4 rounded-4 border {% if course_count == 0 %}border-brand bg-dark{% else %}border-secondary bg-body-secondary opacity-50{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fs-2 {% if course_count == 0 %}text-brand{% else %}text-success{% endif %}">
+                                {% if course_count == 0 %}<i class="bi bi-1-circle"></i>{% else %}<i class="bi bi-check-circle-fill"></i>{% endif %}
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-white mb-1">Crie a base do seu Curso</h5>
+                                <p class="text-secondary small mb-0">Defina o nome, a descrição e a carga horária.</p>
+                            </div>
+                        </div>
+                        {% if course_count == 0 %}
+                        <a href="{% url 'courses:list' %}" class="btn btn-outline-brand rounded-pill btn-sm px-4">Criar Curso</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="p-4 rounded-4 border {% if course_count > 0 and class_count == 0 %}border-brand bg-dark{% else %}border-secondary bg-body-tertiary{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fs-2 {% if course_count > 0 and class_count == 0 %}text-brand{% else %}text-secondary{% endif %}">
+                                <i class="bi bi-2-circle"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-white mb-1">Crie uma Turma para os Alunos</h5>
+                                <p class="text-secondary small mb-0">Com o curso pronto, crie uma Turma para gerar o Código de Acesso.</p>
+                            </div>
+                        </div>
+                        {% if course_count > 0 and class_count == 0 %}
+                        <a href="{% url 'classes:create' %}" class="btn btn-outline-brand rounded-pill btn-sm px-4">Criar Turma</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="p-4 rounded-4 border border-secondary bg-body-tertiary">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="fs-2 text-secondary"><i class="bi bi-3-circle"></i></div>
+                            <div>
+                                <h5 class="fw-bold text-white mb-1">Adicione Aulas e Atividades</h5>
+                                <p class="text-secondary small mb-0">Poste vídeos, materiais no Mural e avalie seus alunos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endif %}
 

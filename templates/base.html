@@ -199,9 +199,15 @@
                             </button>
                         {% endif %}
                         {% if user.is_teacher or user.is_superadmin %}
-                            <a href="{% url 'classes:create' %}" class="btn btn-brand btn-sm rounded-pill px-3">
-                                <i class="bi bi-plus-lg me-1"></i>Nova Turma
-                            </a>
+                            <div class="dropdown">
+                                <button class="btn btn-brand btn-sm rounded-pill px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-plus-lg me-1"></i>Criar
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                    <li><a class="dropdown-item py-2" href="{% url 'courses:list' %}"><i class="bi bi-journal-plus me-2 text-primary"></i>Novo Curso</a></li>
+                                    <li><a class="dropdown-item py-2" href="{% url 'classes:create' %}"><i class="bi bi-people me-2 text-success"></i>Nova Turma</a></li>
+                                </ul>
+                            </div>
                         {% endif %}
                         <div class="dropdown">
                             <button class="btn btn-dark dropdown-toggle border-secondary" type="button" data-bs-toggle="dropdown">

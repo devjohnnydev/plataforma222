@@ -41,9 +41,11 @@ def _admin_dashboard(request):
 def _teacher_dashboard(request):
     from classes.models import Class
     from assignments.models import Submission
+    from courses.models import Course
 
     my_classes = Class.objects.filter(teacher=request.user).select_related('course')
     total_students = sum(c.student_count for c in my_classes)
+    my_courses_count = Course.objects.filter(teacher=request.user).count()
 
     # Pending submissions (no grade yet) across all teacher's classes
     pending_submissions = Submission.objects.filter(
@@ -56,6 +58,7 @@ def _teacher_dashboard(request):
         'total_students': total_students,
         'pending_submissions': pending_submissions,
         'class_count': my_classes.count(),
+        'course_count': my_courses_count,
     }
     return render(request, 'core/dashboard_teacher.html', context)
 

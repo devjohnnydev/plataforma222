@@ -25,7 +25,11 @@ def login_view(request):
             next_url = request.GET.get('next', 'core:home')
             return redirect(next_url)
         else:
-            messages.error(request, 'E-mail ou senha inválidos. Tente novamente.')
+            # Check if user exists but is inactive
+            if User.objects.filter(email=email, is_active=False).exists():
+                messages.error(request, 'Sua conta de professor está em análise pelo administrador. Aguarde a aprovação.')
+            else:
+                messages.error(request, 'E-mail ou senha inválidos. Tente novamente.')
 
     return render(request, 'accounts/login.html')
 
@@ -77,3 +81,47 @@ def register_view(request):
             return redirect('core:home')
 
     return render(request, 'accounts/register.html')
+
+
+def teacher_apply_view(request):
+    if request.user.is_authenticated:
+        return redirect('core:home')
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+        password2 = request.POST.get('password2', '')
+
+        if password != password2:
+            messages.error(request, 'As senhas não coincidem.')
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, 'Este e-mail já está cadastrado.')
+        elif len(password) < 6:
+            messages.error(request, 'A senha deve ter ao menos 6 caracteres.')
+        else:
+            username = email.split('@')[0]
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                role=User.Role.TEACHER,
+                is_active=False  # Pendente de aprovação
+            )
+            
+            parts = name.split(' ', 1)
+            user.first_name = parts[0]
+            user.last_name = parts[1] if len(parts) > 1 else ''
+            user.save()
+
+            messages.success(request, 'Sua solicitação foi enviada com sucesso! Aguarde a aprovação do administrador para fazer login.')
+            return redirect('accounts:login')
+
+    return render(request, 'accounts/teacher_apply.html')
+
