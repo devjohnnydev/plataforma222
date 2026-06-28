@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Cursos — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Meus Cursos</h2>
+        <p class="text-muted small mb-0">Gestão de cursos base e currículo</p>
+    </div>
+    <a href="{% url 'courses:create' %}" class="btn btn-brand rounded-pill px-4">
+        <i class="bi bi-plus-lg me-2"></i>Novo Curso
+    </a>
+</div>
+
+{% if courses %}
+<div class="row g-4">
+    {% for course in courses %}
+    <div class="col-md-6 col-xl-4">
+        <a href="{% url 'courses:detail' slug=course.slug %}" class="text-decoration-none">
+            <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 h-100 overflow-hidden class-card">
+                <!-- Banner Image (Placeholder or Real) -->
+                <div class="card-header border-0 p-0 position-relative" style="height: 140px; background-color: var(--bs-secondary-bg);">
+                    {% if course.banner_image %}
+                        <img src="{{ course.banner_image.url }}" alt="{{ course.title }}" class="w-100 h-100 object-fit-cover">
+                    {% else %}
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center opacity-25">
+                            <i class="bi bi-image display-4"></i>
+                        </div>
+                    {% endif %}
+                    <div class="position-absolute bottom-0 start-0 w-100 p-3 bg-dark bg-opacity-50" style="backdrop-filter: blur(4px);">
+                        <h5 class="fw-bold text-white mb-0 text-truncate">{{ course.title }}</h5>
+                    </div>
+                </div>
+                <div class="card-body px-4 py-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge {% if course.status == 'PUBLISHED' %}bg-success{% elif course.status == 'DRAFT' %}bg-warning text-dark{% else %}bg-secondary{% endif %} bg-opacity-25 {% if course.status == 'PUBLISHED' %}text-success{% elif course.status == 'DRAFT' %}text-warning{% else %}text-secondary{% endif %}">
+                            {{ course.get_status_display }}
+                        </span>
+                        <small class="text-muted"><i class="bi bi-clock me-1"></i>{{ course.workload_hours }}h</small>
+                    </div>
+                    {% if course.description %}
+                        <p class="text-muted small mb-0 text-truncate-2">{{ course.description }}</p>
+                    {% else %}
+                        <p class="text-muted small mb-0 fst-italic">Sem descrição</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-top border-secondary px-4 py-2 d-flex justify-content-between text-muted small">
+                    <span><i class="bi bi-folder2-open me-1"></i>{{ course.module_count }} Módulo{{ course.module_count|pluralize:"","s" }}</span>
+                    <span><i class="bi bi-play-btn me-1"></i>{{ course.lesson_count }} Aula{{ course.lesson_count|pluralize:"","s" }}</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 mt-4">
+    <div class="display-1 mb-3 opacity-25"><i class="bi bi-book"></i></div>
+    <h4 class="fw-bold text-muted">Nenhum curso criado</h4>
+    <p class="text-muted mb-4">Crie a base de um curso e depois organize o currículo em módulos e aulas.</p>
+    <a href="{% url 'courses:create' %}" class="btn btn-brand rounded-pill px-5">
+        <i class="bi bi-plus-lg me-2"></i>Criar Primeiro Curso
+    </a>
+</div>
+{% endif %}
+
+<style>
+.class-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.class-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; }
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+}
+</style>
+{% endblock %}

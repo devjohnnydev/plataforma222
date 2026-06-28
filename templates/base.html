@@ -254,6 +254,15 @@
 
                         <!-- ── Classes List ── -->
                         {% if user.is_teacher or user.is_superadmin %}
+                            <li class="nav-item mt-3 mb-1">
+                                <span class="sidebar-section-label">Gestão</span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-body {% if '/courses/' in request.path %}active{% endif %}" href="{% url 'courses:list' %}">
+                                    <i class="bi bi-book me-2"></i>Meus Cursos
+                                </a>
+                            </li>
+
                             {% with teacher_classes=user.teaching_classes.all %}
                             {% if teacher_classes %}
                             <li class="nav-item mt-3 mb-1">

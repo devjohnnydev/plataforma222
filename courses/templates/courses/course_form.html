@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar Novo Curso — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+
+        <div class="mb-4">
+            <a href="{% url 'courses:list' %}" class="text-muted text-decoration-none small">
+                <i class="bi bi-arrow-left me-1"></i>Voltar para Meus Cursos
+            </a>
+        </div>
+
+        <div class="card bg-body-tertiary border-0 shadow rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="fw-bold mb-1">Criar Novo Curso</h2>
+                <p class="text-muted small mb-4">Crie as informações básicas do curso. Depois, você poderá adicionar os módulos e o conteúdo.</p>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label fw-semibold">Título do Curso <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-body" id="title" name="title"
+                               placeholder="Ex.: Masterclass de Python Completo" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Descrição (Ementa)</label>
+                        <textarea class="form-control bg-body" id="description" name="description"
+                                  rows="4" placeholder="Visão geral do que os alunos aprenderão neste curso..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label for="category" class="form-label fw-semibold">Categoria</label>
+                            <select class="form-select bg-body" id="category" name="category">
+                                <option value="">— Sem categoria —</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="level" class="form-label fw-semibold">Nível</label>
+                            <select class="form-select bg-body" id="level" name="level">
+                                {% for value, label in levels %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <label for="workload_hours" class="form-label fw-semibold">Carga Horária (h)</label>
+                            <input type="number" class="form-control bg-body" id="workload_hours" name="workload_hours"
+                                   value="0" min="0" step="1">
+                        </div>
+                    </div>
+
+                    <hr class="border-secondary mb-4">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-brand btn-lg rounded-pill">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Salvar e Adicionar Conteúdo
+                        </button>
+                        <a href="{% url 'courses:list' %}" class="btn btn-outline-secondary rounded-pill">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
