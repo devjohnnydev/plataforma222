@@ -1,12 +1,14 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 from .models import User
 
-class CustomUserAdmin(UserAdmin):
-    model = User
-    list_display = ['username', 'email', 'role', 'is_staff', 'is_active', 'approved_by_admin']
-    fieldsets = UserAdmin.fieldsets + (
-        ('Custom Fields', {'fields': ('role', 'profile_picture', 'bio', 'approved_by_admin', 'points', 'mood')}),
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'role', 'is_active', 'date_joined')
+    list_filter = ('role', 'is_active', 'is_staff')
+    search_fields = ('username', 'email', 'first_name', 'last_name')
+    ordering = ('-date_joined',)
+    fieldsets = (
+        ('Dados Pessoais', {'fields': ('username', 'email', 'first_name', 'last_name', 'password')}),
+        ('Perfil', {'fields': ('role', 'profile_picture', 'bio', 'mood', 'points')}),
+        ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'approved_by_admin')}),
     )
-
-admin.site.register(User, CustomUserAdmin)
