@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Administrador {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  email      String   @unique
+  senha_hash String
+  mensagens  Mensagem[]
+}
+
+model Professor {
+  id                  Int       @id @default(autoincrement())
+  nome                String
+  email               String    @unique
+  senha_hash          String
+  codigo_turma        String?   @unique // Código legado ou padrão
+  primeiro_acesso     Boolean   @default(true)
+  
+  // Perfil Profissional
+  foto_url            String?   @db.Text
+  bio                 String?   @db.Text
+  mensagem_incentivo  String?   @db.Text
+  
+  turmas              Turma[]
+  alunos              Aluno[]
+  missoes_criadas     Missao[]
+  mensagens_enviadas  Mensagem[]
+}
+
+model Turma {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  materia     String?
+  observacao  String?   @db.Text
+  codigo      String   @unique // O mesmo codigo_turma do Professor
+  data_encerramento DateTime?
+  ranking_encerrado Boolean  @default(false)
+  
+  professor   Professor @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  professorId Int
+  
+  alunos      Aluno[]
+  atividades  Atividade[]
+  missoes     Missao[]
+  mensagens   Mensagem[]
+}
+
+model Aluno {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  email        String?  @unique
+  senha_hash   String?
+  data_criacao DateTime @default(now())
+  
+  // Perfil do Aluno
+  foto_url     String?   @db.Text
+  info         String?   @db.Text
+  estado_humor String?
+  
+  professor    Professor? @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  professorId  Int?
+  
+  turma        Turma?    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  turmaId      Int?
+  
+  notas        Nota[]
+  notas_missoes NotaMissao[]
+  mensagens    Mensagem[] @relation("AlunoMensagens")
+  posicao_anterior Int?
+  data_ultimo_desafio DateTime?
+  pontos_portal    Int       @default(0)
+}
+
+model Atividade {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  descricao   String?
+  nota_maxima Float    @default(10)
+  data_criacao DateTime @default(now())
+  
+  turma       Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  turmaId     Int
+  
+  notas       Nota[]
+}
+
+model Missao {
+  id          Int      @id @default(autoincrement())
+  titulo      String
+  descricao   String
+  recompensa  Int      @default(0)
+  prazo       DateTime?
+  data_criacao DateTime @default(now())
+  
+  turma       Turma    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  turmaId     Int
+  
+  professor   Professor @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  professorId Int
+  
+  notas       NotaMissao[]
+}
+
+model Nota {
+  id             Int      @id @default(autoincrement())
+  valor          Float
+  reacao_emoji   String?  // Reação do aluno à atividade (ex: "😊", "😕", "🔥")
+  data_avaliacao DateTime @default(now())
+  
+  aluno       Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  alunoId     Int
+  
+  atividade   Atividade @relation(fields: [atividadeId], references: [id], onDelete: Cascade)
+  atividadeId Int
+
+  @@unique([alunoId, atividadeId])
+}
+
+model Mensagem {
+  id           Int      @id @default(autoincrement())
+  conteudo     String
+  data_criacao DateTime @default(now())
+  tipo         String   @default("normal")
+  lida         Boolean  @default(false)
+  
+  professor    Professor? @relation(fields: [professorId], references: [id], onDelete: Cascade)
+  professorId  Int?
+  
+  administrador Administrador? @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  adminId       Int?
+  
+  aluno        Aluno?    @relation("AlunoMensagens", fields: [alunoId], references: [id], onDelete: Cascade)
+  alunoId      Int?
+  
+  turma        Turma?    @relation(fields: [turmaId], references: [id], onDelete: Cascade)
+  turmaId      Int?
+}
+
+model NotaMissao {
+  id          Int      @id @default(autoincrement())
+  valor       Float    // Nota de 0 a 10
+  
+  aluno       Aluno    @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  alunoId     Int
+  
+  missao      Missao   @relation(fields: [missaoId], references: [id], onDelete: Cascade)
+  missaoId    Int
+
+  data_avaliacao DateTime @default(now())
+
+  @@unique([alunoId, missaoId])
+}

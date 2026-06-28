@@ -1,0 +1,173 @@
+ajuste o  Hall da Fama, com controle de acesso por perfil e regras rígidas de relacionamento entre Administrador, Professor e Aluno.
+
+O sistema deve seguir as seguintes regras obrigatórias:
+
+🔐 1. PERFIS DO SISTEMA
+
+O sistema terá 3 níveis de usuário:
+
+Administrador
+
+Professor
+
+Aluno
+
+Cada perfil deve ter permissões específicas.
+
+👨‍🏫 2. REGRAS DO PROFESSOR
+
+Cada professor possui:
+
+Nome
+
+Email
+
+Senha
+
+Código único da turma (gerado automaticamente pelo sistema)
+
+O professor:
+
+Só pode visualizar alunos vinculados ao seu código.
+
+Não pode visualizar alunos de outros professores.
+
+Não pode acessar turmas de outros professores.
+
+Quando o administrador criar um professor:
+
+O professor recebe uma senha padrão definida pelo sistema.
+
+No primeiro login, o professor é obrigado a trocar a senha.
+
+O administrador pode resetar a senha para a senha padrão a qualquer momento.
+
+🎓 3. REGRAS DO ALUNO
+
+O aluno só pode entrar no sistema usando:
+
+Nome
+
+Código fornecido pelo professor
+
+O aluno ficará permanentemente vinculado ao professor que forneceu o código.
+
+No Hall da Fama deve sempre aparecer:
+
+Nome do aluno
+
+Nome do professor ao qual ele está vinculado
+
+⚠️ O nome do professor deve ser exibido obrigatoriamente ao lado do aluno.
+
+🗑️ 4. REGRAS DE EXCLUSÃO (CASCATA OBRIGATÓRIA)
+
+O sistema deve ter exclusão em cascata no banco de dados:
+
+📌 Se excluir uma turma:
+
+→ Todos os alunos vinculados a essa turma devem ser automaticamente removidos do banco de dados.
+
+📌 Se o administrador excluir um professor:
+
+→ O sistema deve automaticamente:
+
+Excluir todas as turmas desse professor
+
+Excluir todos os alunos vinculados a ele
+
+Isso deve ser feito com integridade referencial (CASCADE DELETE).
+
+🔑 5. REGRAS DE SEGURANÇA
+
+Senhas devem ser armazenadas com hash seguro (bcrypt ou similar).
+
+Controle de sessão obrigatório.
+
+Middleware de autorização por perfil.
+
+Professor não pode acessar rotas do administrador.
+
+Aluno não pode acessar área administrativa.
+
+🏆 6. HALL DA FAMA
+
+A página pública deve exibir:
+
+Nome do aluno
+
+Nome do professor vinculado
+
+Pontuação ou destaque (se houver)
+
+Data de inclusão
+
+Organizado por:
+
+Professor
+ou
+
+Ranking geral
+
+🧱 7. ESTRUTURA DO BANCO DE DADOS (SUGESTÃO)
+Tabela Professores
+
+id
+
+nome
+
+email
+
+senha_hash
+
+codigo_turma
+
+primeiro_acesso (boolean)
+
+Tabela Alunos
+
+id
+
+nome
+
+professor_id (foreign key)
+
+data_criacao
+
+Tabela Administrador
+
+id
+
+nome
+
+email
+
+senha_hash
+
+Relacionamentos:
+
+Professor 1:N Aluno
+
+Delete com ON DELETE CASCADE
+
+🚨 8. REGRAS IMPORTANTES
+
+Nenhum professor pode visualizar dados de outro professor.
+
+Todo aluno deve estar obrigatoriamente vinculado a um professor.
+
+Não pode existir aluno sem professor.
+
+No primeiro login, professor deve obrigatoriamente alterar a senha.
+
+Administrador pode resetar senha para padrão.
+
+🎯 Objetivo Final
+
+ um sistema seguro, com controle de acesso, integridade de dados e regras automáticas de exclusão em cascata, garantindo que:
+
+Cada aluno esteja vinculado a apenas um professor.
+
+Professores tenham acesso somente à própria turma.
+
+O Hall da Fama sempre mostre o professor responsável por cada aluno.

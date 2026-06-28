@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Teacher Dashboard</h2>
+    <button class="btn btn-brand rounded-pill"><i class="bi bi-plus-lg me-2"></i>Create Course</button>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-body-tertiary shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-1">Active Students</h6>
+                <h2 class="display-6 fw-bold mb-0">86</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-body-tertiary shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-1">Pending Assignments</h6>
+                <h2 class="display-6 fw-bold mb-0 text-warning">12</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-body-tertiary shadow-sm border-0 rounded-4 h-100">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase fw-bold mb-1">Average Score</h6>
+                <h2 class="display-6 fw-bold mb-0 text-success">8.5/10</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="fw-bold mb-3 mt-5">My Classes</h4>
+<div class="row">
+    <!-- Class Card Placeholder -->
+    <div class="col-md-6 mb-4">
+        <div class="card bg-body-tertiary shadow-sm border-0 rounded-4 h-100">
+            <div class="card-header bg-brand border-0 rounded-top-4 py-4 position-relative overflow-hidden" style="background-color: var(--brand-primary);">
+                <div class="position-absolute top-0 end-0 p-3">
+                    <button class="btn btn-sm btn-light rounded-circle shadow-sm"><i class="bi bi-three-dots-vertical"></i></button>
+                </div>
+                <h4 class="text-dark fw-bold mb-0 position-relative z-1">Python Advanced</h4>
+                <p class="text-dark opacity-75 mb-0 position-relative z-1">Code: <strong>X9K2-M3P</strong></p>
+                <div class="position-absolute bottom-0 end-0 translate-middle-y me-4 text-dark opacity-25" style="transform: scale(4);">
+                    <i class="bi bi-code-square"></i>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small"><i class="bi bi-people me-1"></i> 32 Students</span>
+                    <a href="#" class="btn btn-outline-brand btn-sm">Enter Class</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
