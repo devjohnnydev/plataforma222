@@ -1,57 +1,142 @@
 import uuid
+import string
+import random
 from django.db import models
 from django.conf import settings
-from courses.models import Course
+from courses.models import Course, Module, Lesson
 
 User = settings.AUTH_USER_MODEL
 
+
+def generate_join_code():
+    chars = string.ascii_uppercase + string.digits
+    return ''.join(random.choices(chars, k=8))
+
+
 class Class(models.Model):
-    name = models.CharField(max_length=255)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='classes')
-    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='teaching_classes')
-    join_code = models.CharField(max_length=20, unique=True, default=uuid.uuid4)
+    name = models.CharField(max_length=255, verbose_name='Nome da Turma')
+    description = models.TextField(blank=True, null=True, verbose_name='Descrição')
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='classes', verbose_name='Curso')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='teaching_classes', verbose_name='Professor')
+    join_code = models.CharField(max_length=20, unique=True, default=generate_join_code, verbose_name='Código de Acesso')
+    color = models.CharField(max_length=7, default='#4285f4', verbose_name='Cor da Turma')
+    is_active = models.BooleanField(default=True, verbose_name='Ativa')
     created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Turma'
+        verbose_name_plural = 'Turmas'
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.name} ({self.course.title})"
 
+    @property
+    def student_count(self):
+        return self.enrollments.filter(status='ACTIVE').count()
+
+
 class Enrollment(models.Model):
-    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollments')
-    enrolled_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='enrollments')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollments', verbose_name='Aluno')
+    enrolled_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='enrollments', verbose_name='Turma')
     enrolled_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[('ACTIVE', 'Active'), ('DROPPED', 'Dropped')], default='ACTIVE')
+    status = models.CharField(
+        max_length=20,
+        choices=[('ACTIVE', 'Ativo'), ('DROPPED', 'Desistente'), ('COMPLETED', 'Concluído')],
+        default='ACTIVE',
+        verbose_name='Status'
+    )
 
     class Meta:
         unique_together = ('student', 'enrolled_class')
+        verbose_name = 'Matrícula'
+        verbose_name_plural = 'Matrículas'
 
     def __str__(self):
-        return f"{self.student.username} in {self.enrolled_class.name}"
+        return f"{self.student.username} em {self.enrolled_class.name}"
+
 
 class StreamPost(models.Model):
     class PostType(models.TextChoices):
-        ANNOUNCEMENT = 'ANNOUNCEMENT', 'Announcement'
-        MATERIAL = 'MATERIAL', 'Material Alert'
-        ASSIGNMENT = 'ASSIGNMENT', 'Assignment Alert'
+        ANNOUNCEMENT = 'ANNOUNCEMENT', 'Aviso'
+        MATERIAL = 'MATERIAL', 'Material'
+        ASSIGNMENT = 'ASSIGNMENT', 'Atividade'
+        MEETING = 'MEETING', 'Reunião'
 
-    target_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='stream_posts')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stream_posts')
-    content = models.TextField()
-    post_type = models.CharField(max_length=20, choices=PostType.choices, default=PostType.ANNOUNCEMENT)
-    is_pinned = models.BooleanField(default=False)
+    target_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='stream_posts', verbose_name='Turma')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stream_posts', verbose_name='Autor')
+    content = models.TextField(verbose_name='Conteúdo')
+    post_type = models.CharField(max_length=20, choices=PostType.choices, default=PostType.ANNOUNCEMENT, verbose_name='Tipo')
+    attachment = models.FileField(upload_to='stream/attachments/', blank=True, null=True, verbose_name='Anexo')
+    link_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name='Link')
+    is_pinned = models.BooleanField(default=False, verbose_name='Fixado')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-is_pinned', '-created_at']
+        verbose_name = 'Post do Mural'
+        verbose_name_plural = 'Posts do Mural'
 
     def __str__(self):
-        return f"Post by {self.author.username} in {self.target_class.name}"
+        return f"Post de {self.author.username} em {self.target_class.name}"
+
 
 class StreamComment(models.Model):
-    post = models.ForeignKey(StreamPost, on_delete=models.CASCADE, related_name='comments')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stream_comments')
-    content = models.TextField()
+    post = models.ForeignKey(StreamPost, on_delete=models.CASCADE, related_name='comments', verbose_name='Post')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stream_comments', verbose_name='Autor')
+    content = models.TextField(verbose_name='Comentário')
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Comentário'
+        verbose_name_plural = 'Comentários'
+
     def __str__(self):
-        return f"Comment by {self.author.username}"
+        return f"Comentário de {self.author.username}"
+
+
+class CalendarEvent(models.Model):
+    class EventType(models.TextChoices):
+        CLASS = 'CLASS', 'Aula'
+        ASSIGNMENT = 'ASSIGNMENT', 'Entrega de Atividade'
+        EXAM = 'EXAM', 'Avaliação'
+        MEETING = 'MEETING', 'Reunião'
+        OTHER = 'OTHER', 'Outro'
+
+    target_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='events', verbose_name='Turma')
+    title = models.CharField(max_length=255, verbose_name='Título')
+    description = models.TextField(blank=True, null=True, verbose_name='Descrição')
+    event_type = models.CharField(max_length=15, choices=EventType.choices, default=EventType.CLASS, verbose_name='Tipo')
+    start_datetime = models.DateTimeField(verbose_name='Início')
+    end_datetime = models.DateTimeField(blank=True, null=True, verbose_name='Término')
+    meeting_url = models.URLField(blank=True, null=True, verbose_name='Link da Reunião')
+    color = models.CharField(max_length=7, default='#4285f4')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_events', verbose_name='Criado por')
+
+    class Meta:
+        ordering = ['start_datetime']
+        verbose_name = 'Evento'
+        verbose_name_plural = 'Eventos'
+
+    def __str__(self):
+        return f"{self.title} — {self.target_class.name}"
+
+
+class Attendance(models.Model):
+    enrolled_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='attendances', verbose_name='Turma')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendances', verbose_name='Aluno')
+    event = models.ForeignKey(CalendarEvent, on_delete=models.CASCADE, related_name='attendances', null=True, blank=True, verbose_name='Aula/Evento')
+    date = models.DateField(verbose_name='Data')
+    present = models.BooleanField(default=False, verbose_name='Presente')
+    justified = models.BooleanField(default=False, verbose_name='Justificado')
+    note = models.CharField(max_length=255, blank=True, null=True, verbose_name='Observação')
+
+    class Meta:
+        unique_together = ('enrolled_class', 'student', 'date')
+        verbose_name = 'Presença'
+        verbose_name_plural = 'Presenças'
+
+    def __str__(self):
+        status = "✓" if self.present else "✗"
+        return f"{status} {self.student.username} — {self.date}"

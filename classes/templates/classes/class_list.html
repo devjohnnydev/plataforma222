@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Minhas Turmas — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Minhas Turmas</h2>
+        <p class="text-muted small mb-0">
+            {% if classes %}{{ classes|length }} turma{{ classes|length|pluralize:"","s" }}{% else %}Nenhuma turma ainda{% endif %}
+        </p>
+    </div>
+    {% if user.is_teacher or user.is_superadmin %}
+        <a href="{% url 'classes:create' %}" class="btn btn-brand rounded-pill px-4">
+            <i class="bi bi-plus-lg me-2"></i>Nova Turma
+        </a>
+    {% else %}
+        <button class="btn btn-brand rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#joinClassModal">
+            <i class="bi bi-door-open me-2"></i>Entrar em Turma
+        </button>
+    {% endif %}
+</div>
+
+{% if classes %}
+<div class="row g-4">
+    {% for cls in classes %}
+    <div class="col-md-6 col-xl-4">
+        <a href="{% url 'classes:detail' pk=cls.pk %}" class="text-decoration-none">
+            <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 h-100 overflow-hidden class-card">
+                <!-- Colored Header -->
+                <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden"
+                     style="background-color: {{ cls.color }};">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-50" style="transform: scale(3.5) translate(10px, -5px);">
+                        <i class="bi bi-mortarboard text-dark"></i>
+                    </div>
+                    <h5 class="fw-bold mb-1 text-dark position-relative">{{ cls.name }}</h5>
+                    <p class="mb-0 text-dark opacity-75 small position-relative">
+                        {% if cls.course %}{{ cls.course.title }}{% else %}Sem curso vinculado{% endif %}
+                    </p>
+                </div>
+                <div class="card-body px-4 py-3">
+                    <div class="d-flex justify-content-between align-items-center text-muted small">
+                        <span><i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"","s" }}</span>
+                        {% if user.is_teacher or user.is_superadmin %}
+                            <span class="font-monospace bg-body-secondary px-2 py-1 rounded" title="Código de acesso">
+                                <i class="bi bi-key me-1"></i>{{ cls.join_code }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% if cls.description %}
+                    <p class="text-muted small mt-2 mb-0 text-truncate">{{ cls.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent border-top border-secondary px-4 py-2">
+                    <small class="text-muted">
+                        <i class="bi bi-person me-1"></i>
+                        {% if user.is_teacher %}Você é o professor{% else %}Prof. {{ cls.teacher.get_full_name|default:cls.teacher.username }}{% endif %}
+                    </small>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 mt-4">
+    <div class="display-1 mb-3 opacity-25"><i class="bi bi-collection"></i></div>
+    <h4 class="fw-bold text-muted">Nenhuma turma encontrada</h4>
+    {% if user.is_teacher or user.is_superadmin %}
+        <p class="text-muted mb-4">Crie sua primeira turma e comece a ensinar!</p>
+        <a href="{% url 'classes:create' %}" class="btn btn-brand rounded-pill px-5">
+            <i class="bi bi-plus-lg me-2"></i>Criar Primeira Turma
+        </a>
+    {% else %}
+        <p class="text-muted mb-4">Entre em uma turma usando o código fornecido pelo seu professor.</p>
+        <button class="btn btn-brand rounded-pill px-5" data-bs-toggle="modal" data-bs-target="#joinClassModal">
+            <i class="bi bi-door-open me-2"></i>Entrar em Turma
+        </button>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+.class-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.class-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important; }
+</style>
+{% endblock %}

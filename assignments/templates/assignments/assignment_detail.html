@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assignment.title }} — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'classes:classwork' pk=cls.pk %}" class="text-muted text-decoration-none small">
+        <i class="bi bi-arrow-left me-1"></i>{{ cls.name }} — Atividades
+    </a>
+</div>
+
+<!-- ── Assignment Header ── -->
+<div class="card bg-body-tertiary border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+    <div class="card-header py-4 px-4 border-0" style="background-color: {{ cls.color }};">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="d-flex gap-2 mb-2">
+                    <span class="badge bg-dark bg-opacity-25 text-dark">
+                        {{ assignment.get_assignment_type_display }}
+                    </span>
+                    {% if assignment.is_overdue %}
+                        <span class="badge bg-danger bg-opacity-50 text-dark">Encerrado</span>
+                    {% endif %}
+                    {% if assignment.allow_late %}
+                        <span class="badge bg-dark bg-opacity-20 text-dark">Aceita entrega atrasada</span>
+                    {% endif %}
+                </div>
+                <h2 class="fw-bold text-dark mb-1">{{ assignment.title }}</h2>
+                <p class="text-dark opacity-75 mb-0 small">Turma: {{ cls.name }}</p>
+            </div>
+            <div class="text-end">
+                <div class="fw-bold text-dark fs-4">{{ assignment.max_score }} <small class="fs-6">pts</small></div>
+                {% if assignment.due_date %}
+                    <small class="text-dark opacity-75">
+                        <i class="bi bi-calendar-event me-1"></i>{{ assignment.due_date|date:"d/m/Y H:i" }}
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% if assignment.description %}
+    <div class="card-body px-4 py-3">
+        <p class="mb-0" style="white-space: pre-wrap;">{{ assignment.description }}</p>
+    </div>
+    {% endif %}
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+{% if user.is_student %}
+<!-- ── STUDENT VIEW — Submit ── -->
+<div class="card bg-body-tertiary border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+        {% if submission %}
+            <!-- Already submitted -->
+            <div class="d-flex align-items-center gap-3 mb-4">
+                {% if submission.has_grade %}
+                    <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
+                         style="width:48px;height:48px;flex-shrink:0;">
+                        <i class="bi bi-check2 text-white fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0 text-success">Corrigida!</h5>
+                        <p class="text-muted small mb-0">Nota: <strong>{{ submission.grade.score }}/{{ assignment.max_score }}</strong></p>
+                    </div>
+                {% else %}
+                    <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center"
+                         style="width:48px;height:48px;flex-shrink:0;">
+                        <i class="bi bi-hourglass-split text-dark fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Entregue — Aguardando correção</h5>
+                        <p class="text-muted small mb-0">Entregue em {{ submission.submitted_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Feedback -->
+            {% if submission.has_grade and submission.grade.feedback %}
+            <div class="alert alert-info border-0 rounded-3 mb-3">
+                <h6 class="fw-bold mb-1"><i class="bi bi-chat-text me-2"></i>Feedback do Professor</h6>
+                <p class="mb-0">{{ submission.grade.feedback }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Previous Submission Content -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold text-muted small">Sua resposta enviada</label>
+                <div class="bg-body p-3 rounded-3 border border-secondary" style="white-space: pre-wrap;">{{ submission.content|default:"(sem texto, apenas arquivo)" }}</div>
+            </div>
+
+            <!-- Allow re-submit if not graded yet -->
+            {% if not submission.has_grade %}
+            <hr class="border-secondary">
+            <h6 class="fw-semibold mb-3">Atualizar entrega</h6>
+            {% endif %}
+        {% endif %}
+
+        {% if not submission or not submission.has_grade %}
+        <!-- Submit Form -->
+        {% if assignment.is_overdue and not assignment.allow_late %}
+        <div class="alert alert-danger border-0 rounded-3">
+            <i class="bi bi-lock me-2"></i>O prazo para esta atividade já encerrou.
+        </div>
+        {% else %}
+        <form method="POST" action="{% url 'assignments:submit' pk=assignment.pk %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <h6 class="fw-bold mb-3">
+                {% if submission %}Atualizar Resposta{% else %}Sua Resposta{% endif %}
+            </h6>
+            <div class="mb-3">
+                <textarea class="form-control bg-body" name="content" rows="6"
+                          placeholder="Digite sua resposta aqui...">{{ submission.content|default:"" }}</textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold small">Arquivo (opcional)</label>
+                <input type="file" class="form-control bg-body" name="file">
+            </div>
+            <button type="submit" class="btn btn-brand rounded-pill px-4">
+                <i class="bi bi-send me-2"></i>{% if submission %}Atualizar Entrega{% else %}Entregar Atividade{% endif %}
+            </button>
+        </form>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ -->
+{% elif user.is_teacher or user.is_superadmin %}
+<!-- ── TEACHER VIEW — Submissions ── -->
+<div class="d-flex gap-3 mb-4">
+    <div class="card bg-body-tertiary border-0 rounded-4 flex-fill text-center py-3">
+        <div class="fs-3 fw-bold text-brand">{{ submission_count }}</div>
+        <div class="text-muted small">Entregues</div>
+    </div>
+    <div class="card bg-body-tertiary border-0 rounded-4 flex-fill text-center py-3">
+        <div class="fs-3 fw-bold text-warning">{{ pending_count }}</div>
+        <div class="text-muted small">Para Corrigir</div>
+    </div>
+    <div class="card bg-body-tertiary border-0 rounded-4 flex-fill text-center py-3">
+        <div class="fs-3 fw-bold">{{ total_enrolled }}</div>
+        <div class="text-muted small">Total Alunos</div>
+    </div>
+</div>
+
+{% if submissions %}
+<div class="card bg-body-tertiary border-0 shadow-sm rounded-4">
+    <div class="card-header bg-transparent border-bottom border-secondary px-4 py-3">
+        <h6 class="fw-bold mb-0">Entregas dos Alunos</h6>
+    </div>
+    <div class="card-body p-0">
+        {% for submission in submissions %}
+        <div class="p-4 {% if not forloop.last %}border-bottom border-secondary{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-light"
+                         style="width:36px;height:36px;flex-shrink:0;font-size:0.8rem;">
+                        {{ submission.student.get_full_name|first|upper|default:submission.student.username|first|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ submission.student.get_full_name|default:submission.student.username }}</div>
+                        <small class="text-muted">Entregue {{ submission.submitted_at|date:"d/m/Y H:i" }}</small>
+                        {% if submission.is_late %}<span class="badge bg-danger bg-opacity-25 text-danger ms-1 small">Atrasada</span>{% endif %}
+                    </div>
+                </div>
+                {% if submission.has_grade %}
+                    <span class="badge bg-success px-3 py-2 rounded-pill">✓ {{ submission.grade.score }}/{{ assignment.max_score }}</span>
+                {% else %}
+                    <span class="badge bg-secondary px-3 py-2 rounded-pill">Pendente</span>
+                {% endif %}
+            </div>
+
+            {% if submission.content %}
+            <div class="bg-body p-3 rounded-3 border border-secondary mb-3 small" style="white-space: pre-wrap; max-height: 120px; overflow-y: auto;">{{ submission.content }}</div>
+            {% endif %}
+
+            <!-- Grade Form -->
+            <form method="POST" action="{% url 'assignments:grade' pk=submission.pk %}"
+                  class="d-flex gap-2 align-items-end flex-wrap">
+                {% csrf_token %}
+                <div style="width: 120px;">
+                    <label class="form-label small mb-1">Nota (máx: {{ assignment.max_score }})</label>
+                    <input type="number" class="form-control form-control-sm bg-body" name="score"
+                           min="0" max="{{ assignment.max_score }}" step="0.1"
+                           value="{{ submission.grade.score|default:'' }}"
+                           placeholder="0.0">
+                </div>
+                <div class="flex-grow-1">
+                    <label class="form-label small mb-1">Feedback (opcional)</label>
+                    <input type="text" class="form-control form-control-sm bg-body" name="feedback"
+                           value="{{ submission.grade.feedback|default:'' }}"
+                           placeholder="Comentário para o aluno">
+                </div>
+                <button type="submit" class="btn btn-sm btn-brand rounded-pill px-3">
+                    {% if submission.has_grade %}<i class="bi bi-pencil me-1"></i>Atualizar{% else %}<i class="bi bi-check2 me-1"></i>Corrigir{% endif %}
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="text-center py-5 text-muted">
+    <div class="display-2 opacity-15 mb-3"><i class="bi bi-inbox"></i></div>
+    <h5>Nenhuma entrega ainda</h5>
+    <p class="small">Os alunos ainda não entregaram esta atividade.</p>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

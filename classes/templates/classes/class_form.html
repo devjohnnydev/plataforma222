@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Criar Nova Turma — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="mb-4">
+            <a href="{% url 'classes:list' %}" class="text-muted text-decoration-none small">
+                <i class="bi bi-arrow-left me-1"></i>Voltar para Turmas
+            </a>
+        </div>
+
+        <div class="card bg-body-tertiary border-0 shadow rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="fw-bold mb-1">Criar Nova Turma</h2>
+                <p class="text-muted small mb-4">Preencha os dados abaixo para criar sua turma. Um código de acesso único será gerado automaticamente.</p>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- Class Name -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">Nome da Turma <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-body" id="name" name="name"
+                               placeholder="Ex.: Turma A — Python Avançado 2026"
+                               required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label fw-semibold">Descrição</label>
+                        <textarea class="form-control bg-body" id="description" name="description"
+                                  rows="3" placeholder="Descrição opcional da turma..."></textarea>
+                    </div>
+
+                    <!-- Course -->
+                    <div class="mb-3">
+                        <label for="course" class="form-label fw-semibold">Curso Vinculado</label>
+                        <select class="form-select bg-body" id="course" name="course">
+                            <option value="">— Sem curso vinculado —</option>
+                            {% for course in courses %}
+                                <option value="{{ course.pk }}">{{ course.title }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            {% if not courses %}
+                                Nenhum curso criado ainda.
+                                <a href="#" class="text-brand">Criar curso</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold d-block">Cor da Turma</label>
+                        <div class="d-flex flex-wrap gap-2" id="color-picker">
+                            {% for color in colors_list %}
+                            <button type="button"
+                                    class="color-swatch btn p-0 border-0 rounded-circle {% if forloop.first %}selected{% endif %}"
+                                    style="width:32px;height:32px;background-color:{{ color }};box-shadow: 0 0 0 2px var(--bs-body-bg), 0 0 0 {% if forloop.first %}4px{% else %}0px{% endif %} {{ color }};"
+                                    data-color="{{ color }}"
+                                    onclick="selectColor(this)">
+                            </button>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" id="color" name="color" value="#FFE81F">
+                    </div>
+
+                    <!-- Preview -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Preview</label>
+                        <div class="rounded-3 p-3 position-relative overflow-hidden" id="color-preview" style="background-color:#FFE81F;">
+                            <h6 class="fw-bold text-dark mb-0" id="preview-name">Nome da turma</h6>
+                            <p class="text-dark opacity-75 small mb-0" id="preview-course">Curso vinculado</p>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-brand btn-lg rounded-pill">
+                            <i class="bi bi-check2-circle me-2"></i>Criar Turma
+                        </button>
+                        <a href="{% url 'classes:list' %}" class="btn btn-outline-secondary rounded-pill">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.color-swatch { transition: box-shadow 0.15s ease; cursor: pointer; }
+.color-swatch.selected { box-shadow: 0 0 0 2px var(--bs-body-bg), 0 0 0 4px attr(data-color) !important; }
+</style>
+
+<script>
+function selectColor(btn) {
+    document.querySelectorAll('.color-swatch').forEach(s => {
+        s.style.boxShadow = `0 0 0 2px var(--bs-body-bg), 0 0 0 0px ${s.dataset.color}`;
+    });
+    btn.style.boxShadow = `0 0 0 2px var(--bs-body-bg), 0 0 0 4px ${btn.dataset.color}`;
+    document.getElementById('color').value = btn.dataset.color;
+    document.getElementById('color-preview').style.backgroundColor = btn.dataset.color;
+}
+
+document.getElementById('name').addEventListener('input', (e) => {
+    document.getElementById('preview-name').textContent = e.target.value || 'Nome da turma';
+});
+
+document.getElementById('course').addEventListener('change', (e) => {
+    const text = e.target.options[e.target.selectedIndex].text;
+    document.getElementById('preview-course').textContent = text === '— Sem curso vinculado —' ? 'Curso vinculado' : text;
+});
+</script>
+{% endblock %}
