@@ -1,0 +1,140 @@
+<div id="mister-chat-widget" class="position-fixed bottom-0 end-0 m-4" style="z-index: 1050; display: none;">
+    <!-- Chat Window -->
+    <div id="mister-chat-window" class="card shadow-lg border-0 rounded-4 mb-3 d-none" style="width: 350px; height: 500px; display: flex; flex-direction: column;">
+        <div class="card-header bg-brand text-dark rounded-top-4 border-0 d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center gap-2">
+                <img src="/static/images/mister_avatar.jpg" alt="Mister" class="rounded-circle object-fit-cover" width="35" height="35" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 16 16\\\' fill=\\\'%234285f4\\\'%3E%3Cpath d=\\\'M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z\\\'/%3E%3C/svg%3E'">
+                <div>
+                    <h6 class="mb-0 fw-bold">Mister</h6>
+                    <small class="opacity-75" style="font-size: 0.75rem;">Seu Assistente de IA</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close" id="mister-close-btn"></button>
+        </div>
+        
+        <div class="card-body p-3 overflow-auto bg-body-tertiary" id="mister-chat-messages" style="flex: 1;">
+            <div class="d-flex mb-3">
+                <div class="bg-body border border-secondary rounded-3 p-2 small shadow-sm">
+                    Olá, {{ user.first_name|default:user.username }}! Eu sou o Mister, como posso ajudar nos seus estudos hoje?
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-footer bg-body border-top border-secondary p-2">
+            <form id="mister-chat-form" class="d-flex gap-2">
+                <input type="text" id="mister-chat-input" class="form-control rounded-pill bg-body-tertiary border-secondary" placeholder="Pergunte algo..." autocomplete="off">
+                <button type="submit" class="btn btn-brand rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px; flex-shrink: 0;" id="mister-send-btn">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toggle Button -->
+    <button id="mister-toggle-btn" class="btn p-0 border-0 shadow-lg rounded-circle position-relative" style="width: 60px; height: 60px; float: right;">
+        <img src="/static/images/mister_avatar.jpg" alt="Mister" class="w-100 h-100 rounded-circle object-fit-cover shadow" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\\'http://www.w3.org/2000/svg\\\' viewBox=\\\'0 0 16 16\\\' fill=\\\'%234285f4\\\'%3E%3Cpath d=\\\'M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z\\\'/%3E%3C/svg%3E'">
+        <span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+            <span class="visually-hidden">New alerts</span>
+        </span>
+    </button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const isAuth = "{{ user.is_authenticated|yesno:'true,false' }}" === "true";
+    if (!isAuth) return;
+    
+    const widget = document.getElementById('mister-chat-widget');
+    const toggleBtn = document.getElementById('mister-toggle-btn');
+    const closeBtn = document.getElementById('mister-close-btn');
+    const chatWindow = document.getElementById('mister-chat-window');
+    const chatForm = document.getElementById('mister-chat-form');
+    const chatInput = document.getElementById('mister-chat-input');
+    const messagesBox = document.getElementById('mister-chat-messages');
+    const sendBtn = document.getElementById('mister-send-btn');
+
+    // Show the widget container if logged in
+    widget.style.display = 'block';
+
+    function toggleChat() {
+        chatWindow.classList.toggle('d-none');
+        if (!chatWindow.classList.contains('d-none')) {
+            chatInput.focus();
+        }
+    }
+
+    toggleBtn.addEventListener('click', toggleChat);
+    closeBtn.addEventListener('click', toggleChat);
+
+    function addMessage(text, isUser) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `d-flex mb-3 ${isUser ? 'justify-content-end' : ''}`;
+        
+        const innerDiv = document.createElement('div');
+        innerDiv.className = `border border-secondary rounded-3 p-2 small shadow-sm ${isUser ? 'bg-brand text-dark' : 'bg-body'}`;
+        innerDiv.style.maxWidth = '85%';
+        innerDiv.innerHTML = text.replace(/\n/g, '<br>');
+        
+        msgDiv.appendChild(innerDiv);
+        messagesBox.appendChild(msgDiv);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+    }
+
+    function addTypingIndicator() {
+        const id = 'typing-' + Date.now();
+        const msgDiv = document.createElement('div');
+        msgDiv.id = id;
+        msgDiv.className = `d-flex mb-3`;
+        msgDiv.innerHTML = `<div class="bg-body border border-secondary rounded-3 p-2 small shadow-sm text-muted">
+            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+        </div>`;
+        messagesBox.appendChild(msgDiv);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+        return id;
+    }
+
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        // User message
+        addMessage(text, true);
+        chatInput.value = '';
+        
+        // Typing indicator
+        const typingId = addTypingIndicator();
+        sendBtn.disabled = true;
+
+        // Fetch CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+
+        fetch('{% url "core:chat" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ message: text })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById(typingId).remove();
+            sendBtn.disabled = false;
+            
+            if (data.response) {
+                addMessage(data.response, false);
+            } else if (data.error) {
+                addMessage("<span class='text-danger'>Erro: " + data.error + "</span>", false);
+            }
+        })
+        .catch(err => {
+            document.getElementById(typingId).remove();
+            sendBtn.disabled = false;
+            addMessage("<span class='text-danger'>Erro de conexão ao servidor.</span>", false);
+        });
+    });
+});
+</script>

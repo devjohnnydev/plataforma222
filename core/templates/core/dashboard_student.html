@@ -8,9 +8,9 @@
         <h2 class="fw-bold mb-0">Olá, {{ user.get_full_name|default:user.username }}! 👋</h2>
         <p class="text-muted mb-0">
             {% if overdue_assignments %}
-                <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ overdue_assignments|length }} atividade{{ overdue_assignments|length|pluralize:"","s" }} em atraso!</span>
+                <span class="text-danger"><i class="bi bi-exclamation-circle me-1"></i>{{ overdue_assignments|length }} atividade{{ overdue_assignments|length|pluralize:"s" }} em atraso!</span>
             {% elif upcoming_assignments %}
-                Você tem {{ upcoming_assignments|length }} atividade{{ upcoming_assignments|length|pluralize:"","s" }} pendente{{ upcoming_assignments|length|pluralize:"","s" }} esta semana.
+                Você tem {{ upcoming_assignments|length }} atividade{{ upcoming_assignments|length|pluralize:"s" }} pendente{{ upcoming_assignments|length|pluralize:"s" }} esta semana.
             {% else %}
                 Tudo em dia! 🎉
             {% endif %}
@@ -128,7 +128,7 @@
                 </div>
                 <div class="card-body px-4 py-3">
                     <div class="d-flex justify-content-between text-muted small">
-                        <span><i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"","s" }}</span>
+                        <span><i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"s" }}</span>
                         <i class="bi bi-arrow-right-circle"></i>
                     </div>
                 </div>

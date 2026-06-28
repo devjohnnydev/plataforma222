@@ -365,8 +365,15 @@
     </div>
     {% endif %}
 
+    <!-- Global CSRF Token for JavaScript -->
+    {% csrf_token %}
+
+    <!-- Mister AI Widget -->
+    {% include '_mister_widget.html' %}
+
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
     
     <script>
         // Theme Toggle — persist in localStorage

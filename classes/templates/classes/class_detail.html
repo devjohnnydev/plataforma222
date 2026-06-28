@@ -22,7 +22,7 @@
                     {% if user == cls.teacher %}Você é o professor{% else %}Prof. {{ cls.teacher.get_full_name|default:cls.teacher.username }}{% endif %}
                 </span>
                 <span class="text-dark opacity-75 small">
-                    <i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"","s" }}
+                    <i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"s" }}
                 </span>
             </div>
         </div>
@@ -187,7 +187,7 @@
                             {{ assignment.submission_count }}/{{ cls.student_count }} entregues
                         </small>
                         {% if assignment.pending_count > 0 %}
-                            <small class="text-warning">{{ assignment.pending_count }} pendente{{ assignment.pending_count|pluralize:"","s" }}</small>
+                            <small class="text-warning">{{ assignment.pending_count }} pendente{{ assignment.pending_count|pluralize:"s" }}</small>
                         {% endif %}
                     {% endif %}
                 </div>

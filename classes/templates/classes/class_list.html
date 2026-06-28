@@ -7,7 +7,7 @@
     <div>
         <h2 class="fw-bold mb-0">Minhas Turmas</h2>
         <p class="text-muted small mb-0">
-            {% if classes %}{{ classes|length }} turma{{ classes|length|pluralize:"","s" }}{% else %}Nenhuma turma ainda{% endif %}
+            {% if classes %}{{ classes|length }} turma{{ classes|length|pluralize:"s" }}{% else %}Nenhuma turma ainda{% endif %}
         </p>
     </div>
     {% if user.is_teacher or user.is_superadmin %}
@@ -40,7 +40,7 @@
                 </div>
                 <div class="card-body px-4 py-3">
                     <div class="d-flex justify-content-between align-items-center text-muted small">
-                        <span><i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"","s" }}</span>
+                        <span><i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"s" }}</span>
                         {% if user.is_teacher or user.is_superadmin %}
                             <span class="font-monospace bg-body-secondary px-2 py-1 rounded" title="Código de acesso">
                                 <i class="bi bi-key me-1"></i>{{ cls.join_code }}
