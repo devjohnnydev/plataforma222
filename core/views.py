@@ -101,25 +101,116 @@ def _student_dashboard(request):
 
 
 def chat_view(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+
+    # Clear chat history if requested
+    if request.GET.get('clear') == '1':
+        request.session['chat_history'] = []
+        return redirect('core:chat')
+
+    # Retrieve history
+    history = request.session.get('chat_history', [])
+
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            message = data.get("message", "")
+            message = data.get("message", "").strip()
+
+            if not message:
+                return JsonResponse({"error": "Message is empty"}, status=400)
+
+            # Build contextual information for the user
+            context_info = []
+            context_info.append(f"Nome do Usuário: {request.user.get_full_name() or request.user.username}")
+            context_info.append(f"Papel/Role: {request.user.role}")
+
+            from classes.models import Class, Enrollment
+            from assignments.models import Assignment
+
+            if request.user.is_teacher() or request.user.is_superadmin():
+                classes = Class.objects.filter(teacher=request.user).select_related('course')
+                class_names = [f"{c.name} ({c.course.title if c.course else 'Sem Curso'})" for c in classes]
+                context_info.append(f"Turmas que você leciona: {', '.join(class_names) if class_names else 'Nenhuma'}")
+            else:
+                # Student details
+                enrollments = Enrollment.objects.filter(student=request.user, status='ACTIVE').select_related('enrolled_class__course')
+                classes = [e.enrolled_class for e in enrollments]
+                class_names = [f"{c.name} ({c.course.title if c.course else 'Sem Curso'})" for c in classes]
+                context_info.append(f"Turmas matriculadas: {', '.join(class_names) if class_names else 'Nenhuma'}")
+                context_info.append(f"Pontos conquistados: {request.user.points}")
+                if request.user.mood:
+                    context_info.append(f"Estado de espírito atual: {request.user.mood}")
+
+                # Pending assignments
+                now = timezone.now()
+                pending = Assignment.objects.filter(
+                    target_class__in=classes,
+                    due_date__gte=now
+                ).exclude(
+                    submissions__student=request.user
+                ).order_by('due_date')
+
+                if pending.exists():
+                    context_info.append("Suas atividades futuras pendentes são:")
+                    for assign in pending:
+                        context_info.append(f"- {assign.title} (Turma: {assign.target_class.name}, Prazo: {assign.due_date.strftime('%d/%m/%Y %H:%M')})")
+                else:
+                    context_info.append("Você não tem atividades pendentes com prazo no futuro.")
+
+                # Overdue assignments
+                overdue = Assignment.objects.filter(
+                    target_class__in=classes,
+                    due_date__lt=now
+                ).exclude(
+                    submissions__student=request.user
+                ).order_by('due_date')
+
+                if overdue.exists():
+                    context_info.append("Suas atividades ATRASADAS que ainda não foram entregues são:")
+                    for assign in overdue:
+                        context_info.append(f"- {assign.title} (Turma: {assign.target_class.name}, Prazo encerrou em: {assign.due_date.strftime('%d/%m/%Y %H:%M')})")
+
+            # Format current datetime
+            context_info.append(f"Data e Hora atual: {timezone.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+            # Build system prompt
+            system_prompt = (
+                "Você é o Mister, um assistente de inteligência artificial amigável, motivador e prestativo para os alunos e professores da Johnny Corporate Training. "
+                "Responda sempre em português brasileiro de forma acolhedora, clara e concisa.\n"
+                "Para ajudar de forma inteligente e personalizada, utilize as seguintes informações contextuais reais sobre o usuário logado:\n"
+                + "\n".join(context_info)
+                + "\n\nSe o usuário perguntar sobre suas notas, atividades pendentes ou turmas, use as informações acima para responder de forma precisa e direta."
+            )
+
+            # Prepare messages list for Groq API
+            groq_messages = [{"role": "system", "content": system_prompt}]
+            for msg in history[-10:]:
+                groq_messages.append({"role": msg["role"], "content": msg["content"]})
+            groq_messages.append({"role": "user", "content": message})
 
             from groq import Groq
             client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
             completion = client.chat.completions.create(
                 model="llama-3.1-8b-instant",
-                messages=[
-                    {"role": "system", "content": "You are Mister, a helpful and friendly AI assistant for students at Johnny Corporate Training. Answer their questions clearly and concisely in Portuguese."},
-                    {"role": "user", "content": message}
-                ],
+                messages=groq_messages,
                 temperature=0.7,
                 max_tokens=1024,
             )
             response_text = completion.choices[0].message.content
+
+            # Append to history
+            history.append({"role": "user", "content": message})
+            history.append({"role": "assistant", "content": response_text})
+            request.session['chat_history'] = history[-12:] # Store last 6 rounds
+
             return JsonResponse({"response": response_text})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-    return render(request, 'core/chat.html')
+    # For GET requests, render page and pass existing history to Alpine.js
+    chat_history_json = json.dumps([
+        {"id": idx, "role": "user" if msg["role"] == "user" else "assistant", "content": msg["content"]}
+        for idx, msg in enumerate(history)
+    ])
+    return render(request, 'core/chat.html', {'chat_history_json': chat_history_json})

@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('classes.urls', namespace='classes')),
     path('', include('assignments.urls', namespace='assignments')),
     path('', include('courses.urls', namespace='courses')),
+    path('', include('notifications.urls', namespace='notifications')),
 ]

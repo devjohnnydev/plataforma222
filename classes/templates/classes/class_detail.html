@@ -62,6 +62,12 @@
                 <i class="bi bi-people me-1"></i>Membros
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'grades' %}active{% endif %}"
+               href="{% url 'classes:grades' pk=cls.pk %}">
+                <i class="bi bi-award me-1"></i>Notas
+            </a>
+        </li>
     </ul>
 </div>
 
@@ -627,6 +633,146 @@
                 <button type="submit" class="btn btn-brand rounded-pill">Criar e Salvar</button>
             </div>
         </form>
+    </div>
+</div>
+{% endif %}
+
+{% if active_tab == 'grades' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            {% if user == cls.teacher or user.is_superadmin %}
+                <!-- Teacher/Admin View -->
+                <h5 class="fw-bold mb-4"><i class="bi bi-award text-brand me-2"></i>Boletim de Notas da Turma</h5>
+                
+                {% if assignments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-light border-secondary">
+                            <thead>
+                                <tr class="border-secondary">
+                                    <th scope="col" style="min-width: 150px;">Aluno</th>
+                                    {% for assignment in assignments %}
+                                        <th scope="col" class="text-center" style="min-width: 100px;">
+                                            <div class="fw-bold small text-truncate">{{ assignment.title }}</div>
+                                            <span class="text-muted" style="font-size: 0.75rem;">Max: {{ assignment.max_score }} | Peso: {{ assignment.weight }}</span>
+                                        </th>
+                                    {% endfor %}
+                                    <th scope="col" class="text-center" style="min-width: 100px; border-left: 1px solid rgba(255,255,255,0.1);">Média Geral</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sg in student_grades %}
+                                    <tr class="border-secondary">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-light font-monospace" style="width:32px;height:32px;font-size:0.8rem;">
+                                                    {{ sg.student.get_full_name|first|upper|default:sg.student.username|first|upper }}
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold small">{{ sg.student.get_full_name|default:sg.student.username }}</div>
+                                                    <div class="text-muted" style="font-size: 0.7rem;">{{ sg.student.email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        {% for assignment in assignments %}
+                                            <td class="text-center">
+                                                {% with score=sg.grades|dict_get:assignment.pk %}
+                                                    {% if score is not None %}
+                                                        <span class="fw-bold text-brand">{{ score }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted fst-italic">—</span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                        {% endfor %}
+                                        <td class="text-center fw-bold text-success" style="border-left: 1px solid rgba(255,255,255,0.1);">
+                                            {% if sg.average is not None %}
+                                                {{ sg.average }}
+                                            {% else %}
+                                                <span class="text-muted fst-italic">—</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-award display-4 opacity-25"></i>
+                        <p class="mt-2 mb-0">Nenhuma atividade criada para esta turma ainda.</p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Student View -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-award text-brand me-2"></i>Meu Boletim de Notas</h5>
+                    {% if average is not None %}
+                        <div class="text-end">
+                            <span class="text-muted small">Média Geral Ponderada:</span>
+                            <h4 class="fw-bold text-success mb-0">{{ average }}</h4>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if student_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle text-light border-secondary">
+                            <thead>
+                                <tr class="border-secondary">
+                                    <th scope="col">Atividade</th>
+                                    <th scope="col" class="text-center">Nota Máxima</th>
+                                    <th scope="col" class="text-center">Peso</th>
+                                    <th scope="col" class="text-center">Minha Nota</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in student_records %}
+                                    <tr class="border-secondary">
+                                        <td>
+                                            <div class="fw-semibold">{{ record.assignment.title }}</div>
+                                            {% if record.assignment.due_date %}
+                                                <small class="text-muted">Prazo: {{ record.assignment.due_date|date:"d/m/Y H:i" }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ record.assignment.max_score }}</td>
+                                        <td class="text-center">{{ record.assignment.weight }}</td>
+                                        <td class="text-center fw-bold">
+                                            {% if record.has_grade %}
+                                                <span class="text-brand">{{ record.score }}</span>
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if record.submission %}
+                                                {% if record.has_grade %}
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">Avaliado</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Entregue (Aguardando Correção)</span>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if record.assignment.is_overdue %}
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">Atrasado</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">Pendente</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-award display-4 opacity-25"></i>
+                        <p class="mt-2 mb-0">Nenhuma atividade postada para esta turma ainda.</p>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endif %}

@@ -18,4 +18,5 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/<int:lesson_pk>/material/add/', views.add_lesson_material_view, name='add_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/submit/', views.submit_lesson_material_view, name='submit_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/comment/', views.comment_lesson_view, name='comment_lesson'),
+    path('classes/<int:pk>/grades/', views.class_grades_view, name='grades'),
 ]

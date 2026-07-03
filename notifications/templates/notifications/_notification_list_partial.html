@@ -1,0 +1,22 @@
+{% if notifications %}
+    {% for notif in notifications %}
+        <div class="dropdown-item py-2 px-3 border-bottom border-secondary d-flex align-items-start gap-2 {% if not notif.is_read %}bg-dark bg-opacity-50{% endif %}" id="notif-{{ notif.pk }}">
+            <div class="flex-grow-1">
+                <div class="fw-bold small {% if not notif.is_read %}text-brand{% else %}text-light{% endif %}">{{ notif.title }}</div>
+                <p class="text-muted small mb-1" style="font-size:0.75rem; white-space: normal;">{{ notif.message }}</p>
+                <small class="text-muted" style="font-size:0.65rem;">{{ notif.created_at|date:"d/m H:i" }}</small>
+            </div>
+            {% if not notif.is_read %}
+                <button class="btn btn-sm btn-link text-success p-0" 
+                        hx-post="{% url 'notifications:mark_read' pk=notif.pk %}"
+                        hx-swap="outerHTML"
+                        hx-target="#notif-{{ notif.pk }}"
+                        title="Marcar como lida">
+                    <i class="bi bi-check2"></i>
+                </button>
+            {% endif %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="text-center py-3 text-muted small">Nenhuma notificação encontrada</div>
+{% endif %}

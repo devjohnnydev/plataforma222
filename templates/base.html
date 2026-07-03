@@ -209,6 +209,37 @@
                                 </ul>
                             </div>
                         {% endif %}
+                        <!-- Notifications Dropdown -->
+                        <div class="dropdown me-1">
+                            <button class="btn btn-link text-light text-decoration-none position-relative p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações" style="height: 38px;">
+                                <i class="bi bi-bell-fill fs-5"></i>
+                                {% if navbar_unread_count > 0 %}
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem; transform: translate(-20%, 10%) !important;">
+                                        {{ navbar_unread_count }}
+                                    </span>
+                                {% endif %}
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end shadow border-0 p-0" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                                <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center bg-body-tertiary">
+                                    <span class="fw-bold">Notificações</span>
+                                    {% if navbar_unread_count > 0 %}
+                                        <form method="POST" action="{% url 'notifications:mark_all_read' %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-link p-0 text-decoration-none text-brand small fw-semibold" style="font-size: 0.75rem;">
+                                                Ler todas
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                                <div class="notifications-dropdown-list">
+                                    {% include 'notifications/_notification_list_partial.html' with notifications=navbar_notifications %}
+                                </div>
+                                <a class="dropdown-item text-center py-2 border-top border-secondary text-brand small fw-bold" href="{% url 'notifications:list' %}">
+                                    Ver todas as notificações
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="dropdown">
                             <button class="btn btn-dark dropdown-toggle border-secondary" type="button" data-bs-toggle="dropdown">
                                 <i class="bi bi-person-circle me-1"></i> {{ user.get_full_name|default:user.username }}

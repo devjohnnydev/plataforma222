@@ -63,7 +63,7 @@ def create_assignment_view(request, class_pk):
         else:
             from django.utils.dateparse import parse_datetime
             due_date = parse_datetime(due_date_str) if due_date_str else None
-            Assignment.objects.create(
+            assignment = Assignment.objects.create(
                 target_class=cls,
                 title=title,
                 description=description,
@@ -72,6 +72,14 @@ def create_assignment_view(request, class_pk):
                 due_date=due_date,
                 allow_late=allow_late,
             )
+            from notifications.utils import send_notification
+            for enrollment in cls.enrollments.filter(status='ACTIVE').select_related('student'):
+                send_notification(
+                    recipient=enrollment.student,
+                    title=f"Nova Atividade: {assignment.title}",
+                    message=f"Uma nova atividade foi publicada na turma {cls.name}.",
+                    notification_type="NEW_ASSIGNMENT"
+                )
             messages.success(request, f'Atividade "{title}" criada com sucesso!')
             return redirect('classes:classwork', pk=class_pk)
 
@@ -124,6 +132,14 @@ def submit_assignment_view(request, pk):
             submission.save()
         messages.success(request, 'Atividade entregue com sucesso!')
 
+    from notifications.utils import send_notification
+    send_notification(
+        recipient=cls.teacher,
+        title=f"Nova entrega: {assignment.title}",
+        message=f"O aluno {request.user.get_full_name() or request.user.username} entregou a atividade '{assignment.title}'.",
+        notification_type="NEW_SUBMISSION"
+    )
+
     return redirect('assignments:detail', pk=pk)
 
 
@@ -152,6 +168,13 @@ def grade_submission_view(request, pk):
                 'feedback': feedback,
                 'graded_by': request.user,
             }
+        )
+        from notifications.utils import send_notification
+        send_notification(
+            recipient=submission.student,
+            title=f"Atividade Corrigida: {submission.assignment.title}",
+            message=f"Sua entrega para a atividade '{submission.assignment.title}' foi corrigida. Nota: {score}.",
+            notification_type="ASSIGNMENT_GRADED"
         )
         messages.success(request, f'Nota {score} atribuída com sucesso!')
 

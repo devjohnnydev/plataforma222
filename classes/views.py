@@ -291,7 +291,7 @@ def create_class_lesson_view(request, pk):
     if title:
         from courses.models import Lesson
         max_order = cls.lessons.count()
-        Lesson.objects.create(
+        lesson = Lesson.objects.create(
             target_class=cls,
             title=title,
             content=content,
@@ -299,6 +299,15 @@ def create_class_lesson_view(request, pk):
             publish_date=publish_date,
             order=max_order + 1
         )
+        if is_published:
+            from notifications.utils import send_notification
+            for enrollment in cls.enrollments.filter(status='ACTIVE').select_related('student'):
+                send_notification(
+                    recipient=enrollment.student,
+                    title=f"Nova Aula: {lesson.title}",
+                    message=f"Uma nova aula foi postada na turma {cls.name}.",
+                    notification_type="NEW_LESSON"
+                )
         messages.success(request, 'Aula adicionada com sucesso.')
     else:
         messages.error(request, 'O título da aula é obrigatório.')
@@ -318,6 +327,16 @@ def publish_class_lesson_view(request, pk, lesson_pk):
     lesson.is_published = True
     lesson.publish_date = timezone.now().date()
     lesson.save()
+
+    from notifications.utils import send_notification
+    for enrollment in cls.enrollments.filter(status='ACTIVE').select_related('student'):
+        send_notification(
+            recipient=enrollment.student,
+            title=f"Nova Aula: {lesson.title}",
+            message=f"Uma nova aula foi publicada na turma {cls.name}.",
+            notification_type="NEW_LESSON"
+        )
+
     messages.success(request, f'Aula "{lesson.title}" publicada com sucesso!')
     return redirect('classes:lessons', pk=pk)
 
@@ -414,4 +433,88 @@ def comment_lesson_view(request, pk, lesson_pk):
         messages.error(request, 'O comentário não pode ser vazio.')
 
     return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+def class_grades_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    from assignments.models import Assignment, Submission, Grade
+
+    assignments = cls.assignments.all().order_by('created_at')
+
+    if request.user.is_teacher() or request.user.is_superadmin():
+        enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
+        student_grades = []
+
+        for enrollment in enrollments:
+            student = enrollment.student
+            grades_dict = {}
+            total_weighted_score = 0
+            total_weight = 0
+
+            submissions = Submission.objects.filter(assignment__target_class=cls, student=student).select_related('grade')
+            sub_map = {sub.assignment_id: sub for sub in submissions}
+
+            for assignment in assignments:
+                sub = sub_map.get(assignment.pk)
+                score = None
+                if sub and hasattr(sub, 'grade'):
+                    score = sub.grade.score
+                    total_weighted_score += float(score) * float(assignment.weight)
+                    total_weight += float(assignment.weight)
+                grades_dict[assignment.pk] = score
+
+            average = round(total_weighted_score / total_weight, 2) if total_weight > 0 else None
+
+            student_grades.append({
+                'student': student,
+                'grades': grades_dict,
+                'average': average
+            })
+
+        context = {
+            'cls': cls,
+            'assignments': assignments,
+            'student_grades': student_grades,
+            'active_tab': 'grades',
+        }
+    else:
+        # Student view
+        submissions = Submission.objects.filter(assignment__target_class=cls, student=request.user).select_related('grade')
+        sub_map = {sub.assignment_id: sub for sub in submissions}
+
+        student_records = []
+        total_weighted_score = 0
+        total_weight = 0
+
+        for assignment in assignments:
+            sub = sub_map.get(assignment.pk)
+            score = None
+            has_grade = False
+            if sub and hasattr(sub, 'grade'):
+                score = sub.grade.score
+                has_grade = True
+                total_weighted_score += float(score) * float(assignment.weight)
+                total_weight += float(assignment.weight)
+
+            student_records.append({
+                'assignment': assignment,
+                'submission': sub,
+                'score': score,
+                'has_grade': has_grade
+            })
+
+        average = round(total_weighted_score / total_weight, 2) if total_weight > 0 else None
+
+        context = {
+            'cls': cls,
+            'student_records': student_records,
+            'average': average,
+            'active_tab': 'grades',
+        }
+
+    return render(request, 'classes/class_detail.html', context)
+
 

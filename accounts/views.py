@@ -135,6 +135,15 @@ def approve_teacher(request, pk):
     teacher.is_active = True
     teacher.approved_by_admin = True
     teacher.save()
+    
+    from notifications.utils import send_notification
+    send_notification(
+        recipient=teacher,
+        title="Cadastro Aprovado",
+        message="Seu cadastro como professor foi aprovado! Você já pode criar cursos e turmas.",
+        notification_type="TEACHER_APPROVAL"
+    )
+    
     messages.success(request, f"Professor {teacher.get_full_name() or teacher.username} aprovado com sucesso!")
     return redirect('core:home')
 
