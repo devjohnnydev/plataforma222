@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load custom_filters %}
 
 {% block title %}{{ cls.name }} — Braga Treinamentos{% endblock %}
@@ -568,7 +568,7 @@
                                                             </div>
                                                             <span class="text-muted mt-1" style="font-size:0.65rem;">{{ comment.created_at|date:"H:i" }}</span>
                                                         </div>
-                                                    {% endfor %}
+                                                    {% endif %}
                                                 {% empty %}
                                                     <p class="text-muted small fst-italic mb-0">Envie um comentário privado para o seu professor.</p>
                                                 {% endfor %}
