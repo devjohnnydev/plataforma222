@@ -29,7 +29,9 @@ class Class(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.name} ({self.course.title})"
+        if self.course:
+            return f"{self.name} ({self.course.title})"
+        return self.name
 
     @property
     def student_count(self):
