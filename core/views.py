@@ -1,9 +1,12 @@
 import os
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.db.models import Q
+from django.contrib import messages
+from django.views.decorators.http import require_POST
 
 
 def home_view(request):
@@ -21,6 +24,7 @@ def _admin_dashboard(request):
     from accounts.models import User
     from courses.models import Course
     from courses.models import Certificate
+    from classes.models import Class
 
     total_users = User.objects.count()
     teachers = User.objects.filter(role='TEACHER').count()
@@ -28,14 +32,124 @@ def _admin_dashboard(request):
     certificates = Certificate.objects.count()
     pending_teachers = User.objects.filter(role='TEACHER', approved_by_admin=False)
 
+    # Search & filters for users
+    q_user = request.GET.get('q_user', '').strip()
+    role_filter = request.GET.get('role_filter', '').strip()
+    
+    users = User.objects.all().order_by('username')
+    if q_user:
+        users = users.filter(
+            Q(username__icontains=q_user) |
+            Q(email__icontains=q_user) |
+            Q(first_name__icontains=q_user) |
+            Q(last_name__icontains=q_user)
+        )
+    if role_filter:
+        users = users.filter(role=role_filter)
+
+    classes = Class.objects.all().select_related('course', 'teacher').order_by('-created_at')
+    courses = Course.objects.all().select_related('teacher').order_by('-created_at')
+
     context = {
         'total_users': total_users,
         'teachers': teachers,
         'active_courses': active_courses,
         'certificates': certificates,
         'pending_teachers': pending_teachers,
+        'all_users': users,
+        'all_classes': classes,
+        'all_courses': courses,
+        'q_user': q_user,
+        'role_filter': role_filter,
+        'roles': User.Role.choices,
     }
     return render(request, 'core/dashboard_admin.html', context)
+
+
+@login_required
+@require_POST
+def admin_change_role_view(request, user_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from accounts.models import User
+    user = get_object_or_404(User, pk=user_pk)
+    new_role = request.POST.get('role')
+    if new_role in User.Role.values:
+        user.role = new_role
+        user.save()
+        messages.success(request, f"Papel do usuário '{user.username}' alterado para {user.get_role_display()}.")
+    else:
+        messages.error(request, "Papel inválido.")
+    return redirect('core:home')
+
+
+@login_required
+@require_POST
+def admin_toggle_active_view(request, user_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from accounts.models import User
+    user = get_object_or_404(User, pk=user_pk)
+    if user == request.user:
+        messages.error(request, "Você não pode desativar sua própria conta.")
+    else:
+        user.is_active = not user.is_active
+        user.save()
+        status = "ativada" if user.is_active else "desativada"
+        messages.success(request, f"Conta do usuário '{user.username}' foi {status} com sucesso.")
+    return redirect('core:home')
+
+
+@login_required
+@require_POST
+def admin_delete_user_view(request, user_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from accounts.models import User
+    user = get_object_or_404(User, pk=user_pk)
+    if user == request.user:
+        messages.error(request, "Você não pode excluir sua própria conta.")
+    else:
+        username = user.username
+        user.delete()
+        messages.warning(request, f"Usuário '{username}' excluído permanentemente.")
+    return redirect('core:home')
+
+
+@login_required
+@require_POST
+def admin_delete_class_view(request, class_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from classes.models import Class
+    cls = get_object_or_404(Class, pk=class_pk)
+    name = cls.name
+    cls.delete()
+    messages.warning(request, f"Turma '{name}' excluída com sucesso.")
+    return redirect('core:home')
+
+
+@login_required
+@require_POST
+def admin_delete_course_view(request, course_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from courses.models import Course
+    course = get_object_or_404(Course, pk=course_pk)
+    title = course.title
+    course.delete()
+    messages.warning(request, f"Curso '{title}' excluído com sucesso.")
+    return redirect('core:home')
 
 
 def _teacher_dashboard(request):
