@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -132,3 +132,4 @@ def material_create_view(request, slug, les_pk):
         messages.success(request, 'Material adicionado com sucesso.')
 
     return redirect('courses:detail', slug=slug)
+

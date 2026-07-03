@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_POST
@@ -193,3 +193,4 @@ def _check_class_access(user, cls):
         if Enrollment.objects.filter(student=user, enrolled_class=cls, status='ACTIVE').exists():
             return
     raise Http404("Acesso negado.")
+

@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.conf import settings
 
 User = settings.AUTH_USER_MODEL
@@ -18,3 +18,4 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.title} para {self.recipient.username}"
+

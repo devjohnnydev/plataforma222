@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 import uuid
@@ -166,3 +166,4 @@ class Certificate(models.Model):
     @property
     def verification_url(self):
         return f"/certificado/{self.unique_id}/"
+

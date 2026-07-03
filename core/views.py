@@ -1,4 +1,4 @@
-import os
+﻿import os
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
@@ -290,7 +290,7 @@ def chat_view(request):
 
             # Build system prompt
             system_prompt = (
-                "Você é o Mister, um assistente de inteligência artificial amigável, motivador e prestativo para os alunos e professores da Johnny Corporate Training. "
+                "Você é o Mister, um assistente de inteligência artificial amigável, motivador e prestativo para os alunos e professores da Braga Treinamentos. "
                 "Responda sempre em português brasileiro de forma acolhedora, clara e concisa.\n"
                 "Para ajudar de forma inteligente e personalizada, utilize as seguintes informações contextuais reais sobre o usuário logado:\n"
                 + "\n".join(context_info)
@@ -328,3 +328,4 @@ def chat_view(request):
         for idx, msg in enumerate(history)
     ])
     return render(request, 'core/chat.html', {'chat_history_json': chat_history_json})
+

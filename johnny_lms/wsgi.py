@@ -1,4 +1,4 @@
-"""
+﻿"""
 WSGI config for johnny_lms project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
@@ -18,3 +18,4 @@ except ImportError:
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'johnny_lms.settings')
 
 application = get_wsgi_application()
+

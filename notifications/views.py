@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.views.decorators.http import require_POST
@@ -34,3 +34,4 @@ def mark_all_read_view(request):
     if request.headers.get('HX-Request'):
         return HttpResponse('')
     return redirect('notifications:list')
+

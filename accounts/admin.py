@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import User
 
 @admin.register(User)
@@ -12,3 +12,4 @@ class UserAdmin(admin.ModelAdmin):
         ('Perfil', {'fields': ('role', 'profile_picture', 'bio', 'mood', 'points')}),
         ('Permissões', {'fields': ('is_active', 'is_staff', 'is_superuser', 'approved_by_admin')}),
     )
+

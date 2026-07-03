@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 app_name = 'core'
@@ -12,3 +12,4 @@ urlpatterns = [
     path('admin/classes/<int:class_pk>/delete/', views.admin_delete_class_view, name='admin_delete_class'),
     path('admin/courses/<int:course_pk>/delete/', views.admin_delete_course_view, name='admin_delete_course'),
 ]
+

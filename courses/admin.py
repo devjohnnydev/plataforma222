@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import Course, Module, Lesson, Material, Certificate
 
 class ModuleInline(admin.TabularInline):
@@ -49,3 +49,4 @@ class CertificateAdmin(admin.ModelAdmin):
     list_filter = ('course',)
     search_fields = ('unique_id', 'student__username')
     ordering = ('-completion_date',)
+

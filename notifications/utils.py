@@ -1,4 +1,4 @@
-from .models import Notification
+﻿from .models import Notification
 
 def send_notification(recipient, title, message, notification_type=None):
     return Notification.objects.create(
@@ -7,3 +7,4 @@ def send_notification(recipient, title, message, notification_type=None):
         message=message,
         notification_type=notification_type
     )
+

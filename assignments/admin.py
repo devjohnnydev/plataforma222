@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import Assignment, Submission, Grade
 
 class SubmissionInline(admin.TabularInline):
@@ -26,3 +26,4 @@ class GradeAdmin(admin.ModelAdmin):
     list_display = ('submission', 'score', 'graded_by', 'graded_at')
     list_filter = ('graded_by',)
     ordering = ('-graded_at',)
+

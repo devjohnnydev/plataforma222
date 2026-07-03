@@ -1,4 +1,4 @@
-from django import template
+﻿from django import template
 
 register = template.Library()
 
@@ -26,4 +26,5 @@ def filename(value):
     if hasattr(value, 'name'):
         return os.path.basename(value.name)
     return os.path.basename(str(value))
+
 

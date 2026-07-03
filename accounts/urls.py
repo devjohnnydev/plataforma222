@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 app_name = 'accounts'
@@ -12,3 +12,4 @@ urlpatterns = [
     path('reject-teacher/<int:pk>/', views.reject_teacher, name='reject_teacher'),
     path('perfil/', views.profile_view, name='profile'),
 ]
+

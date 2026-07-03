@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
@@ -689,6 +689,7 @@ def student_checkin_view(request, pk):
 
     messages.success(request, 'Sua presença foi confirmada com sucesso!')
     return redirect('classes:detail', pk=pk)
+
 
 
 

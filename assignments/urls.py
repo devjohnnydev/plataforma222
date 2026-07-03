@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 app_name = 'assignments'
@@ -9,3 +9,4 @@ urlpatterns = [
     path('assignments/<int:pk>/submit/', views.submit_assignment_view, name='submit'),
     path('assignments/submissions/<int:pk>/grade/', views.grade_submission_view, name='grade'),
 ]
+

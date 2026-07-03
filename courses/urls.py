@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 app_name = 'courses'
@@ -11,3 +11,4 @@ urlpatterns = [
     path('courses/<slug:slug>/module/<int:mod_pk>/lesson/add/', views.lesson_create_view, name='add_lesson'),
     path('courses/<slug:slug>/lesson/<int:les_pk>/material/add/', views.material_create_view, name='add_material'),
 ]
+

@@ -1,0 +1,192 @@
+﻿{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | Braga Treinamentos Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+        <span style="color: #FFE81F; font-size: 1.5rem; font-weight: 800; display: inline-flex; align-items: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-mortarboard-fill" viewBox="0 0 16 16" style="margin-right: 6px;">
+                <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.862l1.694.79c.143-.19.324-.349.529-.467l5.257-2.45a2.5 2.5 0 0 1 2.262 0l5.257 2.45c.205.118.386.277.53.467l1.693-.79a.5.5 0 0 0 .025-.862z"/>
+                <path d="M1.385 7.678 2 7.965v1.7a1 1 0 0 0 .528.874l3.5 2a1 1 0 0 0 .944 0l3.5-2a1 1 0 0 0 .528-.874v-1.7l.615-.287A11 11 0 0 0 8 9.5a11 11 0 0 0-6.615-1.822z"/>
+                <path d="M13.5 6a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-3 0V9a.5.5 0 0 1 1 0v1.5a.5.5 0 0 0 1 0v-4a.5.5 0 0 1 .5-.5"/>
+            </svg>
+            JC
+        </span>
+        <span style="color: #FFFFFF; font-weight: 700; font-size: 1.25rem;">Braga Treinamentos Admin</span>
+    </a>
+</h1>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Braga Treinamentos Theme for Django Admin */
+    :root {
+        --primary: #FFE81F !important;
+        --primary-fg: #000000 !important;
+        --primary-dark: #E6D11B !important;
+        --accent: #FFE81F !important;
+        --accent-fg: #000000 !important;
+        --header-bg: #111119 !important;
+        --header-color: #FFE81F !important;
+        --header-link-color: #FFFFFF !important;
+        --breadcrumbs-bg: #181824 !important;
+        --breadcrumbs-link-color: #cccccc !important;
+        --breadcrumbs-active-color: #FFE81F !important;
+        --link-color: #FFE81F !important;
+        --link-hover-color: #E6D11B !important;
+        --button-bg: #FFE81F !important;
+        --button-fg: #000000 !important;
+        --button-hover-bg: #E6D11B !important;
+        --button-hover-fg: #000000 !important;
+        --body-bg: #121216 !important;
+        --body-fg: #f5f5f7 !important;
+        --border-color: #2a2a36 !important;
+        --message-success-bg: rgba(40, 167, 69, 0.15) !important;
+        --message-success-color: #28a745 !important;
+        --message-warning-bg: rgba(255, 193, 7, 0.15) !important;
+        --message-warning-color: #ffc107 !important;
+        --message-error-bg: rgba(220, 53, 69, 0.15) !important;
+        --message-error-color: #dc3545 !important;
+    }
+
+    body {
+        background-color: var(--body-bg) !important;
+        color: var(--body-fg) !important;
+    }
+
+    #header {
+        background: var(--header-bg) !important;
+        border-bottom: 2px solid var(--primary) !important;
+        padding: 10px 40px !important;
+    }
+
+    div.breadcrumbs {
+        background: var(--breadcrumbs-bg) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 10px 40px !important;
+        color: var(--breadcrumbs-link-color) !important;
+    }
+
+    div.breadcrumbs a {
+        color: var(--breadcrumbs-link-color) !important;
+    }
+
+    div.breadcrumbs a:hover {
+        color: var(--primary) !important;
+    }
+
+    /* Style modules/cards in the Admin Dashboard */
+    .module {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-radius: 12px !important;
+        margin-bottom: 20px !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .module caption, .module h2 {
+        background: rgba(255, 232, 31, 0.08) !important;
+        color: #FFE81F !important;
+        font-weight: 700 !important;
+        border-bottom: 1px solid rgba(255, 232, 31, 0.15) !important;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        padding: 10px 15px !important;
+    }
+
+    .module table th, .module table td {
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 12px 15px !important;
+    }
+
+    .module table tr:hover td {
+        background: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    /* Input elements style */
+    input[type=text], input[type=password], input[type=email], select, textarea {
+        background: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid var(--border-color) !important;
+        color: #fff !important;
+        border-radius: 6px !important;
+        padding: 8px 12px !important;
+    }
+
+    input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, select:focus, textarea:focus {
+        border-color: var(--primary) !important;
+        outline: none !important;
+        box-shadow: 0 0 5px rgba(255, 232, 31, 0.3) !important;
+    }
+
+    /* Buttons */
+    .submit-row input, .button, input[type=submit], input[type=button] {
+        background: var(--button-bg) !important;
+        color: var(--button-fg) !important;
+        font-weight: 600 !important;
+        border-radius: 20px !important;
+        padding: 10px 20px !important;
+        border: none !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+
+    .submit-row input:hover, .button:hover, input[type=submit]:hover, input[type=button]:hover {
+        background: var(--button-hover-bg) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 10px rgba(255, 232, 31, 0.2) !important;
+    }
+
+    .submit-row input.default {
+        background: var(--primary) !important;
+        border: 1px solid var(--primary-dark) !important;
+    }
+
+    /* Recent actions panel */
+    #content-related {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    #content-related h3 {
+        color: var(--primary) !important;
+        font-weight: 700 !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding-bottom: 10px !important;
+        margin-bottom: 15px !important;
+    }
+
+    #content-related ul li {
+        color: #bbb !important;
+        padding: 6px 0 !important;
+    }
+
+    /* Links inside lists */
+    a:link, a:visited {
+        color: var(--primary) !important;
+        text-decoration: none !important;
+    }
+
+    a:hover {
+        color: var(--primary-dark) !important;
+        text-decoration: underline !important;
+    }
+
+    /* Change link hover color for non-accent links */
+    #user-tools a {
+        color: #fff !important;
+    }
+
+    #user-tools a:hover {
+        color: var(--primary) !important;
+        text-decoration: none !important;
+    }
+</style>
+{% endblock %}
+

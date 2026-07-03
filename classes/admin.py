@@ -1,4 +1,4 @@
-from django.contrib import admin
+﻿from django.contrib import admin
 from .models import Class, Enrollment, StreamPost, StreamComment
 
 class EnrollmentInline(admin.TabularInline):
@@ -48,4 +48,5 @@ class LessonSubmissionAdmin(admin.ModelAdmin):
 class LessonCommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'lesson', 'created_at')
     search_fields = ('author__username', 'lesson__title')
+
 

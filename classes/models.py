@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 import string
 import random
 from django.db import models
@@ -176,4 +176,5 @@ class LessonComment(models.Model):
 
     def __str__(self):
         return f"Comentário de {self.author.username} em {self.lesson.title}"
+
 

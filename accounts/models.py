@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+﻿from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
@@ -28,3 +28,4 @@ class User(AbstractUser):
 
     def is_superadmin(self):
         return self.role == self.Role.ADMIN or self.is_superuser
+
