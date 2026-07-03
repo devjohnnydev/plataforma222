@@ -350,21 +350,36 @@
             {% endif %}
 
             <!-- ── Main Content ── -->
-            <main class="{% if user.is_authenticated %}col-md-9 ms-sm-auto col-lg-10{% else %}col-12{% endif %} px-md-4 py-4">
-                <!-- Django Messages -->
-                {% if messages %}
-                <div class="mb-3" id="django-messages">
-                    {% for message in messages %}
-                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <main class="{% if user.is_authenticated %}col-md-9 ms-sm-auto col-lg-10{% else %}col-12{% endif %} px-md-4 py-4 d-flex flex-column justify-content-between" style="min-height: 85vh;">
+                <div>
+                    <!-- Django Messages -->
+                    {% if messages %}
+                    <div class="mb-3" id="django-messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
-                </div>
-                {% endif %}
+                    {% endif %}
 
-                {% block content %}
-                {% endblock %}
+                    {% block content %}
+                    {% endblock %}
+                </div>
+
+                <!-- Footer -->
+                <footer class="border-top border-secondary mt-5 pt-4 pb-2 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                    <span class="text-muted small">© 2026 Johnny Corporate. Desenvolvido para Professor Johnny Braga Treinamentos.</span>
+                    <div class="d-flex gap-3">
+                        <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="text-muted text-decoration-none small hover-brand">
+                            <i class="bi bi-linkedin me-1 text-primary"></i>LinkedIn
+                        </a>
+                        <a href="https://www.instagram.com/johnnybragaz/" target="_blank" class="text-muted text-decoration-none small hover-brand">
+                            <i class="bi bi-instagram me-1 text-danger"></i>Instagram
+                        </a>
+                    </div>
+                </footer>
             </main>
         </div>
     </div>

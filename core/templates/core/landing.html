@@ -3,17 +3,31 @@
 {% block content %}
 <div class="row align-items-center min-vh-75 py-5">
     <div class="col-md-6 text-center text-md-start">
-        <h1 class="display-4 fw-bold mb-4">Master Your Skills with <span class="text-brand">Johnny Corporate</span></h1>
-        <p class="lead text-muted mb-5">The ultimate enterprise learning platform inspired by the best in the industry. Join our courses and elevate your career today.</p>
+        <h1 class="display-4 fw-bold mb-4">Domine suas Habilidades com a <span class="text-brand">Johnny Corporate</span></h1>
+        <p class="lead text-muted mb-5">
+            A plataforma corporativa de treinamentos liderada pelo especialista **Johnny Braga**.
+            Aprenda, entregue atividades e conquiste certificados com a melhor metodologia do mercado.
+        </p>
         <div class="d-flex gap-3 justify-content-center justify-content-md-start">
-            <a href="#" class="btn btn-brand btn-lg px-4 rounded-pill">Get Started</a>
-            <a href="#" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">Learn More</a>
+            <a href="{% url 'accounts:register' %}" class="btn btn-brand btn-lg px-4 rounded-pill">Começar Agora</a>
+            <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
+                <i class="bi bi-linkedin me-1 text-primary"></i>Conectar no LinkedIn
+            </a>
         </div>
     </div>
     <div class="col-md-6 mt-5 mt-md-0 text-center">
-        <!-- Placeholder for hero image -->
-        <div class="bg-secondary bg-opacity-25 rounded-4 p-5 d-flex align-items-center justify-content-center mx-auto" style="aspect-ratio: 4/3; max-width: 500px;">
-            <i class="bi bi-laptop display-1 text-muted opacity-50"></i>
+        <!-- Brand profile/avatar block instead of empty laptop -->
+        <div class="bg-secondary bg-opacity-10 rounded-4 p-5 d-flex flex-column align-items-center justify-content-center mx-auto border border-secondary shadow-sm" style="aspect-ratio: 4/3; max-width: 500px;">
+            <div class="rounded-circle overflow-hidden mb-3 border border-3 border-brand shadow" style="width: 130px; height: 130px;">
+                <img src="/static/images/mister_avatar.jpg" alt="Johnny Braga" class="w-100 h-100 object-fit-cover">
+            </div>
+            <h5 class="fw-bold text-white mb-1">Johnny Braga</h5>
+            <p class="text-brand small mb-3">CEO & Diretor de Treinamentos</p>
+            <div class="d-flex gap-2">
+                <a href="https://www.instagram.com/johnnybragaz/" target="_blank" class="btn btn-sm btn-dark rounded-pill border-secondary px-3">
+                    <i class="bi bi-instagram me-1 text-danger"></i>@johnnybragaz
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -23,8 +37,8 @@
         <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
                 <div class="display-5 text-brand mb-3"><i class="bi bi-book"></i></div>
-                <h4 class="fw-bold">Comprehensive Courses</h4>
-                <p class="text-muted small">Access a wide range of learning materials, assignments, and exams crafted by expert teachers.</p>
+                <h4 class="fw-bold">Cursos Completos</h4>
+                <p class="text-muted small">Acesse materiais didáticos de alta qualidade, assista lições e faça downloads de planilhas e apoios.</p>
             </div>
         </div>
     </div>
@@ -32,17 +46,17 @@
         <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
                 <div class="display-5 text-brand mb-3"><i class="bi bi-award"></i></div>
-                <h4 class="fw-bold">Earn Certificates</h4>
-                <p class="text-muted small">Complete courses to earn verifiable digital certificates and showcase your new skills.</p>
+                <h4 class="fw-bold">Certificados Digitais</h4>
+                <p class="text-muted small">Conclua as atividades propostas para emitir certificados profissionais verificados e compartilhar no LinkedIn.</p>
             </div>
         </div>
     </div>
     <div class="col-md-4 mb-4">
         <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
-                <div class="display-5 text-brand mb-3"><i class="bi bi-people"></i></div>
-                <h4 class="fw-bold">Interactive Stream</h4>
-                <p class="text-muted small">Stay connected with your classmates and teachers through announcements, comments, and alerts.</p>
+                <div class="display-5 text-brand mb-3"><i class="bi bi-robot"></i></div>
+                <h4 class="fw-bold">Mister (Assistente IA)</h4>
+                <p class="text-muted small">Tire suas dúvidas corporativas e receba feedbacks instantâneos com o seu assistente pessoal de IA integrado.</p>
             </div>
         </div>
     </div>
