@@ -76,7 +76,13 @@ O projeto já está configurado para deploy automático no [Railway.app](https:/
 4. Vá em **Variables** no serviço Web e adicione:
    - `DATABASE_URL` = `${{ Postgres.DATABASE_URL }}` (Para conectar ao banco do Railway).
    - `GROQ_API_KEY` = `gsk_suachave...` (Para ativar o chat IA Mister).
-5. O Railway usará o `Procfile` e o `requirements.txt` automaticamente para rodar as migrações e subir o projeto via `gunicorn`.
+5. **Preservação de Imagens e Arquivos Enviados (Persistência de Mídia):**
+   * Como os containers do Railway são efêmeros (reiniciam e apagam arquivos locais nas atualizações), você deve criar um **Volume** no Railway para salvar arquivos enviados permanentemente.
+   * No painel do seu projeto no Railway, clique em **+ Add** -> **Volume**.
+   * Conecte o Volume ao seu serviço Web e configure o ponto de montagem (Mount Path) como:
+     `/app/media`
+   * Dessa forma, todas as imagens de banners de turmas, fotos de perfil, avatares e arquivos anexos de lições ficarão salvos e nunca serão apagados nas atualizações do sistema.
+6. O Railway usará o `Procfile` e o `requirements.txt` automaticamente para rodar as migrações e subir o projeto via `gunicorn`.
 
 ---
 
