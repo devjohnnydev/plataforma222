@@ -159,3 +159,52 @@ def reject_teacher(request, pk):
     return redirect('core:home')
 
 
+import os
+from django.conf import settings
+from django.core.files.storage import default_storage
+
+@login_required
+def profile_view(request):
+    user = request.user
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        mood = request.POST.get('mood', '').strip()
+        avatar_choice = request.POST.get('avatar_choice', '').strip()
+        
+        file = request.FILES.get('profile_pic_file')
+        
+        if file:
+            # Save uploaded photo
+            ext = os.path.splitext(file.name)[1]
+            filename = f"user_{user.pk}_avatar{ext}"
+            path = os.path.join(settings.MEDIA_ROOT, 'avatars', filename)
+            # Ensure folder exists
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            if os.path.exists(path):
+                os.remove(path)
+            
+            saved_path = default_storage.save(os.path.join('avatars', filename), file)
+            user.profile_picture = settings.MEDIA_URL + saved_path
+        elif avatar_choice:
+            user.profile_picture = f"/static/images/avatars/{avatar_choice}"
+            
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.bio = bio
+        user.mood = mood
+        user.save()
+        messages.success(request, "Perfil atualizado com sucesso!")
+        return redirect('accounts:profile')
+
+    default_avatars = ['avatar1.svg', 'avatar2.svg', 'avatar3.svg', 'avatar4.svg', 'avatar5.svg']
+    context = {
+        'default_avatars': default_avatars,
+    }
+    return render(request, 'accounts/profile.html', context)
+
+
+

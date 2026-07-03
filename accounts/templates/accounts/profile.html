@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Meu Perfil — Johnny Corporate{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="bi bi-person-gear text-brand me-2"></i>Meu Perfil</h2>
+</div>
+
+<form method="POST" action="{% url 'accounts:profile' %}" enctype="multipart/form-data" class="w-100">
+<div class="row g-4" x-data="profileApp()">
+    <!-- Left Column: Avatar Selector -->
+    <div class="col-lg-4 text-center">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-3">Foto de Perfil</h5>
+            
+            <!-- Current Avatar Preview -->
+            <div class="mb-4 d-flex justify-content-center">
+                <div class="rounded-circle overflow-hidden border border-secondary bg-dark d-flex align-items-center justify-content-center" 
+                     style="width: 140px; height: 140px; background-color: var(--bs-border-color);">
+                    <template x-if="avatarPreview">
+                        <img :src="avatarPreview" alt="Avatar" class="img-fluid w-100 h-100 object-fit-cover">
+                    </template>
+                    <template x-if="!avatarPreview">
+                        <i class="bi bi-person-fill text-secondary" style="font-size: 5rem;"></i>
+                    </template>
+                </div>
+            </div>
+
+            {% csrf_token %}
+                
+                <!-- Radio inputs for default avatars (hidden but selectable) -->
+                <input type="hidden" name="avatar_choice" :value="selectedAvatar">
+
+                <h6 class="fw-bold text-muted small text-uppercase mb-3">Escolher Avatar Padrão</h6>
+                <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                    {% for avatar in default_avatars %}
+                        <button type="button" 
+                                @click="selectAvatar('{{ avatar }}')"
+                                :class="['btn p-1 rounded-circle border-2', selectedAvatar === '{{ avatar }}' ? 'border-brand' : 'border-transparent']"
+                                style="width: 44px; height: 44px; overflow: hidden; background: rgba(255,255,255,0.05);">
+                            <img src="/static/images/avatars/{{ avatar }}" alt="{{ avatar }}" class="w-100 h-100 object-fit-contain">
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="border-top border-secondary pt-3 mb-4">
+                    <h6 class="fw-bold text-muted small text-uppercase mb-2">Ou Enviar Foto Própria</h6>
+                    <input type="file" name="profile_pic_file" @change="previewFile" class="form-control form-control-sm bg-body border-secondary text-light">
+                </div>
+        </div>
+    </div>
+
+    <!-- Right Column: User Settings Form -->
+    <div class="col-lg-8">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <h5 class="fw-bold mb-4">Informações da Conta</h5>
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nome</label>
+                    <input type="text" name="first_name" value="{{ user.first_name }}" class="form-control bg-body border-secondary text-light" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Sobrenome</label>
+                    <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control bg-body border-secondary text-light">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">E-mail</label>
+                    <input type="email" name="email" value="{{ user.email }}" class="form-control bg-body border-secondary text-light" required>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Biografia</label>
+                    <textarea name="bio" rows="4" class="form-control bg-body border-secondary text-light" placeholder="Conte um pouco sobre você...">{{ user.bio|default:'' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Estado de Espírito (Mood)</label>
+                    <input type="text" name="mood" value="{{ user.mood|default:'' }}" class="form-control bg-body border-secondary text-light" placeholder="Ex.: Focado, Feliz, Produtivo">
+                </div>
+                {% if user.is_student %}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-muted">Pontuação Conquistada</label>
+                    <div class="form-control bg-body border-secondary text-brand fw-bold" readonly>
+                        <i class="bi bi-star-fill me-1"></i>{{ user.points }} pts
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-brand rounded-pill px-4">
+                    <i class="bi bi-check-circle me-1"></i>Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+<script>
+    function profileApp() {
+        return {
+            selectedAvatar: '{{ user.profile_picture|default:"" }}'.includes('/static/images/avatars/') ? 
+                            '{{ user.profile_picture|default:"" }}'.split('/').pop() : '',
+            avatarPreview: '{{ user.profile_picture|default:"" }}',
+
+            selectAvatar(avatarName) {
+                this.selectedAvatar = avatarName;
+                this.avatarPreview = '/static/images/avatars/' + avatarName;
+            },
+
+            previewFile(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    this.selectedAvatar = '';
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.avatarPreview = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+    }
+</script>
+{% endblock %}

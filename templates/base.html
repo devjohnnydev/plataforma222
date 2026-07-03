@@ -241,13 +241,18 @@
                         </div>
 
                         <div class="dropdown">
-                            <button class="btn btn-dark dropdown-toggle border-secondary" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i> {{ user.get_full_name|default:user.username }}
+                            <button class="btn btn-dark dropdown-toggle border-secondary d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture }}" alt="Avatar" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-person-circle"></i>
+                                {% endif %}
+                                {{ user.get_full_name|default:user.username }}
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><span class="dropdown-item-text small text-muted">{{ user.email }}</span></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
                                 {% if user.is_student %}
                                     <li><a class="dropdown-item" href="{% url 'core:chat' %}"><i class="bi bi-robot me-2"></i>Perguntar ao Mister</a></li>
                                 {% endif %}

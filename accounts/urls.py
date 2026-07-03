@@ -10,4 +10,5 @@ urlpatterns = [
     path('quero-ensinar/', views.teacher_apply_view, name='teacher_apply'),
     path('approve-teacher/<int:pk>/', views.approve_teacher, name='approve_teacher'),
     path('reject-teacher/<int:pk>/', views.reject_teacher, name='reject_teacher'),
+    path('perfil/', views.profile_view, name='profile'),
 ]
