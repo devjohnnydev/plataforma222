@@ -70,8 +70,10 @@
     <div class="auth-card">
         <!-- Logo -->
         <div class="text-center mb-4">
-            <div class="brand-logo mb-1"><i class="bi bi-mortarboard-fill"></i> JC</div>
-            <h5 class="fw-bold text-white mb-0">Johnny Corporate Training</h5>
+            <a href="{% url 'core:home' %}" class="text-decoration-none">
+                <div class="brand-logo mb-1"><i class="bi bi-mortarboard-fill"></i> JC</div>
+                <h5 class="fw-bold text-white mb-0">Johnny Corporate Training</h5>
+            </a>
             <p class="text-secondary small mt-1">Faça login para continuar aprendendo</p>
         </div>
 
@@ -117,7 +119,11 @@
             Não tem uma conta?
             <a href="{% url 'accounts:register' %}" class="fw-semibold text-decoration-none" style="color: var(--brand-primary);">Cadastre-se grátis</a>
         </p>
-        <p class="text-center mt-2 mb-0">
+        <p class="text-center mt-2 mb-0 d-flex justify-content-center gap-3">
+            <a href="{% url 'core:home' %}" class="text-secondary small text-decoration-none">
+                <i class="bi bi-house me-1"></i>Voltar ao Início
+            </a>
+            <span class="text-secondary opacity-25">|</span>
             <a href="{% url 'admin:index' %}" class="text-secondary small text-decoration-none">
                 <i class="bi bi-shield-lock me-1"></i>Acesso Admin
             </a>

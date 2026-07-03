@@ -1,64 +1,481 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    /* Custom Styling for Landing Page */
+    .hero-section {
+        position: relative;
+        padding: 8rem 0 6rem 0;
+        background: radial-gradient(circle at 10% 20%, rgba(255, 232, 31, 0.05) 0%, transparent 50%),
+                    radial-gradient(circle at 90% 80%, rgba(0, 123, 255, 0.05) 0%, transparent 50%);
+        overflow: hidden;
+    }
+    
+    .glow-effect {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(255, 232, 31, 0.15) 0%, transparent 70%);
+        top: -100px;
+        left: -100px;
+        pointer-events: none;
+        filter: blur(50px);
+    }
+
+    .brand-gradient-text {
+        background: linear-gradient(135deg, #FFF 30%, var(--brand-primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 232, 31, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .badge-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        background: rgba(255, 232, 31, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--brand-primary);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Certifications Grid */
+    .cert-badge {
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: all 0.25s ease;
+    }
+
+    .cert-badge:hover {
+        background: rgba(255, 232, 31, 0.08);
+        border-color: rgba(255, 232, 31, 0.3);
+        transform: scale(1.03);
+    }
+
+    /* Photo Showcase Gallery */
+    .gallery-img-container {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        aspect-ratio: 3/4;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gallery-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gallery-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+        padding: 1.5rem;
+        color: #fff;
+        opacity: 0.9;
+        transition: all 0.3s ease;
+    }
+
+    .gallery-img-container:hover {
+        transform: translateY(-8px);
+        border-color: rgba(255, 232, 31, 0.4);
+        box-shadow: 0 15px 35px rgba(255, 232, 31, 0.15);
+    }
+
+    .gallery-img-container:hover img {
+        transform: scale(1.08);
+    }
+
+    /* Smooth Scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Profile Card Highlight */
+    .profile-hero-frame {
+        position: relative;
+        border-radius: 24px;
+        padding: 10px;
+        background: linear-gradient(135deg, var(--brand-primary) 0%, #007bff 100%);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .profile-hero-inner {
+        background: #111;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .stat-pill {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row align-items-center min-vh-75 py-5">
-    <div class="col-md-6 text-center text-md-start">
-        <h1 class="display-4 fw-bold mb-4">Domine suas Habilidades com a <span class="text-brand">Johnny Corporate</span></h1>
-        <p class="lead text-muted mb-5">
-            A plataforma corporativa de treinamentos liderada pelo especialista **Johnny Braga**.
-            Aprenda, entregue atividades e conquiste certificados com a melhor metodologia do mercado.
-        </p>
-        <div class="d-flex gap-3 justify-content-center justify-content-md-start">
-            <a href="{% url 'accounts:register' %}" class="btn btn-brand btn-lg px-4 rounded-pill">Começar Agora</a>
-            <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">
-                <i class="bi bi-linkedin me-1 text-primary"></i>Conectar no LinkedIn
-            </a>
-        </div>
-    </div>
-    <div class="col-md-6 mt-5 mt-md-0 text-center">
-        <!-- Brand profile/avatar block instead of empty laptop -->
-        <div class="bg-secondary bg-opacity-10 rounded-4 p-5 d-flex flex-column align-items-center justify-content-center mx-auto border border-secondary shadow-sm" style="aspect-ratio: 4/3; max-width: 500px;">
-            <div class="rounded-circle overflow-hidden mb-3 border border-3 border-brand shadow" style="width: 130px; height: 130px;">
-                <img src="/static/images/mister_avatar.jpg" alt="Johnny Braga" class="w-100 h-100 object-fit-cover">
-            </div>
-            <h5 class="fw-bold text-white mb-1">Johnny Braga</h5>
-            <p class="text-brand small mb-3">CEO & Diretor de Treinamentos</p>
-            <div class="d-flex gap-2">
-                <a href="https://www.instagram.com/johnnybragaz/" target="_blank" class="btn btn-sm btn-dark rounded-pill border-secondary px-3">
-                    <i class="bi bi-instagram me-1 text-danger"></i>@johnnybragaz
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="glow-effect"></div>
 
-<div class="row mt-5 pt-5 text-center">
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="display-5 text-brand mb-3"><i class="bi bi-book"></i></div>
-                <h4 class="fw-bold">Cursos Completos</h4>
-                <p class="text-muted small">Acesse materiais didáticos de alta qualidade, assista lições e faça downloads de planilhas e apoios.</p>
+<!-- ── HERO SECTION ── -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <!-- Text Content -->
+            <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+                <span class="badge bg-secondary bg-opacity-25 text-brand border border-secondary border-opacity-50 px-3 py-2 rounded-pill mb-3">
+                    <i class="bi bi-rocket-takeoff-fill me-1"></i> Inteligência Artificial & Automação No-Code
+                </span>
+                <h1 class="display-3 fw-bold mb-4">
+                    Impulsione seus resultados com a <span class="brand-gradient-text">Johnny Corporate</span>
+                </h1>
+                <p class="lead text-muted mb-4 fs-5" style="max-width: 540px;">
+                    Treinamentos de elite focados em capacitar equipes para dominar ferramentas de IA Generativa, n8n, e arquiteturas Cloud robustas, liderados pelo especialista **Johnny Braga**.
+                </p>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'core:home' %}" class="btn btn-brand btn-lg px-4 py-3 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-speedometer2"></i> Acessar Meu Painel
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-brand btn-lg px-4 py-3 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-box-arrow-in-right"></i> Entrar na Plataforma
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-person-plus"></i> Criar Conta Grátis
+                        </a>
+                    {% endif %}
+                    <a href="#sobre-mim" class="btn btn-link text-decoration-none text-light btn-lg px-3 py-3 d-flex align-items-center justify-content-center gap-2">
+                        Ver Mais <i class="bi bi-chevron-down text-brand"></i>
+                    </a>
+                </div>
+            </div>
+            <!-- Interactive Profile Frame -->
+            <div class="col-lg-6">
+                <div class="profile-hero-frame mx-auto" style="max-width: 480px;">
+                    <div class="profile-hero-inner p-4 text-center">
+                        <div class="position-relative d-inline-block mb-3">
+                            <div class="rounded-circle overflow-hidden border border-3 border-brand shadow" style="width: 140px; height: 140px; margin: 0 auto;">
+                                <img src="{% static 'images/johnny/johnny_5.jpg' %}" alt="Johnny Braga" class="w-100 h-100 object-fit-cover">
+                            </div>
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-3 border-dark rounded-circle p-2" title="Disponível para Projetos"></span>
+                        </div>
+                        <h4 class="fw-bold text-white mb-1">Johnny Braga de Oliveira</h4>
+                        <p class="text-brand small mb-3">Especialista em Cloud, IA & Automação n8n</p>
+                        
+                        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                            <span class="stat-pill"><i class="bi bi-mortarboard-fill text-brand me-1"></i>Professor SENAI-SP</span>
+                            <span class="stat-pill"><i class="bi bi-cpu text-info me-1"></i>IA Integrations</span>
+                            <span class="stat-pill"><i class="bi bi-shuffle text-success me-1"></i>n8n Specialist</span>
+                        </div>
+
+                        <div class="border-top border-secondary border-opacity-50 pt-3 mt-3 d-flex justify-content-center gap-3">
+                            <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                <i class="bi bi-linkedin text-primary me-1"></i>LinkedIn
+                            </a>
+                            <a href="https://www.instagram.com/johnnybragaz/" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                <i class="bi bi-instagram text-danger me-1"></i>Instagram
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="display-5 text-brand mb-3"><i class="bi bi-award"></i></div>
-                <h4 class="fw-bold">Certificados Digitais</h4>
-                <p class="text-muted small">Conclua as atividades propostas para emitir certificados profissionais verificados e compartilhar no LinkedIn.</p>
+</section>
+
+<!-- ── SOBRE MIM SECTION ── -->
+<section id="sobre-mim" class="py-5 my-5 border-top border-secondary border-opacity-25">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-5 mb-4 mb-md-0 text-center">
+                <div class="rounded-4 overflow-hidden border border-secondary shadow-lg mx-auto" style="max-width: 380px;">
+                    <img src="{% static 'images/johnny/johnny_3.jpg' %}" alt="Johnny Braga no São Paulo Skills" class="w-100 object-fit-cover" style="aspect-ratio: 1/1;">
+                </div>
+                <p class="text-muted small mt-2"><i class="bi bi-flag-fill text-brand me-1"></i>Johnny representando no São Paulo Skills</p>
+            </div>
+            <div class="col-md-7 ps-md-5">
+                <span class="text-brand fw-semibold text-uppercase small tracking-wider mb-2 d-block">Quem é o Instrutor</span>
+                <h2 class="fw-bold mb-4 display-5 text-white">Mais de uma década moldando talentos e arquiteturas tecnológicas</h2>
+                <p class="text-secondary leading-relaxed">
+                    Olá! Sou **Johnny Braga de Oliveira**, Professor de Tecnologia da Informação no **SENAI-SP** e fundador da **Johnny Corporate**. Atuo com foco em engenharia de sistemas em nuvem, capacitação corporativa avançada e automação de processos inteligentes.
+                </p>
+                <p class="text-secondary leading-relaxed mb-4">
+                    Minha missão é simplificar a complexidade tecnológica para empresas e profissionais. Através de treinamentos estruturados em **Inteligência Artificial Aplicada** e fluxos de trabalho com o **n8n**, ajudo organizações de todos os tamanhos a otimizar processos operacionais, reduzir custos e acelerar a produtividade operacional de ponta a ponta.
+                </p>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-brand"></i>
+                            <span class="text-light">Instrutor no SENAI-SP</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-brand"></i>
+                            <span class="text-light">Mentoria & Projetos Corporativos</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-brand"></i>
+                            <span class="text-light">Automações com n8n Integrado</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-brand"></i>
+                            <span class="text-light">Soluções Multi-Cloud</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 mb-4">
-        <div class="card h-100 bg-body-tertiary border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="display-5 text-brand mb-3"><i class="bi bi-robot"></i></div>
-                <h4 class="fw-bold">Mister (Assistente IA)</h4>
-                <p class="text-muted small">Tire suas dúvidas corporativas e receba feedbacks instantâneos com o seu assistente pessoal de IA integrado.</p>
+</section>
+
+<!-- ── TREINAMENTOS CORPORATIVOS SECTION ── -->
+<section id="treinamentos" class="py-5 my-5 border-top border-secondary border-opacity-25">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-brand fw-semibold text-uppercase small tracking-wider mb-2 d-block">Nossas Especialidades</span>
+            <h2 class="fw-bold display-5 text-white">Treinamentos Corporativos em Foco</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Programas de capacitação sob medida para o time da sua empresa acelerar a curva de aprendizado nas ferramentas mais quentes do mercado.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <!-- IA Generativa Card -->
+            <div class="col-md-4">
+                <div class="card glass-card h-100 border-0 p-4">
+                    <div class="badge-icon">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h3 class="fw-bold h4 mb-3 text-white">Inteligência Artificial Aplicada</h3>
+                    <p class="text-secondary small">
+                        Aprenda a integrar modelos de IA (ChatGPT, Claude, Llama, APIs da Groq) nos seus processos diários. Crie assistentes virtuais inteligentes que entendem o seu negócio de verdade.
+                    </p>
+                </div>
+            </div>
+            <!-- N8N Card -->
+            <div class="col-md-4">
+                <div class="card glass-card h-100 border-0 p-4">
+                    <div class="badge-icon" style="background: rgba(40, 167, 69, 0.1); color: #28a745;">
+                        <i class="bi bi-shuffle"></i>
+                    </div>
+                    <h3 class="fw-bold h4 mb-3 text-white">Automações com n8n</h3>
+                    <p class="text-secondary small">
+                        Esqueça tarefas repetitivas. Desenhe fluxos de integração automáticos conectando CRMs, planilhas, bancos de dados, Slack, WhatsApp e muito mais usando o poder do n8n.
+                    </p>
+                </div>
+            </div>
+            <!-- Cloud & DevOps Card -->
+            <div class="col-md-4">
+                <div class="card glass-card h-100 border-0 p-4">
+                    <div class="badge-icon" style="background: rgba(0, 123, 255, 0.1); color: #007bff;">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                    </div>
+                    <h3 class="fw-bold h4 mb-3 text-white">Arquitetura Cloud & Infra</h3>
+                    <p class="text-secondary small">
+                        Capacite seu time técnico a subir aplicações escaláveis usando as maiores clouds globais (AWS, Google Cloud e Microsoft Azure), Docker, WhiteNoise e bancos de dados seguros.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- ── CERTIFICAÇÕES E CREDENCIAIS SECTION ── -->
+<section id="certificacoes" class="py-5 my-5 border-top border-secondary border-opacity-25">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <span class="text-brand fw-semibold text-uppercase small tracking-wider mb-2 d-block">Competência & Expertise</span>
+                <h2 class="fw-bold text-white mb-4 display-5">Certificações e Conquistas Profissionais</h2>
+                <p class="text-muted mb-4">
+                    Garantia de conhecimento validado internacionalmente pelas maiores gigantes de tecnologia e por metodologias de ensino sólidas como as do SENAI-SP.
+                </p>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="btn btn-outline-brand rounded-pill px-4">
+                        <i class="bi bi-linkedin me-2"></i>Ver Perfil do LinkedIn
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-google text-warning fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">Google Cloud</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Associate Cloud Engineer</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-alexa text-info fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">AWS Cloud</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Solutions Architect</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-node-plus text-success fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">n8n Academy</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Certified Integrator</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-award-fill text-brand fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">São Paulo Skills</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Competidor e Técnico</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-microsoft text-primary fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">Microsoft Certified</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Azure Administrator</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="cert-badge">
+                            <i class="bi bi-patch-check-fill text-brand fs-4"></i>
+                            <div>
+                                <span class="d-block text-white fw-semibold small">SENAI-SP Oficial</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Docência Profissional</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── EM AÇÃO SECTION (GALLERY) ── -->
+<section id="galeria" class="py-5 my-5 border-top border-secondary border-opacity-25">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-brand fw-semibold text-uppercase small tracking-wider mb-2 d-block">Bastidores</span>
+            <h2 class="fw-bold display-5 text-white">Johnny Braga em Ação</h2>
+            <p class="text-muted mx-auto" style="max-width: 600px;">
+                Momentos marcantes de aulas, palestras, mentorias corporativas e dedicação ao ensino tecnológico.
+            </p>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            <!-- Photo 1 -->
+            <div class="col-sm-6 col-md-3">
+                <div class="gallery-img-container">
+                    <img src="{% static 'images/johnny/johnny_1.jpg' %}" alt="Johnny Braga Palestra">
+                    <div class="gallery-overlay">
+                        <span class="d-block fw-bold text-white small">Palestrante Principal</span>
+                        <span class="text-muted small" style="font-size: 0.75rem;">IA no Mercado Atual</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Photo 2 -->
+            <div class="col-sm-6 col-md-3">
+                <div class="gallery-img-container">
+                    <img src="{% static 'images/johnny/johnny_2.jpg' %}" alt="Johnny Braga Workshops">
+                    <div class="gallery-overlay">
+                        <span class="d-block fw-bold text-white small">Treinamento Hands-on</span>
+                        <span class="text-muted small" style="font-size: 0.75rem;">Workshops Práticos</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Photo 3 -->
+            <div class="col-sm-6 col-md-3">
+                <div class="gallery-img-container">
+                    <img src="{% static 'images/johnny/johnny_3.jpg' %}" alt="Johnny Braga São Paulo Skills">
+                    <div class="gallery-overlay">
+                        <span class="d-block fw-bold text-white small">São Paulo Skills</span>
+                        <span class="text-muted small" style="font-size: 0.75rem;">Capacitação de Excelência</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Photo 5 -->
+            <div class="col-sm-6 col-md-3">
+                <div class="gallery-img-container">
+                    <img src="{% static 'images/johnny/johnny_5.jpg' %}" alt="Johnny Braga Terno">
+                    <div class="gallery-overlay">
+                        <span class="d-block fw-bold text-white small">Consultor Corporativo</span>
+                        <span class="text-muted small" style="font-size: 0.75rem;">Soluções Empresariais</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── FINAL CALL TO ACTION (CTA) ── -->
+<section class="py-5 my-5">
+    <div class="container">
+        <div class="card glass-card border-0 p-5 text-center position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(255,232,31,0.08) 0%, rgba(0,123,255,0.08) 100%);">
+            <div class="position-relative z-3">
+                <i class="bi bi-shield-lock-fill text-brand display-4 mb-3 d-block"></i>
+                <h2 class="fw-bold text-white mb-3 display-6">Pronto para acelerar o aprendizado?</h2>
+                <p class="text-muted mx-auto mb-4" style="max-width: 550px;">
+                    Faça login para acessar suas turmas corporativas, interagir no mural, entregar atividades e conversar diretamente com o seu assistente inteligente **Mister**.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'core:home' %}" class="btn btn-brand btn-lg px-5 rounded-pill shadow">
+                            Acessar Painel do Aluno/Professor
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-brand btn-lg px-5 rounded-pill shadow">
+                            Acessar a Plataforma
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 {% endblock %}
