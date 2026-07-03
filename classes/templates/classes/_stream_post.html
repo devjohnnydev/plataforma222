@@ -1,4 +1,5 @@
 {% load tz %}
+{% load custom_filters %}
 <div class="card stream-card mb-3 bg-body-tertiary" id="post-{{ post.pk }}">
     <div class="card-body p-4">
         <div class="d-flex align-items-start gap-3">
@@ -36,6 +37,41 @@
                 </div>
 
                 <p class="mt-2 mb-0" style="white-space: pre-wrap;">{{ post.content }}</p>
+
+                <!-- Attached materials and links display -->
+                {% if post.link_url or post.attachment %}
+                <div class="row g-2 mt-3">
+                    {% if post.attachment %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-50 d-flex align-items-center gap-3">
+                            <div class="fs-4 text-brand"><i class="bi bi-file-earmark-arrow-down-fill"></i></div>
+                            <div class="text-truncate flex-grow-1">
+                                <div class="fw-bold small text-white text-truncate" title="{{ post.attachment|filename }}">{{ post.attachment|filename }}</div>
+                                <small class="text-muted">Arquivo Anexo</small>
+                            </div>
+                            <a href="{{ post.attachment.url }}" download class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if post.link_url %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-50 d-flex align-items-center gap-3">
+                            <div class="fs-4 text-info"><i class="bi bi-link-45deg"></i></div>
+                            <div class="text-truncate flex-grow-1">
+                                <div class="fw-bold small text-white text-truncate" title="{{ post.link_url }}">{{ post.link_url }}</div>
+                                <small class="text-muted">Link Externo</small>
+                            </div>
+                            <a href="{{ post.link_url }}" target="_blank" class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

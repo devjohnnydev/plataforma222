@@ -109,7 +109,7 @@
                                 <!-- Add Material Modal per Lesson -->
                                 <div class="modal fade" id="addMaterialModal-{{ lesson.pk }}" tabindex="-1">
                                     <div class="modal-dialog">
-                                        <form method="POST" action="{% url 'courses:add_material' slug=course.slug les_pk=lesson.pk %}" class="modal-content bg-body-tertiary">
+                                        <form method="POST" action="{% url 'courses:add_material' slug=course.slug les_pk=lesson.pk %}" enctype="multipart/form-data" class="modal-content bg-body-tertiary">
                                             {% csrf_token %}
                                             <div class="modal-header border-secondary">
                                                 <h5 class="modal-title fw-bold">Anexar Material à Aula</h5>
@@ -133,7 +133,11 @@
                                                     <input type="url" class="form-control bg-body" name="url" placeholder="https://youtube.com/...">
                                                     <div class="form-text text-muted">Use para vídeos do YouTube, links externos, etc.</div>
                                                 </div>
-                                                <!-- File upload optional for later -->
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-semibold">Arquivo (Opcional)</label>
+                                                    <input type="file" class="form-control bg-body" name="file">
+                                                    <div class="form-text text-muted">Upload de PDFs, slides (.pptx, .pdf), imagens ou outros arquivos locais.</div>
+                                                </div>
                                             </div>
                                             <div class="modal-footer border-secondary">
                                                 <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>

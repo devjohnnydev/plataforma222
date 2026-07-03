@@ -15,3 +15,15 @@ def dict_get(d, key):
 def split(value, delimiter=','):
     """Split a string by delimiter: {{ 'a,b,c'|split:',' }}"""
     return value.split(delimiter)
+
+
+@register.filter
+def filename(value):
+    """Extract base filename from path or file field: {{ post.attachment|filename }}"""
+    if not value:
+        return ''
+    import os
+    if hasattr(value, 'name'):
+        return os.path.basename(value.name)
+    return os.path.basename(str(value))
+

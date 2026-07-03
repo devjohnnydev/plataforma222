@@ -22,6 +22,7 @@ class Class(models.Model):
     color = models.CharField(max_length=7, default='#4285f4', verbose_name='Cor da Turma')
     banner_image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name='Imagem de Banner')
     is_active = models.BooleanField(default=True, verbose_name='Ativa')
+    checkin_open = models.BooleanField(default=False, verbose_name='Check-in Liberado')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

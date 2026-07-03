@@ -30,6 +30,35 @@ def class_list_view(request):
     return render(request, 'classes/class_list.html', context)
 
 
+def copy_course_lessons_to_class(course, target_class):
+    """Copies all lessons and support materials from a Course to a target Class."""
+    if not course:
+        return
+    from courses.models import Lesson, Material
+    # Get all lessons from modules of the course
+    course_lessons = Lesson.objects.filter(module__course=course).order_by('module__order', 'order')
+    for order_idx, cl in enumerate(course_lessons, start=1):
+        # Create a new lesson linked to the target class
+        new_lesson = Lesson.objects.create(
+            target_class=target_class,
+            title=cl.title,
+            content=cl.content,
+            order=order_idx,
+            duration_minutes=cl.duration_minutes,
+            is_published=False,  # Keep it draft so the teacher can publish it when ready
+        )
+        # Copy materials
+        for mat in cl.materials.all():
+            Material.objects.create(
+                lesson=new_lesson,
+                title=mat.title,
+                material_type=mat.material_type,
+                file=mat.file,
+                url=mat.url,
+                description=mat.description
+            )
+
+
 # ── Create Class (Teacher only) ───────────────────────────────────────────────
 
 @login_required
@@ -59,6 +88,8 @@ def create_class_view(request):
                 color=color,
                 banner_image=banner_image,
             )
+            if course:
+                copy_course_lessons_to_class(course, new_class)
             messages.success(request, f'Turma "{new_class.name}" criada com sucesso! Código: {new_class.join_code}')
             return redirect('classes:detail', pk=new_class.pk)
 
@@ -176,6 +207,8 @@ def post_announcement_view(request, pk):
 
     content = request.POST.get('content', '').strip()
     post_type = request.POST.get('post_type', 'ANNOUNCEMENT')
+    link_url = request.POST.get('link_url', '').strip()
+    attachment = request.FILES.get('attachment')
 
     if not content:
         return HttpResponse(status=400)
@@ -185,6 +218,8 @@ def post_announcement_view(request, pk):
         author=request.user,
         content=content,
         post_type=post_type,
+        link_url=link_url or None,
+        attachment=attachment or None,
     )
 
     # If HTMX request, return just the new post partial
@@ -518,5 +553,142 @@ def class_grades_view(request, pk):
         }
 
     return render(request, 'classes/class_detail.html', context)
+
+
+# ── Class Management Views ───────────────────────────────────────────────────
+
+@login_required
+def edit_class_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        color = request.POST.get('color', cls.color)
+        banner_image = request.FILES.get('banner_image')
+
+        if name:
+            cls.name = name
+            cls.description = description
+            cls.color = color
+            if banner_image:
+                cls.banner_image = banner_image
+            cls.save()
+            messages.success(request, 'Turma atualizada com sucesso.')
+        else:
+            messages.error(request, 'O nome da turma é obrigatório.')
+
+    return redirect('classes:detail', pk=pk)
+
+
+@login_required
+@require_POST
+def delete_class_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    name = cls.name
+    cls.delete()
+    messages.success(request, f'Turma "{name}" excluída com sucesso.')
+    return redirect('core:home')
+
+
+@login_required
+def edit_lesson_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        content = request.POST.get('content', '').strip()
+
+        if title:
+            lesson.title = title
+            lesson.content = content
+            lesson.save()
+            messages.success(request, 'Aula atualizada com sucesso.')
+        else:
+            messages.error(request, 'O título da aula é obrigatório.')
+
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def delete_lesson_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    title = lesson.title
+    lesson.delete()
+    messages.success(request, f'Aula "{title}" excluída com sucesso.')
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def remove_student_view(request, pk, student_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    enrollment = get_object_or_404(Enrollment, enrolled_class=cls, student_id=student_pk)
+    student_name = enrollment.student.get_full_name() or enrollment.student.username
+    enrollment.delete()
+    messages.success(request, f'Aluno "{student_name}" removido da turma com sucesso.')
+    return redirect('classes:members', pk=pk)
+
+
+@login_required
+@require_POST
+def toggle_checkin_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    cls.checkin_open = not cls.checkin_open
+    cls.save()
+
+    status_str = "aberto" if cls.checkin_open else "fechado"
+    messages.success(request, f'Check-in de presença {status_str} com sucesso.')
+    return redirect(request.META.get('HTTP_REFERER', f'/classes/{pk}/'))
+
+
+@login_required
+@require_POST
+def student_checkin_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    if not cls.checkin_open:
+        messages.error(request, 'O check-in de presença não está aberto para esta turma no momento.')
+        return redirect('classes:detail', pk=pk)
+
+    from .models import Attendance
+    today = timezone.now().date()
+
+    attendance, created = Attendance.objects.get_or_create(
+        enrolled_class=cls,
+        student=request.user,
+        date=today,
+        defaults={'present': True}
+    )
+    if not created:
+        attendance.present = True
+        attendance.save()
+
+    messages.success(request, 'Sua presença foi confirmada com sucesso!')
+    return redirect('classes:detail', pk=pk)
+
 
 

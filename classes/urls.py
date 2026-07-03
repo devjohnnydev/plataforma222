@@ -18,5 +18,12 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/<int:lesson_pk>/material/add/', views.add_lesson_material_view, name='add_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/submit/', views.submit_lesson_material_view, name='submit_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/comment/', views.comment_lesson_view, name='comment_lesson'),
+    path('classes/<int:pk>/edit/', views.edit_class_view, name='edit'),
+    path('classes/<int:pk>/delete/', views.delete_class_view, name='delete'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/edit/', views.edit_lesson_view, name='edit_lesson'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/delete/', views.delete_lesson_view, name='delete_lesson'),
+    path('classes/<int:pk>/students/<int:student_pk>/remove/', views.remove_student_view, name='remove_student'),
+    path('classes/<int:pk>/checkin/toggle/', views.toggle_checkin_view, name='toggle_checkin'),
+    path('classes/<int:pk>/checkin/', views.student_checkin_view, name='student_checkin'),
     path('classes/<int:pk>/grades/', views.class_grades_view, name='grades'),
 ]
