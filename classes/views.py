@@ -222,3 +222,196 @@ def _check_access(user, cls):
             return
     from django.http import Http404
     raise Http404("Acesso negado a esta turma.")
+
+
+from django.utils import timezone
+
+@login_required
+def class_lessons_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    # Get lessons
+    if request.user.is_teacher() or request.user.is_superadmin():
+        lessons = cls.lessons.all().order_by('order', 'created_at')
+    else:
+        lessons = cls.lessons.filter(is_published=True).order_by('order', 'created_at')
+
+    total_lessons = cls.lessons.count()
+    published_lessons = cls.lessons.filter(is_published=True).count()
+    progress_percent = int((published_lessons / total_lessons) * 100) if total_lessons > 0 else 0
+
+    # Retrieve student submissions
+    user_submissions = {}
+    if request.user.is_student():
+        from .models import LessonSubmission
+        subs = LessonSubmission.objects.filter(student=request.user, lesson__in=lessons)
+        user_submissions = {s.lesson_id: s for s in subs}
+
+    enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
+    
+    # Pre-fetch comments and submissions for lessons to be displayable
+    # We can handle comments in template logic.
+    from courses.models import Material
+    material_types = Material.MaterialType.choices
+
+    context = {
+        'cls': cls,
+        'lessons': lessons,
+        'total_lessons': total_lessons,
+        'published_lessons': published_lessons,
+        'progress_percent': progress_percent,
+        'user_submissions': user_submissions,
+        'enrollments': enrollments,
+        'active_tab': 'lessons',
+        'material_types': material_types,
+    }
+    return render(request, 'classes/class_detail.html', context)
+
+
+@login_required
+@require_POST
+def create_class_lesson_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    title = request.POST.get('title', '').strip()
+    content = request.POST.get('content', '').strip()
+    is_published = request.POST.get('is_published') == 'on'
+    publish_date_str = request.POST.get('publish_date', '')
+
+    from django.utils.dateparse import parse_date
+    publish_date = parse_date(publish_date_str) if publish_date_str else None
+
+    # If is_published is set, make sure publish_date is set to today if not provided
+    if is_published and not publish_date:
+        publish_date = timezone.now().date()
+
+    if title:
+        from courses.models import Lesson
+        max_order = cls.lessons.count()
+        Lesson.objects.create(
+            target_class=cls,
+            title=title,
+            content=content,
+            is_published=is_published,
+            publish_date=publish_date,
+            order=max_order + 1
+        )
+        messages.success(request, 'Aula adicionada com sucesso.')
+    else:
+        messages.error(request, 'O título da aula é obrigatório.')
+
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def publish_class_lesson_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    lesson.is_published = True
+    lesson.publish_date = timezone.now().date()
+    lesson.save()
+    messages.success(request, f'Aula "{lesson.title}" publicada com sucesso!')
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def add_lesson_material_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson, Material
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+
+    title = request.POST.get('title', '').strip()
+    material_type = request.POST.get('material_type', 'FILE')
+    url = request.POST.get('url', '').strip()
+    file = request.FILES.get('file')
+
+    if title:
+        Material.objects.create(
+            lesson=lesson,
+            title=title,
+            material_type=material_type,
+            url=url,
+            file=file
+        )
+        messages.success(request, 'Material anexado com sucesso.')
+    else:
+        messages.error(request, 'O título do material é obrigatório.')
+
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def submit_lesson_material_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    if not request.user.is_student():
+        messages.error(request, 'Apenas alunos podem devolver material.')
+        return redirect('classes:lessons', pk=pk)
+
+    from courses.models import Lesson
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls, is_published=True)
+
+    text_content = request.POST.get('text_content', '').strip()
+    file = request.FILES.get('file')
+
+    from .models import LessonSubmission
+    submission, created = LessonSubmission.objects.update_or_create(
+        lesson=lesson,
+        student=request.user,
+        defaults={
+            'text_content': text_content,
+        }
+    )
+    if file:
+        submission.file = file
+        submission.save()
+
+    messages.success(request, 'Material devolvido com sucesso!')
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def comment_lesson_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    from courses.models import Lesson
+    if request.user.is_student():
+        lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls, is_published=True)
+        student_target = request.user
+    else:
+        lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+        student_pk = request.POST.get('student_pk')
+        from accounts.models import User
+        student_target = get_object_or_404(User, pk=student_pk)
+
+    content = request.POST.get('content', '').strip()
+    if content:
+        from .models import LessonComment
+        LessonComment.objects.create(
+            lesson=lesson,
+            author=request.user,
+            student=student_target,
+            content=content
+        )
+        messages.success(request, 'Comentário enviado.')
+    else:
+        messages.error(request, 'O comentário não pode ser vazio.')
+
+    return redirect('classes:lessons', pk=pk)
+

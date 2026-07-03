@@ -94,18 +94,25 @@ class Module(models.Model):
 
 
 class Lesson(models.Model):
-    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='lessons', verbose_name='Módulo')
+    module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='lessons', null=True, blank=True, verbose_name='Módulo')
+    target_class = models.ForeignKey('classes.Class', on_delete=models.CASCADE, related_name='lessons', null=True, blank=True, verbose_name='Turma')
     title = models.CharField(max_length=255, verbose_name='Título')
     content = models.TextField(blank=True, null=True, verbose_name='Conteúdo')
     order = models.PositiveIntegerField(default=0, verbose_name='Ordem')
     duration_minutes = models.PositiveIntegerField(default=0, verbose_name='Duração (min)')
+    is_published = models.BooleanField(default=False, verbose_name='Publicada')
+    publish_date = models.DateField(blank=True, null=True, verbose_name='Data de Publicação')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['order']
 
     def __str__(self):
-        return f"{self.module.title} — {self.title}"
+        if self.module:
+            return f"{self.module.title} — {self.title}"
+        elif self.target_class:
+            return f"{self.target_class.name} — {self.title}"
+        return self.title
 
 
 class Material(models.Model):

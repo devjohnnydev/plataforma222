@@ -35,3 +35,17 @@ class StreamPostAdmin(admin.ModelAdmin):
 class StreamCommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'post', 'created_at')
     search_fields = ('author__username', 'content')
+
+
+from .models import LessonSubmission, LessonComment
+
+@admin.register(LessonSubmission)
+class LessonSubmissionAdmin(admin.ModelAdmin):
+    list_display = ('student', 'lesson', 'submitted_at')
+    search_fields = ('student__username', 'lesson__title')
+
+@admin.register(LessonComment)
+class LessonCommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'lesson', 'created_at')
+    search_fields = ('author__username', 'lesson__title')
+

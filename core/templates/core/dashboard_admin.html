@@ -86,9 +86,20 @@
                     <p class="text-muted small mb-0">{{ teacher.email }}</p>
                 </div>
             </div>
-            <a href="/admin/accounts/user/{{ teacher.pk }}/change/" class="btn btn-sm btn-outline-brand rounded-pill">
-                <i class="bi bi-box-arrow-up-right me-1"></i>Revisar no Admin
-            </a>
+            <div class="d-flex gap-2">
+                <form method="POST" action="{% url 'accounts:approve_teacher' pk=teacher.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                        <i class="bi bi-check-circle me-1"></i>Aprovar
+                    </button>
+                </form>
+                <form method="POST" action="{% url 'accounts:reject_teacher' pk=teacher.pk %}" onsubmit="return confirm('Tem certeza que deseja recusar este professor?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                        <i class="bi bi-x-circle me-1"></i>Recusar
+                    </button>
+                </form>
+            </div>
         </div>
         {% endfor %}
     </div>

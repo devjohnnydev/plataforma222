@@ -140,3 +140,36 @@ class Attendance(models.Model):
     def __str__(self):
         status = "✓" if self.present else "✗"
         return f"{status} {self.student.username} — {self.date}"
+
+
+class LessonSubmission(models.Model):
+    lesson = models.ForeignKey('courses.Lesson', on_delete=models.CASCADE, related_name='lesson_submissions', verbose_name='Aula')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_submissions', verbose_name='Aluno')
+    file = models.FileField(upload_to='lesson_submissions/', blank=True, null=True, verbose_name='Arquivo')
+    text_content = models.TextField(blank=True, null=True, verbose_name='Conteúdo de Texto')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('lesson', 'student')
+        verbose_name = 'Entrega de Aula'
+        verbose_name_plural = 'Entregas de Aula'
+
+    def __str__(self):
+        return f"Entrega de {self.student.username} para {self.lesson.title}"
+
+
+class LessonComment(models.Model):
+    lesson = models.ForeignKey('courses.Lesson', on_delete=models.CASCADE, related_name='lesson_comments', verbose_name='Aula')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_comments', verbose_name='Autor')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_private_comments', null=True, blank=True, verbose_name='Aluno do Chat Privado')
+    content = models.TextField(verbose_name='Conteúdo')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = 'Comentário da Aula'
+        verbose_name_plural = 'Comentários da Aula'
+
+    def __str__(self):
+        return f"Comentário de {self.author.username} em {self.lesson.title}"
+

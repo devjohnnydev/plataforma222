@@ -45,6 +45,12 @@
             </a>
         </li>
         <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'lessons' %}active{% endif %}"
+               href="{% url 'classes:lessons' pk=cls.pk %}">
+                <i class="bi bi-journal-bookmark me-1"></i>Aulas
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link {% if active_tab == 'classwork' %}active{% endif %}"
                href="{% url 'classes:classwork' pk=cls.pk %}">
                 <i class="bi bi-journal-check me-1"></i>Atividades
@@ -260,6 +266,367 @@
                 <p class="mt-2">Nenhum aluno matriculado ainda.</p>
             </div>
         {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- ── LESSONS TAB ── -->
+<!-- ══════════════════════════════════════════════════════════ -->
+{% if active_tab == 'lessons' %}
+<div class="row">
+    <!-- Progress Bar & Actions -->
+    <div class="col-12 mb-4">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-journal-bookmark text-brand me-2"></i>Aulas da Turma</h5>
+                    <p class="text-muted small mb-0">{{ published_lessons }} de {{ total_lessons }} aulas executadas</p>
+                </div>
+                {% if user == cls.teacher or user.is_superadmin %}
+                    <button class="btn btn-brand rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createLessonModal">
+                        <i class="bi bi-plus-lg me-2"></i>Nova Aula
+                    </button>
+                {% endif %}
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress bg-secondary bg-opacity-25 rounded-pill" style="height: 10px;">
+                <div class="progress-bar bg-success rounded-pill" role="progressbar" style="width: {{ progress_percent }}%;" aria-valuenow="{{ progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="text-end mt-1">
+                <small class="fw-bold text-success">{{ progress_percent }}% Concluído</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lessons List -->
+    <div class="col-12">
+        {% if lessons %}
+            <div class="d-flex flex-column gap-4">
+                {% for lesson in lessons %}
+                <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-transparent border-bottom border-secondary p-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                {% if lesson.is_published %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="bi bi-check-circle me-1"></i>Postada</span>
+                                    {% if lesson.publish_date %}
+                                        <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{ lesson.publish_date|date:"d/m/Y" }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i class="bi bi-file-earmark-diff me-1"></i>Rascunho</span>
+                                {% endif %}
+                            </div>
+                            <h5 class="fw-bold mb-0">Aula {{ forloop.counter }}: {{ lesson.title }}</h5>
+                        </div>
+                        <div class="d-flex gap-2">
+                            {% if user == cls.teacher or user.is_superadmin %}
+                                {% if not lesson.is_published %}
+                                    <form method="POST" action="{% url 'classes:publish_lesson' pk=cls.pk lesson_pk=lesson.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                            <i class="bi bi-send me-1"></i>Postar Aula
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addMaterialModal-{{ lesson.pk }}">
+                                    <i class="bi bi-plus-lg me-1"></i>Anexar Arquivo/Notion
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        {% if lesson.content %}
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-2">Descrição / Conteúdo</h6>
+                                <p class="text-light opacity-75 mb-0" style="white-space: pre-wrap;">{{ lesson.content }}</p>
+                            </div>
+                        {% endif %}
+
+                        <!-- Support Materials Section -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-folder2-open text-brand me-2"></i>Materiais de Apoio</h6>
+                            {% if lesson.materials.all %}
+                                <div class="row g-2">
+                                    {% for mat in lesson.materials.all %}
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="p-3 bg-body rounded-3 border border-secondary d-flex align-items-center gap-3">
+                                                <div class="fs-3"><i class="{{ mat.icon }}"></i></div>
+                                                <div class="text-truncate flex-grow-1">
+                                                    <div class="fw-bold small text-truncate">{{ mat.title }}</div>
+                                                    <small class="text-muted">{{ mat.get_material_type_display }}</small>
+                                                </div>
+                                                {% if mat.url %}
+                                                    <a href="{{ mat.url }}" target="_blank" class="btn btn-sm btn-outline-brand rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                                        <i class="bi bi-box-arrow-up-right"></i>
+                                                    </a>
+                                                {% elif mat.file %}
+                                                    <a href="{{ mat.file.url }}" download class="btn btn-sm btn-outline-brand rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                                        <i class="bi bi-download"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted small fst-italic mb-0">Nenhum material anexado a esta aula.</p>
+                            {% endif %}
+                        </div>
+
+                        <hr class="border-secondary my-4">
+
+                        <!-- Submissions and Private Comments Grid -->
+                        <div class="row g-4">
+                            <!-- Student Return/Submission Section -->
+                            <div class="col-lg-6">
+                                <div class="p-4 bg-body rounded-4 border border-secondary h-100">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-box-arrow-in-down text-brand me-2"></i>Entregar Atividade / Material</h6>
+                                    
+                                    {% if user.is_student %}
+                                        {% with sub=user_submissions|default:{}|dict_get:lesson.pk %}
+                                            {% if sub %}
+                                                <div class="alert alert-success bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-3 mb-3">
+                                                    <i class="bi bi-check-circle-fill me-2"></i>Material entregue em {{ sub.submitted_at|date:"d/m/Y H:i" }}
+                                                </div>
+                                                {% if sub.text_content %}
+                                                    <p class="small text-muted mb-2"><strong>Seu texto:</strong> {{ sub.text_content }}</p>
+                                                {% endif %}
+                                                {% if sub.file %}
+                                                    <a href="{{ sub.file.url }}" download class="btn btn-sm btn-outline-light rounded-pill px-3">
+                                                        <i class="bi bi-file-earmark-arrow-down me-1"></i>Ver arquivo enviado
+                                                    </a>
+                                                {% endif %}
+                                                <hr class="border-secondary my-3">
+                                            {% endif %}
+
+                                            <!-- Re-submit / Edit Form -->
+                                            <form method="POST" action="{% url 'classes:submit_lesson_material' pk=cls.pk lesson_pk=lesson.pk %}" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Nota/Texto explicativo (Opcional)</label>
+                                                    <textarea class="form-control bg-body-tertiary border-secondary text-light" name="text_content" rows="2" placeholder="Digite uma observação para o professor..."></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-semibold">Anexar Arquivo (PDF, Word, etc.)</label>
+                                                    <input type="file" class="form-control bg-body-tertiary border-secondary text-light" name="file">
+                                                </div>
+                                                <button type="submit" class="btn btn-brand btn-sm rounded-pill w-100">
+                                                    <i class="bi bi-cloud-arrow-up me-1"></i>{% if sub %}Atualizar Entrega{% else %}Enviar Entrega{% endif %}
+                                                </button>
+                                            </form>
+                                        {% endwith %}
+                                    {% else %}
+                                        <!-- Teacher view of submissions -->
+                                        <div style="max-height: 250px; overflow-y: auto;">
+                                            {% if lesson.lesson_submissions.all %}
+                                                <div class="list-group list-group-flush">
+                                                    {% for sub in lesson.lesson_submissions.all %}
+                                                        <div class="list-group-item bg-transparent px-0 py-3 border-secondary">
+                                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-light font-monospace" style="width:28px;height:28px;font-size:0.8rem;">
+                                                                    {{ sub.student.get_full_name|first|upper|default:sub.student.username|first|upper }}
+                                                                </div>
+                                                                <div>
+                                                                    <strong class="small">{{ sub.student.get_full_name|default:sub.student.username }}</strong>
+                                                                    <div class="text-muted" style="font-size:0.7rem;">{{ sub.submitted_at|date:"d/m/Y H:i" }}</div>
+                                                                </div>
+                                                            </div>
+                                                            {% if sub.text_content %}
+                                                                <p class="small mb-2 bg-body-tertiary p-2 rounded">{{ sub.text_content }}</p>
+                                                            {% endif %}
+                                                            {% if sub.file %}
+                                                                <a href="{{ sub.file.url }}" download class="btn btn-xs btn-outline-brand rounded-pill py-1 px-2 text-decoration-none" style="font-size: 0.75rem;">
+                                                                    <i class="bi bi-file-earmark-arrow-down me-1"></i>Baixar Anexo
+                                                                </a>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% else %}
+                                                <p class="text-muted small fst-italic mb-0">Nenhuma entrega de aluno para esta aula ainda.</p>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Individual Private Comments Section -->
+                            <div class="col-lg-6">
+                                <div class="p-4 bg-body rounded-4 border border-secondary h-100">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-chat-right-text text-brand me-2"></i>Comentários Privados (Com Professor)</h6>
+                                    
+                                    {% if user.is_student %}
+                                        <!-- Student Chat view -->
+                                        <div class="d-flex flex-column gap-3 mb-3" style="max-height: 200px; overflow-y: auto;">
+                                            {% for comment in lesson.lesson_comments.all %}
+                                                {% if comment.student == user %}
+                                                    <div class="d-flex flex-column {% if comment.author == user %}align-items-end{% else %}align-items-start{% endif %}">
+                                                        <div class="p-3 rounded-4 small {% if comment.author == user %}bg-brand text-dark rounded-bottom-end-0{% else %}bg-body-tertiary text-light rounded-bottom-start-0{% endif %}" style="max-width: 85%;">
+                                                            <strong>{% if comment.author == user %}Você{% else %}Prof. {{ comment.author.get_full_name|default:comment.author.username }}{% endif %}</strong>
+                                                            <p class="mb-0 mt-1">{{ comment.content }}</p>
+                                                        </div>
+                                                        <span class="text-muted mt-1" style="font-size:0.65rem;">{{ comment.created_at|date:"H:i" }}</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% empty %}
+                                                <p class="text-muted small fst-italic mb-0">Envie um comentário privado para o seu professor.</p>
+                                            {% endfor %}
+                                        </div>
+                                        <form method="POST" action="{% url 'classes:comment_lesson' pk=cls.pk lesson_pk=lesson.pk %}">
+                                            {% csrf_token %}
+                                            <div class="input-group">
+                                                <input type="text" class="form-control bg-body-tertiary border-secondary text-light" name="content" placeholder="Escreva uma mensagem..." required>
+                                                <button class="btn btn-brand" type="submit"><i class="bi bi-send"></i></button>
+                                            </div>
+                                        </form>
+                                    {% else %}
+                                        <!-- Teacher Chat view: List of student threads -->
+                                        <div class="accordion accordion-flush" id="commentsAccordion-{{ lesson.pk }}">
+                                            {% for enrollment in enrollments %}
+                                                <div class="accordion-item bg-transparent border-bottom border-secondary">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button bg-transparent text-light collapsed py-2 px-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#studentChat-{{ lesson.pk }}-{{ enrollment.student.pk }}">
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-light font-monospace" style="width:24px;height:24px;font-size:0.75rem;">
+                                                                    {{ enrollment.student.get_full_name|first|upper|default:enrollment.student.username|first|upper }}
+                                                                </div>
+                                                                <span class="small">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</span>
+                                                            </div>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="studentChat-{{ lesson.pk }}-{{ enrollment.student.pk }}" class="accordion-collapse collapse" data-bs-parent="#commentsAccordion-{{ lesson.pk }}">
+                                                        <div class="accordion-body px-0 py-3">
+                                                            <div class="d-flex flex-column gap-2 mb-3" style="max-height: 180px; overflow-y: auto;">
+                                                                {% for comment in lesson.lesson_comments.all %}
+                                                                    {% if comment.student == enrollment.student %}
+                                                                        <div class="d-flex flex-column {% if comment.author == user %}align-items-end{% else %}align-items-start{% endif %}">
+                                                                            <div class="p-2 rounded-3 small {% if comment.author == user %}bg-brand text-dark{% else %}bg-body-tertiary text-light{% endif %}" style="max-width: 85%;">
+                                                                                <strong>{% if comment.author == user %}Você{% else %}{{ comment.author.get_full_name|default:comment.author.username }}{% endif %}</strong>
+                                                                                <p class="mb-0 mt-1">{{ comment.content }}</p>
+                                                                            </div>
+                                                                            <span class="text-muted mt-1" style="font-size:0.6rem;">{{ comment.created_at|date:"H:i" }}</span>
+                                                                        </div>
+                                                                    {% endif %}
+                                                                {% endfor %}
+                                                            </div>
+                                                            <form method="POST" action="{% url 'classes:comment_lesson' pk=cls.pk lesson_pk=lesson.pk %}">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="student_pk" value="{{ enrollment.student.pk }}">
+                                                                <div class="input-group input-group-sm">
+                                                                    <input type="text" class="form-control bg-body-tertiary border-secondary text-light" name="content" placeholder="Responder para o aluno..." required>
+                                                                    <button class="btn btn-brand" type="submit"><i class="bi bi-send"></i></button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% empty %}
+                                                <p class="text-muted small fst-italic mb-0">Nenhum aluno matriculado na turma.</p>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Add Material Modal per Lesson -->
+                <div class="modal fade" id="addMaterialModal-{{ lesson.pk }}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <form method="POST" action="{% url 'classes:add_lesson_material' pk=cls.pk lesson_pk=lesson.pk %}" enctype="multipart/form-data" class="modal-content bg-body-tertiary">
+                            {% csrf_token %}
+                            <div class="modal-header border-secondary">
+                                <h5 class="modal-title fw-bold">Anexar Material à Aula</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Título do Material</label>
+                                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Slides da Aula ou Notion Link" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Tipo</label>
+                                    <select class="form-select bg-body" name="material_type">
+                                        {% for value, label in material_types %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Link (URL)</label>
+                                    <input type="url" class="form-control bg-body" name="url" placeholder="https://notion.so/... ou youtube.com/...">
+                                    <div class="form-text text-muted">Use para links do Notion, vídeos do YouTube, etc.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Arquivo (Opcional)</label>
+                                    <input type="file" class="form-control bg-body" name="file">
+                                    <div class="form-text text-muted">Para PDFs, Words, Slides, etc.</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-brand rounded-pill">Adicionar Material</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="display-2 opacity-15 mb-3"><i class="bi bi-journal-bookmark"></i></div>
+                <h5 class="text-muted">Nenhuma aula criada ainda</h5>
+                {% if user == cls.teacher or user.is_superadmin %}
+                    <p class="text-muted small mb-3">Crie sua primeira aula e adicione materiais para os alunos.</p>
+                    <button class="btn btn-brand rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createLessonModal">
+                        <i class="bi bi-plus-lg me-2"></i>Criar Primeira Aula
+                    </button>
+                {% else %}
+                    <p class="text-muted small">Seu professor ainda não publicou nenhuma aula.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Lesson Modal -->
+<div class="modal fade" id="createLessonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'classes:create_lesson' pk=cls.pk %}" class="modal-content bg-body-tertiary">
+            {% csrf_token %}
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold">Criar Nova Aula</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Título da Aula</label>
+                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Aula 1: Introdução ao Curso" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Descrição / Conteúdo</label>
+                    <textarea class="form-control bg-body" name="content" rows="4" placeholder="Descreva os temas abordados nesta aula..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Data de Publicação</label>
+                    <input type="date" class="form-control bg-body" name="publish_date">
+                    <div class="form-text text-muted">Defina uma data ou marque abaixo para postar imediatamente.</div>
+                </div>
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" name="is_published" id="publishImmediatelyCheck">
+                    <label class="form-check-label fw-semibold" for="publishImmediatelyCheck">Postar imediatamente (Publicada)</label>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-brand rounded-pill">Criar e Salvar</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endif %}

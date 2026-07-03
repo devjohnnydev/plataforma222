@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -124,4 +125,28 @@ def teacher_apply_view(request):
             return redirect('accounts:login')
 
     return render(request, 'accounts/teacher_apply.html')
+
+
+@login_required
+def approve_teacher(request, pk):
+    if not request.user.is_superadmin():
+        return HttpResponse(status=403)
+    teacher = get_object_or_404(User, pk=pk, role=User.Role.TEACHER)
+    teacher.is_active = True
+    teacher.approved_by_admin = True
+    teacher.save()
+    messages.success(request, f"Professor {teacher.get_full_name() or teacher.username} aprovado com sucesso!")
+    return redirect('core:home')
+
+
+@login_required
+def reject_teacher(request, pk):
+    if not request.user.is_superadmin():
+        return HttpResponse(status=403)
+    teacher = get_object_or_404(User, pk=pk, role=User.Role.TEACHER)
+    name = teacher.get_full_name() or teacher.username
+    teacher.delete()
+    messages.warning(request, f"Solicitação do professor {name} recusada e conta removida.")
+    return redirect('core:home')
+
 
