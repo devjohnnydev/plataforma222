@@ -27,14 +27,14 @@
     <div class="col-md-6 col-xl-4">
         <a href="{% url 'classes:detail' pk=cls.pk %}" class="text-decoration-none">
             <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 h-100 overflow-hidden class-card">
-                <!-- Colored Header -->
+                <!-- Colored/Image Header -->
                 <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden"
-                     style="background-color: {{ cls.color }};">
+                     style="{% if cls.banner_image %}background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%), url('{{ cls.banner_image.url }}') center/cover no-repeat; min-height: 100px;{% else %}background-color: {{ cls.color }};{% endif %}">
                     <div class="position-absolute top-0 end-0 p-3 opacity-50" style="transform: scale(3.5) translate(10px, -5px);">
-                        <i class="bi bi-mortarboard text-dark"></i>
+                        <i class="bi bi-mortarboard {% if cls.banner_image %}text-light{% else %}text-dark{% endif %}"></i>
                     </div>
-                    <h5 class="fw-bold mb-1 text-dark position-relative">{{ cls.name }}</h5>
-                    <p class="mb-0 text-dark opacity-75 small position-relative">
+                    <h5 class="fw-bold mb-1 position-relative {% if cls.banner_image %}text-light{% else %}text-dark{% endif %}">{{ cls.name }}</h5>
+                    <p class="mb-0 small position-relative {% if cls.banner_image %}text-light opacity-90{% else %}text-dark opacity-75{% endif %}">
                         {% if cls.course %}{{ cls.course.title }}{% else %}Sem curso vinculado{% endif %}
                     </p>
                 </div>

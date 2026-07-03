@@ -18,7 +18,7 @@
                 <h2 class="fw-bold mb-1">Criar Nova Turma</h2>
                 <p class="text-muted small mb-4">Preencha os dados abaixo para criar sua turma. Um código de acesso único será gerado automaticamente.</p>
 
-                <form method="POST">
+                <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <!-- Class Name -->
@@ -51,6 +51,13 @@
                                 <a href="#" class="text-brand">Criar curso</a>
                             {% endif %}
                         </div>
+                    </div>
+
+                    <!-- Banner Image -->
+                    <div class="mb-3">
+                        <label for="banner_image" class="form-label fw-semibold">Imagem de Banner (Opcional)</label>
+                        <input type="file" class="form-control bg-body" id="banner_image" name="banner_image" accept="image/*">
+                        <div class="form-text">Adicione uma imagem personalizada para o banner no lugar da cor padrão.</div>
                     </div>
 
                     <div class="mb-4">

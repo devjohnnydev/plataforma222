@@ -20,6 +20,7 @@ class Class(models.Model):
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='teaching_classes', verbose_name='Professor')
     join_code = models.CharField(max_length=20, unique=True, default=generate_join_code, verbose_name='Código de Acesso')
     color = models.CharField(max_length=7, default='#4285f4', verbose_name='Cor da Turma')
+    banner_image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name='Imagem de Banner')
     is_active = models.BooleanField(default=True, verbose_name='Ativa')
     created_at = models.DateTimeField(auto_now_add=True)
 

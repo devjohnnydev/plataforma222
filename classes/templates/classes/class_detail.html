@@ -6,30 +6,34 @@
 {% block content %}
 
 <!-- ── Class Banner ── -->
-<div class="class-banner mb-0 rounded-bottom-0" style="background-color: {{ cls.color }};">
+<div class="class-banner mb-0 rounded-bottom-0" style="{% if cls.banner_image %}background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%), url('{{ cls.banner_image.url }}') center/cover no-repeat; min-height: 180px;{% else %}background-color: {{ cls.color }};{% endif %}">
     <div class="d-flex justify-content-between align-items-start">
         <div>
-            <p class="text-dark opacity-75 small mb-1">
-                <a href="{% url 'classes:list' %}" class="text-dark opacity-75 text-decoration-none">
+            <p class="mb-1">
+                <a href="{% url 'classes:list' %}" class="text-decoration-none {% if cls.banner_image %}text-light opacity-75{% else %}text-dark opacity-75{% endif %}">
                     <i class="bi bi-arrow-left me-1"></i>Turmas
                 </a>
             </p>
-            <h1 class="fw-bold text-dark mb-1 fs-2">{{ cls.name }}</h1>
-            {% if cls.course %}<p class="text-dark opacity-75 mb-2">{{ cls.course.title }}</p>{% endif %}
+            <h1 class="fw-bold mb-1 fs-2 {% if cls.banner_image %}text-light{% else %}text-dark{% endif %}">{{ cls.name }}</h1>
+            {% if cls.course %}<p class="mb-2 {% if cls.banner_image %}text-light opacity-90{% else %}text-dark opacity-75{% endif %}">{{ cls.course.title }}</p>{% endif %}
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                <span class="text-dark opacity-75 small">
+                <span class="small {% if cls.banner_image %}text-light opacity-90{% else %}text-dark opacity-75{% endif %}">
                     <i class="bi bi-person me-1"></i>
                     {% if user == cls.teacher %}Você é o professor{% else %}Prof. {{ cls.teacher.get_full_name|default:cls.teacher.username }}{% endif %}
                 </span>
-                <span class="text-dark opacity-75 small">
+                <span class="small {% if cls.banner_image %}text-light opacity-90{% else %}text-dark opacity-75{% endif %}">
                     <i class="bi bi-people me-1"></i>{{ cls.student_count }} aluno{{ cls.student_count|pluralize:"s" }}
                 </span>
             </div>
         </div>
         {% if user == cls.teacher or user.is_superadmin %}
         <div class="d-flex flex-column align-items-end gap-2">
-            <div class="join-code-badge text-dark">{{ cls.join_code }}</div>
-            <small class="text-dark opacity-75">Código de acesso</small>
+            <div class="join-code-badge {% if cls.banner_image %}bg-light text-dark{% else %}text-dark{% endif %} d-flex align-items-center gap-2" 
+                 data-bs-toggle="modal" data-bs-target="#joinCodeZoomModal" title="Ampliar Código" style="cursor: pointer;">
+                {{ cls.join_code }}
+                <i class="bi bi-aspect-ratio fs-6"></i>
+            </div>
+            <small class="{% if cls.banner_image %}text-light opacity-75{% else %}text-dark opacity-75{% endif %}">Código de acesso</small>
         </div>
         {% endif %}
     </div>
@@ -776,6 +780,24 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Join Code Zoom Modal -->
+<div class="modal fade" id="joinCodeZoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-secondary rounded-4 shadow">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-5">
+                <h5 class="text-secondary small text-uppercase fw-bold mb-3" style="letter-spacing: .1em;">Código de Acesso da Turma</h5>
+                <div class="display-1 fw-bold text-brand font-monospace user-select-all my-4" style="font-size: 5.5rem; letter-spacing: 0.15em;">
+                    {{ cls.join_code }}
+                </div>
+                <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Clique duas vezes no código acima para copiar.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 

@@ -45,6 +45,7 @@ def create_class_view(request):
         description = request.POST.get('description', '').strip()
         course_id = request.POST.get('course')
         color = request.POST.get('color', '#FFE81F')
+        banner_image = request.FILES.get('banner_image')
 
         if not name:
             messages.error(request, 'O nome da turma é obrigatório.')
@@ -56,6 +57,7 @@ def create_class_view(request):
                 course=course,
                 teacher=request.user,
                 color=color,
+                banner_image=banner_image,
             )
             messages.success(request, f'Turma "{new_class.name}" criada com sucesso! Código: {new_class.join_code}')
             return redirect('classes:detail', pk=new_class.pk)
