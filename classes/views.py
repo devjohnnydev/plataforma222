@@ -188,10 +188,20 @@ def class_members_view(request, pk):
     _check_access(request.user, cls)
 
     enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
+
+    # Fetch today's attendance status for students
+    today_attendance = {}
+    if request.user == cls.teacher or request.user.is_superadmin():
+        from .models import Attendance
+        today = timezone.now().date()
+        att_list = Attendance.objects.filter(enrolled_class=cls, date=today)
+        today_attendance = {att.student_id: att.present for att in att_list}
+
     context = {
         'cls': cls,
         'enrollments': enrollments,
         'active_tab': 'members',
+        'today_attendance': today_attendance,
     }
     return render(request, 'classes/class_detail.html', context)
 
@@ -776,6 +786,42 @@ def duplicate_class_view(request, pk):
         return redirect('classes:detail', pk=new_class.pk)
 
     return redirect('classes:detail', pk=pk)
+
+
+@login_required
+@require_POST
+def teacher_update_attendance_view(request, pk, student_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from accounts.models import User
+    student = get_object_or_404(User, pk=student_pk)
+    status = request.POST.get('status')
+    today = timezone.now().date()
+
+    from .models import Attendance
+    attendance, created = Attendance.objects.get_or_create(
+        enrolled_class=cls,
+        student=student,
+        date=today
+    )
+
+    if status == 'present':
+        attendance.present = True
+    else:
+        attendance.present = False
+
+    attendance.save()
+
+    if request.headers.get('HX-Request'):
+        return render(request, 'classes/_attendance_controls.html', {
+            'cls': cls,
+            'student': student,
+            'is_present': attendance.present
+        })
+
+    return redirect('classes:members', pk=pk)
 
 
 

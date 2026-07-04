@@ -25,6 +25,7 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/<int:lesson_pk>/edit/', views.edit_lesson_view, name='edit_lesson'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/delete/', views.delete_lesson_view, name='delete_lesson'),
     path('classes/<int:pk>/students/<int:student_pk>/remove/', views.remove_student_view, name='remove_student'),
+    path('classes/<int:pk>/students/<int:student_pk>/attendance/', views.teacher_update_attendance_view, name='update_attendance'),
     path('classes/<int:pk>/checkin/toggle/', views.toggle_checkin_view, name='toggle_checkin'),
     path('classes/<int:pk>/checkin/', views.student_checkin_view, name='student_checkin'),
     path('classes/<int:pk>/grades/', views.class_grades_view, name='grades'),

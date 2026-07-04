@@ -1,0 +1,29 @@
+<div class="d-flex align-items-center gap-2" id="attendance-controls-{{ student.pk }}">
+    {% if is_present == True %}
+        <span class="badge bg-success bg-opacity-25 text-success me-1 px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Presente</span>
+        <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=student.pk %}"
+              hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=student.pk %}"
+              hx-target="#attendance-controls-{{ student.pk }}"
+              hx-swap="outerHTML"
+              class="m-0">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="absent">
+            <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
+                Falta
+            </button>
+        </form>
+    {% else %}
+        <span class="badge bg-danger bg-opacity-25 text-danger me-1 px-2 py-1"><i class="bi bi-x-circle-fill me-1"></i>Ausente</span>
+        <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=student.pk %}"
+              hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=student.pk %}"
+              hx-target="#attendance-controls-{{ student.pk }}"
+              hx-swap="outerHTML"
+              class="m-0">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="present">
+            <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
+                Presença
+            </button>
+        </form>
+    {% endif %}
+</div>
