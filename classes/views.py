@@ -741,46 +741,52 @@ def duplicate_class_view(request, pk):
             messages.error(request, "O nome da turma é obrigatório.")
             return redirect('classes:detail', pk=pk)
 
-        # Create the new class
-        new_class = Class.objects.create(
-            name=name,
-            description=description or original_class.description,
-            course=original_class.course,
-            teacher=original_class.teacher,
-            color=color,
-            banner_image=original_class.banner_image,
-            checkin_open=False,
-            is_active=True
-        )
-
-        # Copy all lessons
-        from courses.models import Lesson, Material
-        original_lessons = original_class.lessons.all().order_by('order', 'created_at')
-
-        for lesson in original_lessons:
-            # Create lesson copy as a draft
-            new_lesson = Lesson.objects.create(
-                module=lesson.module,
-                target_class=new_class,
-                title=lesson.title,
-                content=lesson.content,
-                order=lesson.order,
-                duration_minutes=lesson.duration_minutes,
-                is_published=False,  # Draft
-                publish_date=None
-            )
-
-            # Copy support materials
-            for mat in lesson.materials.all():
-                Material.objects.create(
-                    lesson=new_lesson,
-                    module=mat.module,
-                    title=mat.title,
-                    material_type=mat.material_type,
-                    file=mat.file,
-                    url=mat.url,
-                    description=mat.description
+        from django.db import transaction
+        try:
+            with transaction.atomic():
+                # Create the new class
+                new_class = Class.objects.create(
+                    name=name,
+                    description=description or original_class.description,
+                    course=original_class.course,
+                    teacher=original_class.teacher,
+                    color=color,
+                    banner_image=original_class.banner_image,
+                    checkin_open=False,
+                    is_active=True
                 )
+
+                # Copy all lessons
+                from courses.models import Lesson, Material
+                original_lessons = original_class.lessons.all().order_by('order', 'created_at')
+
+                for lesson in original_lessons:
+                    # Create lesson copy as a draft
+                    new_lesson = Lesson.objects.create(
+                        module=lesson.module,
+                        target_class=new_class,
+                        title=lesson.title,
+                        content=lesson.content,
+                        order=lesson.order,
+                        duration_minutes=lesson.duration_minutes,
+                        is_published=False,  # Draft
+                        publish_date=None
+                    )
+
+                    # Copy support materials
+                    for mat in lesson.materials.all():
+                        Material.objects.create(
+                            lesson=new_lesson,
+                            module=mat.module,
+                            title=mat.title,
+                            material_type=mat.material_type,
+                            file=mat.file,
+                            url=mat.url,
+                            description=mat.description
+                        )
+        except Exception as e:
+            messages.error(request, f"Erro ao duplicar turma: {str(e)}")
+            return redirect('classes:detail', pk=pk)
 
         messages.success(request, f"Turma '{original_class.name}' duplicada com sucesso para '{new_class.name}'! Todas as aulas foram copiadas como rascunhos.")
         return redirect('classes:detail', pk=new_class.pk)
