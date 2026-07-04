@@ -23,4 +23,22 @@ else:
     print('Superusuário já existe.')
 "
 
+echo "==> Criando/atualizando conta do professor Johnny (se não existir)..."
+python manage.py shell -c "
+from accounts.models import User
+u, created = User.objects.get_or_create(
+    email='johnny.braga@docente.senai.br',
+    defaults={
+        'username': 'johnny.braga',
+        'role': 'TEACHER',
+        'approved_by_admin': True
+    }
+)
+u.role = 'TEACHER'
+u.approved_by_admin = True
+u.set_password('Jb@46431194')
+u.save()
+print('Conta do professor configurada com sucesso!')
+"
+
 echo "==> Release concluído com sucesso!"
