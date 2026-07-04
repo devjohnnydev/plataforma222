@@ -69,6 +69,10 @@
             <button class="btn btn-sm {% if cls.banner_image %}btn-outline-light{% else %}btn-outline-dark{% endif %} rounded-pill w-100 mt-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#editClassModal">
                 <i class="bi bi-gear-fill me-1"></i>Configurações
             </button>
+            <!-- Duplicate Class Button -->
+            <button class="btn btn-sm {% if cls.banner_image %}btn-outline-light{% else %}btn-outline-dark{% endif %} rounded-pill w-100 mt-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#duplicateClassModal">
+                <i class="bi bi-copy me-1"></i>Duplicar Turma
+            </button>
         </div>
         {% endif %}
     </div>
@@ -973,6 +977,45 @@
 <form id="deleteClassForm" method="POST" action="{% url 'classes:delete' pk=cls.pk %}">
     {% csrf_token %}
 </form>
+
+<!-- Duplicar Turma Modal -->
+<div class="modal fade" id="duplicateClassModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{% url 'classes:duplicate' pk=cls.pk %}" class="modal-content bg-body-tertiary">
+            {% csrf_token %}
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-copy text-brand me-2"></i>Duplicar Turma</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-start">
+                <p class="text-secondary small mb-3">
+                    Isso criará uma nova turma com a mesma estrutura de aulas e materiais de apoio. Todas as aulas copiadas começarão como <strong>rascunho (não publicadas)</strong> e poderão ser editadas antes que os novos alunos tenham acesso.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nome da Nova Turma</label>
+                    <input type="text" class="form-control bg-body" name="name" value="{{ cls.name }} (Cópia)" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Descrição</label>
+                    <textarea class="form-control bg-body" name="description" rows="3">{{ cls.description|default:"" }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Cor de Identificação</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="color" class="form-control form-control-color bg-body" name="color" value="{{ cls.color }}" style="width: 60px; height: 38px;">
+                        <span class="text-secondary small">Escolha uma nova cor ou mantenha a atual.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary rounded-pill me-2" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-brand rounded-pill px-4">
+                    <i class="bi bi-copy me-1"></i>Duplicar Agora
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}

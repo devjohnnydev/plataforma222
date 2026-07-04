@@ -206,11 +206,25 @@ def _student_dashboard(request):
         submissions__student=request.user
     ).order_by('due_date')[:5]
 
+    from classes.models import Attendance
+    today = timezone.now().date()
+    checked_in_class_ids = Attendance.objects.filter(
+        student=request.user,
+        date=today,
+        present=True
+    ).values_list('enrolled_class_id', flat=True)
+
+    open_checkins = [
+        cls for cls in my_classes
+        if cls.checkin_open and cls.pk not in checked_in_class_ids
+    ]
+
     context = {
         'my_classes': my_classes,
         'upcoming_assignments': upcoming_assignments,
         'overdue_assignments': overdue_assignments,
         'class_count': len(my_classes),
+        'open_checkins': open_checkins,
     }
     return render(request, 'core/dashboard_student.html', context)
 

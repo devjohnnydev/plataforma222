@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -200,9 +200,26 @@ def profile_view(request):
         messages.success(request, "Perfil atualizado com sucesso!")
         return redirect('accounts:profile')
 
+    open_checkins = []
+    if user.is_student():
+        from classes.models import Enrollment, Attendance
+        from django.utils import timezone
+        my_classes = [e.enrolled_class for e in user.enrollments.filter(status='ACTIVE')]
+        today = timezone.now().date()
+        checked_in_class_ids = Attendance.objects.filter(
+            student=user,
+            date=today,
+            present=True
+        ).values_list('enrolled_class_id', flat=True)
+        open_checkins = [
+            cls for cls in my_classes
+            if cls.checkin_open and cls.pk not in checked_in_class_ids
+        ]
+
     default_avatars = ['avatar1.svg', 'avatar2.svg', 'avatar3.svg', 'avatar4.svg', 'avatar5.svg']
     context = {
         'default_avatars': default_avatars,
+        'open_checkins': open_checkins,
     }
     return render(request, 'accounts/profile.html', context)
 
