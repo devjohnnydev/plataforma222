@@ -382,6 +382,18 @@
             <div class="sidebar-overlay" onclick="toggleSidebarMobile()"></div>
             <nav class="sidebar py-3" id="sidebarMenu">
                 <div class="sidebar-sticky px-2">
+                    <!-- Sleek Brand Badge Logo 'B' -->
+                    <div class="d-flex align-items-center gap-2 px-2 mb-4">
+                        <div class="rounded-3 bg-warning text-dark d-flex align-items-center justify-content-center fw-bold shadow-sm" 
+                             style="width: 36px; height: 36px; font-size: 1.3rem; font-family: 'Inter', sans-serif;">
+                            B
+                        </div>
+                        <div>
+                            <div class="fw-bold text-light mb-0" style="font-size: 0.95rem; letter-spacing: -0.3px;">Braga LMS</div>
+                            <div class="text-secondary" style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">LMS Corporativo</div>
+                        </div>
+                    </div>
+
                     <ul class="nav flex-column gap-1">
                         <li class="nav-item">
                             <a class="nav-link {% if request.path == '/' %}active{% endif %} text-body" href="{% url 'core:home' %}">
