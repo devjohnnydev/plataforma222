@@ -191,9 +191,9 @@ def class_members_view(request, pk):
 
     # Fetch today's attendance status for students
     today_attendance = {}
-    if request.user == cls.teacher or request.user.is_superadmin():
+    if request.user.pk == cls.teacher.pk or request.user.is_superadmin():
         from .models import Attendance
-        today = timezone.now().date()
+        today = timezone.localtime(timezone.now()).date()
         att_list = Attendance.objects.filter(enrolled_class=cls, date=today)
         today_attendance = {att.student_id: att.present for att in att_list}
 
@@ -685,7 +685,7 @@ def student_checkin_view(request, pk):
         return redirect('classes:detail', pk=pk)
 
     from .models import Attendance
-    today = timezone.now().date()
+    today = timezone.localtime(timezone.now()).date()
 
     attendance, created = Attendance.objects.get_or_create(
         enrolled_class=cls,
@@ -792,13 +792,13 @@ def duplicate_class_view(request, pk):
 @require_POST
 def teacher_update_attendance_view(request, pk, student_pk):
     cls = get_object_or_404(Class, pk=pk)
-    if not (request.user == cls.teacher or request.user.is_superadmin()):
+    if not (request.user.pk == cls.teacher.pk or request.user.is_superadmin()):
         return HttpResponse(status=403)
 
     from accounts.models import User
     student = get_object_or_404(User, pk=student_pk)
     status = request.POST.get('status')
-    today = timezone.now().date()
+    today = timezone.localtime(timezone.now()).date()
 
     from .models import Attendance
     attendance, created = Attendance.objects.get_or_create(

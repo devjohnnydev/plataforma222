@@ -65,14 +65,7 @@
                 {% endif %}
             </form>
 
-            <!-- Edit Class Button -->
-            <button class="btn btn-sm {% if cls.banner_image %}btn-outline-light{% else %}btn-outline-dark{% endif %} rounded-pill w-100 mt-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#editClassModal">
-                <i class="bi bi-gear-fill me-1"></i>Configurações
-            </button>
-            <!-- Duplicate Class Button -->
-            <button class="btn btn-sm {% if cls.banner_image %}btn-outline-light{% else %}btn-outline-dark{% endif %} rounded-pill w-100 mt-1 fw-semibold" data-bs-toggle="modal" data-bs-target="#duplicateClassModal">
-                <i class="bi bi-copy me-1"></i>Duplicar Turma
-            </button>
+            <!-- Configurações e Duplicar agora ficam na barra de guias ao lado de Notas -->
         </div>
         {% endif %}
     </div>
@@ -111,6 +104,18 @@
                 <i class="bi bi-award me-1"></i>Notas
             </a>
         </li>
+        {% if user.pk == cls.teacher.pk or user.is_superadmin %}
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#editClassModal">
+                <i class="bi bi-gear me-1"></i>Configurações
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#duplicateClassModal">
+                <i class="bi bi-copy me-1"></i>Duplicar Turma
+            </a>
+        </li>
+        {% endif %}
     </ul>
 </div>
 
