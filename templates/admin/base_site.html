@@ -1,17 +1,12 @@
-﻿{% extends "admin/base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}{{ title }} | Braga Treinamentos Admin{% endblock %}
 
 {% block branding %}
 <h1 id="site-name">
     <a href="{% url 'admin:index' %}" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
-        <span style="color: #FFE81F; font-size: 1.5rem; font-weight: 800; display: inline-flex; align-items: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-mortarboard-fill" viewBox="0 0 16 16" style="margin-right: 6px;">
-                <path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.862l1.694.79c.143-.19.324-.349.529-.467l5.257-2.45a2.5 2.5 0 0 1 2.262 0l5.257 2.45c.205.118.386.277.53.467l1.693-.79a.5.5 0 0 0 .025-.862z"/>
-                <path d="M1.385 7.678 2 7.965v1.7a1 1 0 0 0 .528.874l3.5 2a1 1 0 0 0 .944 0l3.5-2a1 1 0 0 0 .528-.874v-1.7l.615-.287A11 11 0 0 0 8 9.5a11 11 0 0 0-6.615-1.822z"/>
-                <path d="M13.5 6a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-3 0V9a.5.5 0 0 1 1 0v1.5a.5.5 0 0 0 1 0v-4a.5.5 0 0 1 .5-.5"/>
-            </svg>
-            JC
+        <span style="color: #FFE81F; font-size: 1.5rem; font-weight: 800; display: inline-flex; align-items: center; gap: 8px;">
+            <span style="background: #FFE81F; color: #000000; width: 32px; height: 32px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; font-family: sans-serif; margin-right: 4px;">B</span>
         </span>
         <span style="color: #FFFFFF; font-weight: 700; font-size: 1.25rem;">Braga Treinamentos Admin</span>
     </a>
