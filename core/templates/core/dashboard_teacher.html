@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard do Professor — Braga Treinamentos{% endblock %}
 
@@ -21,46 +21,52 @@
 <!-- Stats Row -->
 <div class="row g-4 mb-5">
     <div class="col-md-4">
-        <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(255, 232, 31, 0.1); width: 60px; height: 60px;">
-                    <i class="bi bi-collection text-brand fs-3"></i>
+        <a href="#classesGrid" class="text-decoration-none h-100 d-block">
+            <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
+                <div class="card-body d-flex align-items-center gap-3 p-4">
+                    <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(255, 232, 31, 0.1); width: 60px; height: 60px;">
+                        <i class="bi bi-collection text-brand fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Turmas Ativas</h6>
+                        <h2 class="fw-extrabold text-white mb-0">{{ class_count }}</h2>
+                    </div>
                 </div>
-                <div>
-                    <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Turmas Ativas</h6>
-                    <h2 class="fw-extrabold text-white mb-0">{{ class_count }}</h2>
-                </div>
+                <div class="stat-glow bg-brand"></div>
             </div>
-            <div class="stat-glow bg-brand"></div>
-        </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(13, 202, 240, 0.1); width: 60px; height: 60px;">
-                    <i class="bi bi-people text-info fs-3"></i>
+        <a href="#classesGrid" class="text-decoration-none h-100 d-block">
+            <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
+                <div class="card-body d-flex align-items-center gap-3 p-4">
+                    <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(13, 202, 240, 0.1); width: 60px; height: 60px;">
+                        <i class="bi bi-people text-info fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Alunos Ativos</h6>
+                        <h2 class="fw-extrabold text-white mb-0">{{ total_students }}</h2>
+                    </div>
                 </div>
-                <div>
-                    <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Alunos Ativos</h6>
-                    <h2 class="fw-extrabold text-white mb-0">{{ total_students }}</h2>
-                </div>
+                <div class="stat-glow bg-info"></div>
             </div>
-            <div class="stat-glow bg-info"></div>
-        </div>
+        </a>
     </div>
     <div class="col-md-4">
-        <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
-            <div class="card-body d-flex align-items-center gap-3 p-4">
-                <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(255, 193, 7, 0.1); width: 60px; height: 60px;">
-                    <i class="bi bi-hourglass-split text-warning fs-3"></i>
+        <a href="{% if pending_submissions > 0 %}#pendingSubmissionsSection{% else %}#classesGrid{% endif %}" class="text-decoration-none h-100 d-block">
+            <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
+                <div class="card-body d-flex align-items-center gap-3 p-4">
+                    <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(255, 193, 7, 0.1); width: 60px; height: 60px;">
+                        <i class="bi bi-hourglass-split text-warning fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Atividades para Corrigir</h6>
+                        <h2 class="fw-extrabold text-white mb-0 {% if pending_submissions > 0 %}text-warning{% endif %}">{{ pending_submissions }}</h2>
+                    </div>
                 </div>
-                <div>
-                    <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Atividades para Corrigir</h6>
-                    <h2 class="fw-extrabold text-white mb-0 {% if pending_submissions > 0 %}text-warning{% endif %}">{{ pending_submissions }}</h2>
-                </div>
+                <div class="stat-glow bg-warning"></div>
             </div>
-            <div class="stat-glow bg-warning"></div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -227,6 +233,75 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Seção de Atividades para Corrigir -->
+{% if pending_subs_list %}
+<div class="row mt-5 mb-4" id="pendingSubmissionsSection">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold mb-1 text-white"><i class="bi bi-hourglass-split text-warning me-2 animate-pulse"></i>Atividades para Corrigir</h4>
+                <p class="text-secondary small mb-0">Submissões dos alunos aguardando nota.</p>
+            </div>
+            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 fw-semibold">
+                {{ pending_submissions }} pendente{{ pending_submissions|pluralize:"s" }}
+            </span>
+        </div>
+        
+        <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-light text-dark">
+                        <tr>
+                            <th class="ps-4">Aluno</th>
+                            <th>Turma</th>
+                            <th>Atividade</th>
+                            <th>Data de Envio</th>
+                            <th class="text-end pe-4">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in pending_subs_list %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if sub.student.profile_picture %}
+                                        <img src="{{ sub.student.profile_picture }}" alt="Avatar" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-light" style="width: 28px; height: 28px; font-size: 0.7rem;">
+                                            {{ sub.student.get_full_name|first|upper|default:sub.student.username|first|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-semibold text-white">{{ sub.student.get_full_name|default:sub.student.username }}</div>
+                                        <small class="text-muted" style="font-size: 0.75rem;">{{ sub.student.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-25 text-white border border-secondary border-opacity-50">
+                                    {{ sub.assignment.target_class.name }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-white">{{ sub.assignment.title }}</div>
+                                <small class="text-muted" style="font-size: 0.75rem;">Valor: {{ sub.assignment.max_score }} pts</small>
+                            </td>
+                            <td class="text-muted">{{ sub.submitted_at|date:"d/m/Y H:i" }}</td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'assignments:detail' pk=sub.assignment.pk %}" class="btn btn-sm btn-brand rounded-pill px-3">
+                                    <i class="bi bi-check2-square me-1"></i>Corrigir
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

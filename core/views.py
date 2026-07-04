@@ -162,15 +162,16 @@ def _teacher_dashboard(request):
     my_courses_count = Course.objects.filter(teacher=request.user).count()
 
     # Pending submissions (no grade yet) across all teacher's classes
-    pending_submissions = Submission.objects.filter(
+    pending_subs = Submission.objects.filter(
         assignment__target_class__in=my_classes,
         grade__isnull=True,
-    ).count()
+    ).select_related('assignment', 'student', 'assignment__target_class').order_by('-submitted_at')
 
     context = {
         'my_classes': my_classes,
         'total_students': total_students,
-        'pending_submissions': pending_submissions,
+        'pending_submissions': pending_subs.count(),
+        'pending_subs_list': pending_subs,
         'class_count': my_classes.count(),
         'course_count': my_courses_count,
     }
