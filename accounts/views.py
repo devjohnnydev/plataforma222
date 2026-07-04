@@ -189,7 +189,7 @@ def profile_view(request):
             saved_path = default_storage.save(os.path.join('avatars', filename), file)
             user.profile_picture = settings.MEDIA_URL + saved_path
         elif avatar_choice:
-            user.profile_picture = f"/static/images/avatars/{avatar_choice}"
+            user.profile_picture = avatar_choice
             
         user.first_name = first_name
         user.last_name = last_name
@@ -216,13 +216,21 @@ def profile_view(request):
             if cls.checkin_open and cls.pk not in checked_in_class_ids
         ]
 
-    default_avatars = ['avatar1.svg', 'avatar2.svg', 'avatar3.svg', 'avatar4.svg', 'avatar5.svg']
+    default_avatars = [
+        {"name": "Homem", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"},
+        {"name": "Mulher", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka"},
+        {"name": "Japonês", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sara"},
+        {"name": "Óculos", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack"},
+        {"name": "Cabelo Curto", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver"},
+        {"name": "Cabelo Longo", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophia"},
+        {"name": "Professor", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=George"},
+        {"name": "Geek", "url": "https://api.dicebear.com/7.x/avataaars/svg?seed=Christian"},
+    ]
     context = {
         'default_avatars': default_avatars,
         'open_checkins': open_checkins,
     }
     return render(request, 'accounts/profile.html', context)
-
 
 
 

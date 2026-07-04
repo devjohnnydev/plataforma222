@@ -85,16 +85,28 @@
                 <!-- Radio inputs for default avatars (hidden but selectable) -->
                 <input type="hidden" name="avatar_choice" :value="selectedAvatar">
 
-                <h6 class="fw-bold text-muted small text-uppercase mb-3">Escolher Avatar Padrão</h6>
-                <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
+                <h6 class="fw-bold text-muted small text-uppercase mb-3">Escolher Avatar Temático</h6>
+                <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
                     {% for avatar in default_avatars %}
                         <button type="button" 
-                                @click="selectAvatar('{{ avatar }}')"
-                                :class="['btn p-1 rounded-circle border-2', selectedAvatar === '{{ avatar }}' ? 'border-brand' : 'border-transparent']"
-                                style="width: 44px; height: 44px; overflow: hidden; background: rgba(255,255,255,0.05);">
-                            <img src="/static/images/avatars/{{ avatar }}" alt="{{ avatar }}" class="w-100 h-100 object-fit-contain">
+                                @click="selectAvatar('{{ avatar.url }}')"
+                                :class="['btn p-1 rounded-circle border-2', selectedAvatar === '{{ avatar.url }}' ? 'border-warning' : 'border-transparent']"
+                                style="width: 48px; height: 48px; overflow: hidden; background: rgba(255,255,255,0.05);"
+                                title="{{ avatar.name }}">
+                            <img src="{{ avatar.url }}" alt="{{ avatar.name }}" class="w-100 h-100 object-fit-contain">
                         </button>
                     {% endfor %}
+                </div>
+
+                <!-- Custom Avatar Generator Box -->
+                <div class="px-2 mb-3">
+                    <label class="form-label text-muted small fw-semibold mb-1">Ou Digite um Nome para Criar a sua Carinha:</label>
+                    <div class="input-group input-group-sm">
+                        <input type="text" x-model="avatarSeed" @input="updateCustomAvatar()" class="form-control bg-body border-secondary text-light text-center" placeholder="Ex: Lucas, Ana, Geek...">
+                        <button type="button" class="btn btn-warning text-dark" @click="generateRandomSeed()" title="Gerar Semente Aleatória">
+                            <i class="bi bi-shuffle"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="border-top border-secondary pt-3 mb-4">
@@ -153,13 +165,27 @@
 <script>
     function profileApp() {
         return {
-            selectedAvatar: '{{ user.profile_picture|default:"" }}'.includes('/static/images/avatars/') ? 
-                            '{{ user.profile_picture|default:"" }}'.split('/').pop() : '',
+            selectedAvatar: '{{ user.profile_picture|default:"" }}',
             avatarPreview: '{{ user.profile_picture|default:"" }}',
+            avatarSeed: '',
 
-            selectAvatar(avatarName) {
-                this.selectedAvatar = avatarName;
-                this.avatarPreview = '/static/images/avatars/' + avatarName;
+            selectAvatar(avatarUrl) {
+                this.selectedAvatar = avatarUrl;
+                this.avatarPreview = avatarUrl;
+            },
+
+            updateCustomAvatar() {
+                if (this.avatarSeed.trim()) {
+                    const url = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(this.avatarSeed.trim());
+                    this.selectedAvatar = url;
+                    this.avatarPreview = url;
+                }
+            },
+
+            generateRandomSeed() {
+                const randomWords = ['Felix', 'Aneka', 'Sara', 'Jack', 'Sophia', 'Oliver', 'George', 'Harry', 'Maya', 'Ruby', 'Leo', 'Mia'];
+                this.avatarSeed = randomWords[Math.floor(Math.random() * randomWords.length)] + Math.floor(Math.random() * 100);
+                this.updateCustomAvatar();
             },
 
             previewFile(event) {
