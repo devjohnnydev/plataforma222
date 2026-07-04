@@ -967,6 +967,24 @@ def teacher_update_attendance_note_view(request, pk, student_pk):
     return HttpResponse(status=200)
 
 
+@login_required
+@require_POST
+def teacher_reset_student_password_view(request, pk, student_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user.pk == cls.teacher.pk or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from accounts.models import User
+    student = get_object_or_404(User, pk=student_pk)
+
+    # Reset password to Braga123
+    student.set_password('Braga123')
+    student.save()
+
+    messages.success(request, f"A senha do aluno {student.get_full_name() or student.username} foi redefinida para a senha padrão: Braga123")
+    return redirect('classes:members', pk=pk)
+
+
 
 
 
