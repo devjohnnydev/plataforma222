@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from . import views
 
 app_name = 'classes'
@@ -12,6 +12,7 @@ urlpatterns = [
     path('classes/<int:pk>/members/', views.class_members_view, name='members'),
     path('classes/<int:pk>/post/', views.post_announcement_view, name='post_announcement'),
     path('classes/<int:pk>/post/<int:post_pk>/delete/', views.delete_post_view, name='delete_post'),
+    path('classes/<int:pk>/post/<int:post_pk>/comment/', views.add_stream_comment_view, name='add_stream_comment'),
     path('classes/<int:pk>/lessons/', views.class_lessons_view, name='lessons'),
     path('classes/<int:pk>/lessons/create/', views.create_class_lesson_view, name='create_lesson'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/publish/', views.publish_class_lesson_view, name='publish_lesson'),

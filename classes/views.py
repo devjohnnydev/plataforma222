@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
@@ -689,6 +689,29 @@ def student_checkin_view(request, pk):
 
     messages.success(request, 'Sua presença foi confirmada com sucesso!')
     return redirect('classes:detail', pk=pk)
+
+
+@login_required
+@require_POST
+def add_stream_comment_view(request, pk, post_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    post = get_object_or_404(StreamPost, pk=post_pk, target_class=cls)
+    content = request.POST.get('content', '').strip()
+
+    if content:
+        StreamComment.objects.create(
+            post=post,
+            author=request.user,
+            content=content
+        )
+        if request.headers.get('HX-Request'):
+            comments = post.comments.select_related('author').all()
+            return render(request, 'classes/_stream_comments_list.html', {'comments': comments})
+
+    return redirect('classes:detail', pk=pk)
+
 
 
 

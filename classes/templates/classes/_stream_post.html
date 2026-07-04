@@ -1,13 +1,17 @@
-﻿{% load tz %}
+{% load tz %}
 {% load custom_filters %}
 <div class="card stream-card mb-3 bg-body-tertiary" id="post-{{ post.pk }}">
     <div class="card-body p-4">
-        <div class="d-flex align-items-start gap-3">
+        <div class="d-flex align-items-start gap-3 w-100">
             <!-- Avatar -->
-            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-dark flex-shrink-0"
-                 style="width:40px;height:40px;background-color:{{ cls.color }};font-size:0.85rem;">
-                {{ post.author.get_full_name|first|upper|default:post.author.username|first|upper }}
-            </div>
+            {% if post.author.profile_picture %}
+                <img src="{{ post.author.profile_picture }}" alt="Avatar" class="rounded-circle flex-shrink-0" style="width:40px;height:40px;object-fit:cover;">
+            {% else %}
+                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-dark flex-shrink-0"
+                     style="width:40px;height:40px;background-color:{{ cls.color }};font-size:0.85rem;">
+                    {{ post.author.get_full_name|first|upper|default:post.author.username|first|upper }}
+                </div>
+            {% endif %}
 
             <div class="flex-grow-1">
                 <div class="d-flex justify-content-between align-items-start">
@@ -72,6 +76,41 @@
                     {% endif %}
                 </div>
                 {% endif %}
+
+                <!-- Seção de Comentários -->
+                <div class="mt-4 pt-3 border-top border-secondary border-opacity-25">
+                    <div class="d-flex align-items-center gap-2 mb-3 text-muted">
+                        <i class="bi bi-chat-left-text"></i>
+                        <span class="small fw-semibold">Comentários</span>
+                    </div>
+
+                    <!-- Lista de Comentários -->
+                    <div class="comments-list d-flex flex-column gap-2 mb-3" id="comments-list-{{ post.pk }}">
+                        {% include 'classes/_stream_comments_list.html' with comments=post.comments.all %}
+                    </div>
+
+                    <!-- Formulário para Comentar -->
+                    <form method="POST" action="{% url 'classes:add_stream_comment' pk=cls.pk post_pk=post.pk %}"
+                          hx-post="{% url 'classes:add_stream_comment' pk=cls.pk post_pk=post.pk %}"
+                          hx-target="#comments-list-{{ post.pk }}"
+                          hx-swap="innerHTML"
+                          hx-on::after-request="this.reset();"
+                          class="d-flex align-items-center gap-2 mt-2">
+                        {% csrf_token %}
+                        {% if request.user.profile_picture %}
+                            <img src="{{ request.user.profile_picture }}" alt="Avatar" class="rounded-circle flex-shrink-0" style="width:32px;height:32px;object-fit:cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-light flex-shrink-0"
+                                 style="width:32px;height:32px;font-size:0.75rem;">
+                                {{ request.user.get_full_name|first|upper|default:request.user.username|first|upper }}
+                            </div>
+                        {% endif %}
+                        <input type="text" name="content" class="form-control form-control-sm bg-body border-secondary rounded-pill px-3 py-1.5" placeholder="Escreva um comentário..." required autocomplete="off">
+                        <button type="submit" class="btn btn-sm btn-brand rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;">
+                            <i class="bi bi-send-fill" style="font-size: 0.8rem;"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
