@@ -95,8 +95,9 @@
         <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 overflow-hidden class-card position-relative d-flex flex-column">
             
             <!-- Class Banner / Header -->
-            <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden d-flex flex-column justify-content-end"
-                 style="min-height: 120px; {% if cls.banner_image %}background: linear-gradient(180deg, rgba(18,18,22,0.2) 0%, rgba(18,18,22,0.85) 100%), url('{{ cls.banner_image.url }}') center/cover no-repeat;{% else %}background: linear-gradient(135deg, {{ cls.color }}dd 0%, #121216 100%);{% endif %}">
+            <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden d-flex flex-column justify-content-end cursor-pointer"
+                 style="min-height: 120px; cursor: pointer; {% if cls.banner_image %}background: linear-gradient(180deg, rgba(18,18,22,0.2) 0%, rgba(18,18,22,0.85) 100%), url('{{ cls.banner_image.url }}') center/cover no-repeat;{% else %}background: linear-gradient(135deg, {{ cls.color }}dd 0%, #121216 100%);{% endif %}"
+                 onclick="if (!event.target.closest('.join-code-badge') && !event.target.closest('a')) { window.location='{% url 'classes:detail' pk=cls.pk %}'; }">
                 
                 <!-- Floating Dot indicators & Right Arrow -->
                 <div class="position-absolute top-0 end-0 p-3 d-flex align-items-center gap-2">
