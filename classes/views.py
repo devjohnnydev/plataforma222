@@ -798,7 +798,14 @@ def teacher_update_attendance_view(request, pk, student_pk):
     from accounts.models import User
     student = get_object_or_404(User, pk=student_pk)
     status = request.POST.get('status')
-    today = timezone.localtime(timezone.now()).date()
+    date_str = request.POST.get('date')
+    if date_str:
+        try:
+            today = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            today = timezone.localtime(timezone.now()).date()
+    else:
+        today = timezone.localtime(timezone.now()).date()
 
     from .models import Attendance
     attendance, created = Attendance.objects.get_or_create(
@@ -818,10 +825,147 @@ def teacher_update_attendance_view(request, pk, student_pk):
         return render(request, 'classes/_attendance_controls.html', {
             'cls': cls,
             'student': student,
-            'is_present': attendance.present
+            'is_present': attendance.present,
+            'selected_date': today
         })
 
     return redirect('classes:members', pk=pk)
+
+
+@login_required
+def class_attendance_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+
+    # Only teachers and admins can access the attendance panel
+    if not (request.user.pk == cls.teacher.pk or request.user.is_superadmin()):
+        messages.error(request, "Acesso restrito ao professor da turma.")
+        return redirect('classes:detail', pk=pk)
+
+    # Get chosen date or default to local today
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = timezone.localtime(timezone.now()).date()
+    else:
+        selected_date = timezone.localtime(timezone.now()).date()
+
+    enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
+
+    # Handle CSV Export if requested
+    export_format = request.GET.get('export')
+    if export_format == 'csv':
+        import csv
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+        response['Content-Disposition'] = f'attachment; filename="Chamada_{cls.name}_{selected_date}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Nome do Aluno', 'E-mail', 'Data', 'Status de Presenca', 'Observacao'])
+
+        # Get attendance for all students for this date
+        from .models import Attendance
+        att_map = {att.student_id: att for att in Attendance.objects.filter(enrolled_class=cls, date=selected_date)}
+
+        for enroll in enrollments:
+            att = att_map.get(enroll.student.pk)
+            status = 'Presente' if (att and att.present) else ('Ausente' if (att and not att.present) else 'Nao Registrado')
+            note = att.note if (att and att.note) else ''
+            writer.writerow([
+                enroll.student.get_full_name() or enroll.student.username,
+                enroll.student.email,
+                selected_date.strftime('%d/%m/%Y'),
+                status,
+                note
+            ])
+        return response
+
+    # Calculate stats per student: total presences, total absences, % presence
+    from .models import Attendance
+    # Fetch all attendance records for this class
+    all_attendance = Attendance.objects.filter(enrolled_class=cls)
+
+    # Compute counts
+    student_stats = {}
+    for enroll in enrollments:
+        student_stats[enroll.student.pk] = {
+            'present': 0,
+            'absent': 0,
+            'total': 0,
+            'percent': 0
+        }
+
+    for att in all_attendance:
+        if att.student_id in student_stats:
+            if att.present:
+                student_stats[att.student_id]['present'] += 1
+            else:
+                student_stats[att.student_id]['absent'] += 1
+            student_stats[att.student_id]['total'] += 1
+
+    for s_pk, stats in student_stats.items():
+        if stats['total'] > 0:
+            stats['percent'] = round((stats['present'] / stats['total']) * 100, 1)
+        else:
+            stats['percent'] = 100.0  # Default/no classes yet
+
+    # Fetch today's records for grid
+    today_records = {att.student_id: att for att in Attendance.objects.filter(enrolled_class=cls, date=selected_date)}
+
+    # Calculate active stats for the day
+    total_students = enrollments.count()
+    present_today = sum(1 for att in today_records.values() if att.present)
+    absent_today = sum(1 for att in today_records.values() if not att.present)
+    unregistered_today = total_students - len(today_records)
+
+    context = {
+        'cls': cls,
+        'enrollments': enrollments,
+        'selected_date': selected_date,
+        'today_records': today_records,
+        'student_stats': student_stats,
+        'total_students': total_students,
+        'present_today': present_today,
+        'absent_today': absent_today,
+        'unregistered_today': unregistered_today,
+        'active_tab': 'attendance',
+    }
+    return render(request, 'classes/class_detail.html', context)
+
+
+@login_required
+@require_POST
+def teacher_update_attendance_note_view(request, pk, student_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user.pk == cls.teacher.pk or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from accounts.models import User
+    student = get_object_or_404(User, pk=student_pk)
+    note = request.POST.get('note', '').strip()
+
+    date_str = request.POST.get('date')
+    if date_str:
+        try:
+            selected_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_date = timezone.localtime(timezone.now()).date()
+    else:
+        selected_date = timezone.localtime(timezone.now()).date()
+
+    from .models import Attendance
+    attendance, created = Attendance.objects.get_or_create(
+        enrolled_class=cls,
+        student=student,
+        date=selected_date
+    )
+    attendance.note = note
+    attendance.save()
+
+    return HttpResponse(status=200)
+
 
 
 

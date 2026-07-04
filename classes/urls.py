@@ -28,6 +28,8 @@ urlpatterns = [
     path('classes/<int:pk>/students/<int:student_pk>/attendance/', views.teacher_update_attendance_view, name='update_attendance'),
     path('classes/<int:pk>/checkin/toggle/', views.toggle_checkin_view, name='toggle_checkin'),
     path('classes/<int:pk>/checkin/', views.student_checkin_view, name='student_checkin'),
+    path('classes/<int:pk>/students/<int:student_pk>/attendance/note/', views.teacher_update_attendance_note_view, name='update_attendance_note'),
+    path('classes/<int:pk>/attendance/', views.class_attendance_view, name='attendance'),
     path('classes/<int:pk>/grades/', views.class_grades_view, name='grades'),
 ]
 

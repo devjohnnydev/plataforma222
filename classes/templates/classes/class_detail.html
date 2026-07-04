@@ -98,6 +98,14 @@
                 <i class="bi bi-people me-1"></i>Membros
             </a>
         </li>
+        {% if user.pk == cls.teacher.pk or user.is_superadmin %}
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'attendance' %}active{% endif %}"
+               href="{% url 'classes:attendance' pk=cls.pk %}">
+                <i class="bi bi-calendar-check me-1"></i>Chamada
+            </a>
+        </li>
+        {% endif %}
         <li class="nav-item">
             <a class="nav-link {% if active_tab == 'grades' %}active{% endif %}"
                href="{% url 'classes:grades' pk=cls.pk %}">
@@ -829,6 +837,240 @@
         </form>
     </div>
 </div>
+{% endif %}
+
+{% if active_tab == 'attendance' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-calendar-check text-brand me-2"></i>Controle de Frequência & Chamada</h5>
+                    <p class="text-secondary small mb-0">Selecione o dia para registrar presenças e gerenciar observações de entrada/saída.</p>
+                </div>
+                
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <!-- Date selector form -->
+                    <form method="GET" action="{% url 'classes:attendance' pk=cls.pk %}" class="d-flex align-items-center gap-2 m-0">
+                        <label class="fw-semibold small text-muted text-nowrap">Data da Chamada:</label>
+                        <input type="date" name="date" class="form-control bg-body border-secondary text-light rounded-pill px-3 py-1.5"
+                               value="{{ selected_date|date:'Y-m-d' }}" onchange="this.form.submit()">
+                    </form>
+
+                    <!-- Export Actions -->
+                    <a href="{% url 'classes:attendance' pk=cls.pk %}?date={{ selected_date|date:'Y-m-d' }}&export=csv" class="btn btn-outline-success rounded-pill px-3 py-1.5 small">
+                        <i class="bi bi-file-earmark-excel me-1"></i>Baixar Planilha (Excel)
+                    </a>
+                    
+                    <button onclick="window.print()" class="btn btn-outline-info rounded-pill px-3 py-1.5 small">
+                        <i class="bi bi-printer me-1"></i>Imprimir / PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daily Statistics Summary Widgets -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-body border-0 shadow-sm p-3 text-center rounded-3">
+                        <div class="text-muted small fw-semibold">Alunos Matriculados</div>
+                        <div class="fs-3 fw-bold text-light mt-1">{{ total_students }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-body border-0 shadow-sm p-3 text-center rounded-3" style="border-left: 3px solid var(--bs-success) !important;">
+                        <div class="text-success small fw-semibold">Presentes Hoje</div>
+                        <div class="fs-3 fw-bold text-success mt-1">{{ present_today }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-body border-0 shadow-sm p-3 text-center rounded-3" style="border-left: 3px solid var(--bs-danger) !important;">
+                        <div class="text-danger small fw-semibold">Ausentes Hoje</div>
+                        <div class="fs-3 fw-bold text-danger mt-1">{{ absent_today }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-body border-0 shadow-sm p-3 text-center rounded-3" style="border-left: 3px solid var(--bs-secondary) !important;">
+                        <div class="text-secondary small fw-semibold">Pendentes</div>
+                        <div class="fs-3 fw-bold text-secondary mt-1">{{ unregistered_today }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students List Table -->
+            {% if enrollments %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-light border-secondary">
+                        <thead>
+                            <tr class="border-secondary text-secondary small">
+                                <th scope="col" style="min-width: 250px;">Aluno</th>
+                                <th scope="col" class="text-center">Faltas Acumuladas</th>
+                                <th scope="col" class="text-center">Presenças Acumuladas</th>
+                                <th scope="col" class="text-center">Frequência (%)</th>
+                                <th scope="col" class="text-center" style="min-width: 150px;">Status ({{ selected_date|date:"d/m/Y" }})</th>
+                                <th scope="col" style="min-width: 280px;">Observação / Ocorrência</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enroll in enrollments %}
+                                {% with stats=student_stats|dict_get:enroll.student.pk %}
+                                {% with record=today_records|dict_get:enroll.student.pk %}
+                                <tr class="border-secondary">
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if enroll.student.profile_picture %}
+                                                <img src="{{ enroll.student.profile_picture }}" alt="Avatar" class="rounded-circle flex-shrink-0" style="width:36px;height:36px;object-fit:cover;">
+                                            {% else %}
+                                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center fw-bold text-light" style="width:36px;height:36px;flex-shrink:0;">
+                                                    {{ enroll.student.get_full_name|first|upper|default:enroll.student.username|first|upper }}
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-semibold">{{ enroll.student.get_full_name|default:enroll.student.username }}</div>
+                                                <small class="text-muted d-block" style="font-size:0.75rem;">{{ enroll.student.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="text-center font-monospace text-danger fw-semibold">
+                                        {{ stats.absent }}
+                                    </td>
+                                    
+                                    <td class="text-center font-monospace text-success fw-semibold">
+                                        {{ stats.present }}
+                                    </td>
+                                    
+                                    <td class="text-center font-monospace">
+                                        <span class="badge {% if stats.percent >= 75 %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if stats.percent >= 75 %}text-success{% else %}text-danger{% endif %} border border-opacity-25">
+                                            {{ stats.percent }}%
+                                        </span>
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        <!-- Attendance Toggles for this date -->
+                                        <div class="d-flex align-items-center justify-content-center gap-1" id="attendance-controls-{{ enroll.student.pk }}">
+                                            {% if record %}
+                                                {% if record.present %}
+                                                    <span class="badge bg-success bg-opacity-25 text-success px-2.5 py-1.5 me-1"><i class="bi bi-check-circle-fill me-1"></i>Presente</span>
+                                                    <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-target="#attendance-controls-{{ enroll.student.pk }}"
+                                                          hx-swap="outerHTML"
+                                                          class="m-0">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="absent">
+                                                        <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                                                        <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
+                                                            Falta
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <span class="badge bg-danger bg-opacity-25 text-danger px-2.5 py-1.5 me-1"><i class="bi bi-x-circle-fill me-1"></i>Ausente</span>
+                                                    <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-target="#attendance-controls-{{ enroll.student.pk }}"
+                                                          hx-swap="outerHTML"
+                                                          class="m-0">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="present">
+                                                        <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                                                        <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
+                                                            Presença
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary px-2.5 py-1.5 me-1">Não registrado</span>
+                                                <div class="btn-group btn-group-sm bg-dark rounded-pill overflow-hidden border border-secondary border-opacity-50">
+                                                    <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-target="#attendance-controls-{{ enroll.student.pk }}"
+                                                          hx-swap="outerHTML"
+                                                          class="m-0 d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="present">
+                                                        <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                                                        <button type="submit" class="btn btn-outline-success border-0 px-2 py-0.5" style="font-size:0.75rem;">
+                                                            Presença
+                                                        </button>
+                                                    </form>
+                                                    <form method="POST" action="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-post="{% url 'classes:update_attendance' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                          hx-target="#attendance-controls-{{ enroll.student.pk }}"
+                                                          hx-swap="outerHTML"
+                                                          class="m-0 d-inline">
+                                                        {% csrf_token %}
+                                                        <input type="hidden" name="status" value="absent">
+                                                        <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                                                        <button type="submit" class="btn btn-outline-danger border-0 px-2 py-0.5" style="font-size:0.75rem;">
+                                                            Falta
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    
+                                    <td>
+                                        <!-- Observation field -->
+                                        <form method="POST" action="{% url 'classes:update_attendance_note' pk=cls.pk student_pk=enroll.student.pk %}" class="m-0">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                                            <div class="input-group input-group-sm">
+                                                <input type="text" name="note" class="form-control bg-body border-secondary text-light" 
+                                                       placeholder="Ex.: Atrasado 10m, saiu mais cedo..."
+                                                       value="{{ record.note|default:'' }}"
+                                                       hx-post="{% url 'classes:update_attendance_note' pk=cls.pk student_pk=enroll.student.pk %}"
+                                                       hx-trigger="blur, change"
+                                                       hx-swap="none">
+                                                <span class="input-group-text bg-secondary bg-opacity-25 border-secondary text-muted" title="Salva automaticamente ao desfocar">
+                                                    <i class="bi bi-cloud-check-fill text-success"></i>
+                                                </span>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-people display-4 opacity-25"></i>
+                    <p class="mt-2 mb-0">Nenhum aluno matriculado nesta turma.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Print-only CSS style to hide navbar and clean up table layout on print -->
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #main-content-card, #main-content-card *, table, table * {
+        visibility: visible;
+    }
+    #main-content-card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+    }
+    table, th, td {
+        color: black !important;
+        border-color: #ddd !important;
+    }
+    .btn, form, input[type="date"], select, .navbar, .sidebar {
+        display: none !important;
+    }
+}
+</style>
 {% endif %}
 
 {% if active_tab == 'grades' %}

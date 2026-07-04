@@ -8,6 +8,7 @@
               class="m-0">
             {% csrf_token %}
             <input type="hidden" name="status" value="absent">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
             <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
                 Falta
             </button>
@@ -21,6 +22,7 @@
               class="m-0">
             {% csrf_token %}
             <input type="hidden" name="status" value="present">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
             <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0.5" style="font-size:0.75rem;">
                 Presença
             </button>
