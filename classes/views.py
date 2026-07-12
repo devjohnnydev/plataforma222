@@ -280,7 +280,7 @@ def class_lessons_view(request, pk):
 
     # Get lessons
     if request.user.is_teacher() or request.user.is_superadmin():
-        lessons = cls.lessons.all().order_by('order', 'created_at')
+        lessons = cls.lessons.all().order_by('is_published', 'order', 'created_at')
     else:
         lessons = cls.lessons.filter(is_published=True).order_by('order', 'created_at')
 
