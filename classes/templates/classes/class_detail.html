@@ -491,27 +491,39 @@
                             <i class="bi fs-5 text-brand" :class="expanded ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
                             <div>
                                 <div class="d-flex align-items-center gap-2 mb-1">
-                                    {% if lesson.is_published %}
-                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="bi bi-check-circle me-1"></i>Postada</span>
-                                        {% if lesson.publish_date %}
-                                            <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{ lesson.publish_date|date:"d/m/Y" }}</small>
-                                        {% endif %}
+                                    {% if lesson.order == 0 %}
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25"><i class="bi bi-star-fill me-1"></i>Geral</span>
                                     {% else %}
-                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i class="bi bi-file-earmark-diff me-1"></i>Rascunho</span>
+                                        {% if lesson.is_published %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25"><i class="bi bi-check-circle me-1"></i>Postada</span>
+                                            {% if lesson.publish_date %}
+                                                <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{ lesson.publish_date|date:"d/m/Y" }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"><i class="bi bi-file-earmark-diff me-1"></i>Rascunho</span>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
-                                <h5 class="fw-bold mb-0">Aula {{ lesson.order }}: {{ lesson.title }}</h5>
+                                <h5 class="fw-bold mb-0">
+                                    {% if lesson.order == 0 %}
+                                        {{ lesson.title }}
+                                    {% else %}
+                                        Aula {{ lesson.order }}: {{ lesson.title }}
+                                    {% endif %}
+                                </h5>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2" @click.stop>
                             {% if user == cls.teacher or user.is_superadmin %}
-                                {% if not lesson.is_published %}
-                                    <form method="POST" action="{% url 'classes:publish_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
-                                            <i class="bi bi-send me-1"></i>Postar Aula
-                                        </button>
-                                    </form>
+                                {% if lesson.order != 0 %}
+                                    {% if not lesson.is_published %}
+                                        <form method="POST" action="{% url 'classes:publish_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                                                <i class="bi bi-send me-1"></i>Postar Aula
+                                            </button>
+                                        </form>
+                                    {% endif %}
                                 {% endif %}
                                 <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addMaterialModal-{{ lesson.pk }}">
                                     <i class="bi bi-plus-lg me-1"></i>Anexar Arquivo/Notion
@@ -519,12 +531,14 @@
                                 <button class="btn btn-sm btn-outline-brand rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#editLessonModal-{{ lesson.pk }}">
                                     <i class="bi bi-pencil me-1"></i>Editar Aula
                                 </button>
-                                <form method="POST" action="{% url 'classes:delete_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir esta aula permanentemente?')">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
-                                        <i class="bi bi-trash me-1"></i>Excluir
-                                    </button>
-                                </form>
+                                {% if lesson.order != 0 %}
+                                    <form method="POST" action="{% url 'classes:delete_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir esta aula permanentemente?')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                            <i class="bi bi-trash me-1"></i>Excluir
+                                        </button>
+                                    </form>
+                                {% endif %}
                             {% endif %}
                         </div>
                     </div>
@@ -561,6 +575,12 @@
                                                         </a>
                                                     {% endif %}
                                                     {% if user == cls.teacher or user.is_superadmin %}
+                                                        <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Postar no Mural">
+                                                                <i class="bi bi-megaphone"></i>
+                                                            </button>
+                                                        </form>
                                                         <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
                                                             {% csrf_token %}
                                                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Excluir Material">

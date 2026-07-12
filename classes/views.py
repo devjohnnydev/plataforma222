@@ -278,11 +278,38 @@ def class_lessons_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
     _check_access(request.user, cls)
 
+    # Ensure "Materiais do Curso" exists
+    from courses.models import Lesson
+    Lesson.objects.get_or_create(
+        target_class=cls,
+        order=0,
+        defaults={
+            'title': 'Materiais do Curso',
+            'content': 'Espaço destinado para o plano de curso, cronograma e materiais gerais da turma.',
+            'is_published': True,
+        }
+    )
+
+    from django.db.models import Case, When, Value, IntegerField
+
     # Get lessons
     if request.user.is_teacher() or request.user.is_superadmin():
-        lessons = cls.lessons.all().order_by('is_published', 'order', 'created_at')
+        lessons = cls.lessons.all().annotate(
+            sort_priority=Case(
+                When(order=0, then=Value(0)),
+                When(is_published=False, then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            )
+        ).order_by('sort_priority', 'order', 'created_at')
     else:
-        lessons = cls.lessons.filter(is_published=True).order_by('order', 'created_at')
+        lessons = cls.lessons.filter(is_published=True).annotate(
+            sort_priority=Case(
+                When(order=0, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('sort_priority', 'order', 'created_at')
 
     total_lessons = cls.lessons.count()
     published_lessons = cls.lessons.filter(is_published=True).count()
@@ -473,6 +500,35 @@ def delete_lesson_material_view(request, pk, lesson_pk, material_pk):
 
     messages.success(request, 'Material excluído com sucesso.')
     return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def post_material_to_mural_view(request, pk, lesson_pk, material_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson, Material
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    material = get_object_or_404(Material, pk=material_pk, lesson=lesson)
+
+    from .models import StreamPost
+    
+    post_content = f"Compartilhou o material: {material.title}"
+    post = StreamPost.objects.create(
+        target_class=cls,
+        author=request.user,
+        content=post_content,
+        post_type=StreamPost.PostType.MATERIAL,
+        link_url=material.url,
+    )
+    if material.file:
+        post.attachment = material.file
+        post.save()
+
+    messages.success(request, 'Material postado no mural com sucesso!')
+    return redirect('classes:detail', pk=pk)
 
 
 @login_required
