@@ -17,6 +17,7 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/create/', views.create_class_lesson_view, name='create_lesson'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/publish/', views.publish_class_lesson_view, name='publish_lesson'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/material/add/', views.add_lesson_material_view, name='add_lesson_material'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/material/<int:material_pk>/delete/', views.delete_lesson_material_view, name='delete_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/submit/', views.submit_lesson_material_view, name='submit_lesson_material'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/comment/', views.comment_lesson_view, name='comment_lesson'),
     path('classes/<int:pk>/edit/', views.edit_class_view, name='edit'),

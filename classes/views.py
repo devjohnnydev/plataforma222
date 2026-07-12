@@ -401,20 +401,77 @@ def add_lesson_material_view(request, pk, lesson_pk):
     title = request.POST.get('title', '').strip()
     material_type = request.POST.get('material_type', 'FILE')
     url = request.POST.get('url', '').strip()
-    file = request.FILES.get('file')
+    files = request.FILES.getlist('file')
 
-    if title:
+    created_count = 0
+
+    if files:
+        for f in files:
+            f_title = title if (len(files) == 1 and title) else f.name
+            
+            ext = f.name.split('.')[-1].lower() if '.' in f.name else ''
+            f_type = material_type
+            if len(files) > 1 or not title:
+                if ext == 'pdf':
+                    f_type = 'PDF'
+                elif ext in ['mp4', 'mov', 'avi', 'mkv']:
+                    f_type = 'VIDEO'
+                elif ext in ['ppt', 'pptx', 'key']:
+                    f_type = 'SLIDE'
+                elif ext in ['mp3', 'wav', 'aac']:
+                    f_type = 'AUDIO'
+                else:
+                    f_type = 'FILE'
+
+            Material.objects.create(
+                lesson=lesson,
+                title=f_title,
+                material_type=f_type,
+                file=f
+            )
+            created_count += 1
+    elif url:
+        f_title = title if title else url
+        Material.objects.create(
+            lesson=lesson,
+            title=f_title,
+            material_type=material_type,
+            url=url
+        )
+        created_count += 1
+    elif title:
         Material.objects.create(
             lesson=lesson,
             title=title,
             material_type=material_type,
-            url=url,
-            file=file
+            url=url
         )
-        messages.success(request, 'Material anexado com sucesso.')
-    else:
-        messages.error(request, 'O título do material é obrigatório.')
+        created_count += 1
 
+    if created_count > 0:
+        if created_count == 1:
+            messages.success(request, 'Material anexado com sucesso.')
+        else:
+            messages.success(request, f'{created_count} materiais anexados com sucesso.')
+    else:
+        messages.error(request, 'Título, arquivo ou URL do material é obrigatório.')
+
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def delete_lesson_material_view(request, pk, lesson_pk, material_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson, Material
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    material = get_object_or_404(Material, pk=material_pk, lesson=lesson)
+    material.delete()
+
+    messages.success(request, 'Material excluído com sucesso.')
     return redirect('classes:lessons', pk=pk)
 
 

@@ -560,6 +560,14 @@
                                                             <i class="bi bi-download"></i>
                                                         </a>
                                                     {% endif %}
+                                                    {% if user == cls.teacher or user.is_superadmin %}
+                                                        <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Excluir Material">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -733,8 +741,8 @@
                             </div>
                             <div class="modal-body">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Título do Material</label>
-                                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Slides da Aula ou Notion Link" required>
+                                    <label class="form-label fw-semibold">Título do Material (Opcional se enviar arquivo)</label>
+                                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Slides da Aula ou Notion Link">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Tipo</label>
@@ -750,8 +758,8 @@
                                     <div class="form-text text-muted">Use para links do Notion, vídeos do YouTube, etc.</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Arquivo (Opcional)</label>
-                                    <input type="file" class="form-control bg-body" name="file">
+                                    <label class="form-label fw-semibold">Arquivo (Opcional - Suporta múltiplos)</label>
+                                    <input type="file" class="form-control bg-body" name="file" multiple>
                                     <div class="form-text text-muted">Para PDFs, Words, Slides, etc.</div>
                                 </div>
                             </div>

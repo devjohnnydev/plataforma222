@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Construtor de Currículo — {{ course.title }}{% endblock %}
 
@@ -97,6 +97,15 @@
                                                 {% else %}
                                                     <span class="text-body text-truncate flex-grow-1">{{ material.title }}</span>
                                                 {% endif %}
+
+                                                {% if user == course.teacher or user.is_superadmin %}
+                                                    <form method="POST" action="{% url 'courses:delete_material' slug=course.slug les_pk=lesson.pk material_pk=material.pk %}" class="m-0 ms-auto" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-link text-danger p-0 m-0 border-0" style="line-height: 1;" title="Excluir Material">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
                                             </li>
                                             {% endfor %}
                                         </ul>
@@ -104,7 +113,7 @@
                                             <p class="text-muted small mb-0 mt-2 fst-italic">Nenhum material anexado a esta aula.</p>
                                         {% endif %}
                                     </div>
-                                </div>
+                                  </div>
 
                                 <!-- Add Material Modal per Lesson -->
                                 <div class="modal fade" id="addMaterialModal-{{ lesson.pk }}" tabindex="-1">
@@ -117,8 +126,8 @@
                                             </div>
                                             <div class="modal-body">
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Título do Material</label>
-                                                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Slides da Aula" required>
+                                                    <label class="form-label fw-semibold">Título do Material (Opcional se enviar arquivo)</label>
+                                                    <input type="text" class="form-control bg-body" name="title" placeholder="Ex.: Slides da Aula">
                                                 </div>
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Tipo</label>
@@ -134,8 +143,8 @@
                                                     <div class="form-text text-muted">Use para vídeos do YouTube, links externos, etc.</div>
                                                 </div>
                                                 <div class="mb-3">
-                                                    <label class="form-label fw-semibold">Arquivo (Opcional)</label>
-                                                    <input type="file" class="form-control bg-body" name="file">
+                                                    <label class="form-label fw-semibold">Arquivo (Opcional - Suporta múltiplos)</label>
+                                                    <input type="file" class="form-control bg-body" name="file" multiple>
                                                     <div class="form-text text-muted">Upload de PDFs, slides (.pptx, .pdf), imagens ou outros arquivos locais.</div>
                                                 </div>
                                             </div>
