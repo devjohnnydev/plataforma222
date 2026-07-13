@@ -167,20 +167,20 @@
                 <p class="lead text-muted mb-4 fs-5" style="max-width: 540px;">
                     Uma solução SaaS completa e robusta para gerenciar turmas, registrar frequências de chamada (PDF profissional), centralizar notas, publicar aulas e conteúdos com inteligência artificial integrada.
                 </p>
-                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'core:home' %}" class="btn btn-brand btn-lg px-4 py-3 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
+                        <a href="{% url 'core:home' %}" class="btn btn-brand px-4 py-2 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
                             <i class="bi bi-speedometer2"></i> Acessar Meu Painel
                         </a>
                     {% else %}
-                        <a href="{% url 'accounts:login' %}" class="btn btn-brand btn-lg px-4 py-3 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-brand px-4 py-2 rounded-pill shadow d-flex align-items-center justify-content-center gap-2">
                             <i class="bi bi-box-arrow-in-right"></i> Entrar na Plataforma
                         </a>
-                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill d-flex align-items-center justify-content-center gap-2">
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-light px-4 py-2 rounded-pill d-flex align-items-center justify-content-center gap-2">
                             <i class="bi bi-person-plus"></i> Criar Conta Grátis
                         </a>
                     {% endif %}
-                    <a href="#sobre-mim" class="btn btn-link text-decoration-none text-light btn-lg px-3 py-3 d-flex align-items-center justify-content-center gap-2">
+                    <a href="#sobre-mim" class="btn btn-link text-decoration-none text-light px-3 py-2 d-flex align-items-center justify-content-center gap-2">
                         Ver Mais <i class="bi bi-chevron-down text-brand"></i>
                     </a>
                 </div>
@@ -233,10 +233,10 @@
                 <span class="text-brand fw-semibold text-uppercase small tracking-wider mb-2 d-block">Quem é o Instrutor</span>
                 <h2 class="fw-bold mb-4 display-5 text-white">Mais de uma década moldando talentos e arquiteturas tecnológicas</h2>
                 <p class="text-secondary leading-relaxed">
-                    Olá! Sou **Johnny Braga de Oliveira**, Professor de Tecnologia da Informação no **SENAI-SP** e fundador da **Braga Treinamentos**. Atuo com foco em engenharia de sistemas em nuvem, capacitação corporativa avançada e automação de processos inteligentes.
+                    Olá! Sou <strong>Johnny Braga de Oliveira</strong>, Professor de Tecnologia da Informação no <strong>SENAI-SP</strong> e fundador da <strong>Braga Treinamentos</strong>. Atuo com foco em engenharia de sistemas em nuvem, capacitação corporativa avançada e automação de processos inteligentes.
                 </p>
                 <p class="text-secondary leading-relaxed mb-4">
-                    Minha missão é simplificar a complexidade tecnológica para empresas e profissionais. Através de treinamentos estruturados em **Inteligência Artificial Aplicada** e fluxos de trabalho com o **n8n**, ajudo organizações de todos os tamanhos a otimizar processos operacionais, reduzir custos e acelerar a produtividade operacional de ponta a ponta.
+                    Minha missão é simplificar a complexidade tecnológica para empresas e profissionais. Através de treinamentos estruturados em <strong>Inteligência Artificial Aplicada</strong> e fluxos de trabalho com o <strong>n8n</strong>, ajudo organizações de todos os tamanhos a otimizar processos operacionais, reduzir custos e acelerar a produtividade operacional de ponta a ponta.
                 </p>
                 <div class="row g-3">
                     <div class="col-6">
