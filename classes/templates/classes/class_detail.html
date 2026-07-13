@@ -878,6 +878,8 @@
 <div class="row">
     <div class="col-12">
         <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4" id="attendance-print-card">
+            <!-- Watermark Logo for Print -->
+            <img src="{% static 'images/logo.png' %}" class="print-watermark" alt="Watermark Logo">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 d-print-none">
                 <div>
                     <h5 class="fw-bold mb-1"><i class="bi bi-calendar-check text-brand me-2"></i>Controle de Frequência & Chamada</h5>
@@ -1152,8 +1154,10 @@
     </div>
 </div>
 
-<!-- Print-only CSS style to hide navbar and clean up table layout on print -->
-<style>
+.print-watermark {
+    display: none;
+}
+
 @media print {
     body * {
         visibility: hidden;
@@ -1172,6 +1176,18 @@
         box-shadow: none !important;
         margin: 0 !important;
         padding: 0 !important;
+    }
+    .print-watermark {
+        display: block !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        opacity: 0.06 !important;
+        z-index: -1 !important;
+        width: 60% !important;
+        max-width: 400px !important;
+        pointer-events: none !important;
     }
     table {
         width: 100% !important;
