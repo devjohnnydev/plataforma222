@@ -219,7 +219,7 @@
 <!-- ── CLASSWORK TAB ── -->
 <!-- ══════════════════════════════════════════════════════════ -->
 {% if active_tab == 'classwork' %}
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <h5 class="fw-bold mb-0">Atividades</h5>
     {% if user == cls.teacher or user.is_superadmin %}
         <a href="{% url 'assignments:create' class_pk=cls.pk %}" class="btn btn-brand rounded-pill px-3">
@@ -1288,7 +1288,7 @@
                 {% endif %}
             {% else %}
                 <!-- Student View -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                     <h5 class="fw-bold mb-0"><i class="bi bi-award text-brand me-2"></i>Meu Boletim de Notas</h5>
                     {% if average is not None %}
                         <div class="text-end">
