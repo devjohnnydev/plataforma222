@@ -1,0 +1,9 @@
+# Force LF line endings for shell scripts in all environments
+*.sh text eol=lf
+
+# Also force LF for Python files
+*.py text eol=lf
+
+# Force LF for common config files
+*.toml text eol=lf
+Procfile text eol=lf
