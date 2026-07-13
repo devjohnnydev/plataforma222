@@ -17,7 +17,23 @@ def home_view(request):
             return _teacher_dashboard(request)
         else:
             return _student_dashboard(request)
-    return render(request, 'core/landing.html')
+    
+    from courses.models import Course
+    from accounts.models import User
+    
+    # Get published courses for the trainings gallery
+    courses = Course.objects.filter(status='PUBLISHED').select_related('teacher')[:6]
+    # Get teachers for the teachers carousel
+    teachers = User.objects.filter(role='TEACHER').exclude(profile_picture__isnull=True).exclude(profile_picture='')
+    if not teachers.exists():
+        # Fallback to any teachers if none have profile pictures
+        teachers = User.objects.filter(role='TEACHER')
+        
+    context = {
+        'courses': courses,
+        'teachers': teachers,
+    }
+    return render(request, 'core/landing.html', context)
 
 
 def _admin_dashboard(request):
@@ -119,6 +135,33 @@ def admin_delete_user_view(request, user_pk):
         username = user.username
         user.delete()
         messages.warning(request, f"Usuário '{username}' excluído permanentemente.")
+    return redirect('core:home')
+
+
+@login_required
+@require_POST
+def admin_edit_user_view(request, user_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from accounts.models import User
+    user = get_object_or_404(User, pk=user_pk)
+    
+    first_name = request.POST.get('first_name', '').strip()
+    last_name = request.POST.get('last_name', '').strip()
+    email = request.POST.get('email', '').strip()
+    profile_picture = request.POST.get('profile_picture', '').strip()
+    bio = request.POST.get('bio', '').strip()
+    
+    user.first_name = first_name
+    user.last_name = last_name
+    user.email = email
+    user.profile_picture = profile_picture
+    user.bio = bio
+    user.save()
+    
+    messages.success(request, f"Perfil do usuário '{user.username}' atualizado com sucesso.")
     return redirect('core:home')
 
 
