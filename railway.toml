@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "python manage.py migrate --noinput && python manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(email='johnnybraga2@gmail.com').exists() or User.objects.create_superuser('johnnyadmin', 'johnnybraga2@gmail.com', 'Jb@46431194', role='ADMIN')\" && gunicorn johnny_lms.wsgi --log-file -"
+startCommand = "python manage.py migrate --noinput && python manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='johnnyadmin').exists() or User.objects.filter(email='johnnybraga2@gmail.com').exists() or User.objects.create_superuser('johnnyadmin', 'johnnybraga2@gmail.com', 'Jb@46431194', role='ADMIN')\" && gunicorn johnny_lms.wsgi --log-file -"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
