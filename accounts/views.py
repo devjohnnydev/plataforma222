@@ -213,7 +213,7 @@ def profile_view(request):
         ).values_list('enrolled_class_id', flat=True)
         open_checkins = [
             cls for cls in my_classes
-            if cls.checkin_open and cls.pk not in checked_in_class_ids
+            if cls.is_checkin_currently_open and cls.pk not in checked_in_class_ids
         ]
 
     default_avatars = [

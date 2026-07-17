@@ -787,10 +787,16 @@ def toggle_checkin_view(request, pk):
     if not (request.user == cls.teacher or request.user.is_superadmin()):
         return HttpResponse(status=403)
 
-    cls.checkin_open = not cls.checkin_open
+    is_open = cls.is_checkin_currently_open
+    if is_open:
+        cls.checkin_open = False
+        cls.checkin_opened_at = None
+    else:
+        cls.checkin_open = True
+        cls.checkin_opened_at = timezone.now()
     cls.save()
 
-    status_str = "aberto" if cls.checkin_open else "fechado"
+    status_str = "liberado" if cls.checkin_open else "fechado"
     messages.success(request, f'Check-in de presença {status_str} com sucesso.')
     return redirect(request.META.get('HTTP_REFERER', f'/classes/{pk}/'))
 
@@ -801,8 +807,8 @@ def student_checkin_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
     _check_access(request.user, cls)
 
-    if not cls.checkin_open:
-        messages.error(request, 'O check-in de presença não está aberto para esta turma no momento.')
+    if not cls.is_checkin_currently_open:
+        messages.error(request, 'O check-in de presença não está aberto ou já expirou.')
         return redirect('classes:detail', pk=pk)
 
     from .models import Attendance

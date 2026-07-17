@@ -23,7 +23,33 @@ class Class(models.Model):
     banner_image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name='Imagem de Banner')
     is_active = models.BooleanField(default=True, verbose_name='Ativa')
     checkin_open = models.BooleanField(default=False, verbose_name='Check-in Liberado')
+    checkin_opened_at = models.DateTimeField(blank=True, null=True, verbose_name='Check-in Aberto Em')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def is_checkin_currently_open(self):
+        if not self.checkin_open:
+            return False
+        if not self.checkin_opened_at:
+            return False
+        from django.utils import timezone
+        from datetime import timedelta
+        if timezone.now() - self.checkin_opened_at > timedelta(minutes=30):
+            # Auto-close it
+            self.checkin_open = False
+            self.save(update_fields=['checkin_open'])
+            return False
+        return True
+
+    @property
+    def checkin_remaining_minutes(self):
+        if not self.is_checkin_currently_open:
+            return 0
+        from django.utils import timezone
+        from datetime import timedelta
+        elapsed = timezone.now() - self.checkin_opened_at
+        remaining = timedelta(minutes=30) - elapsed
+        return max(0, int(remaining.total_seconds() / 60))
 
     class Meta:
         verbose_name = 'Turma'
