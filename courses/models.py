@@ -1,4 +1,4 @@
-﻿from django.db import models
+from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 import uuid
@@ -115,6 +115,20 @@ class Lesson(models.Model):
         return self.title
 
 
+class MaterialFolder(models.Model):
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='folders', verbose_name='Aula')
+    name = models.CharField(max_length=255, verbose_name='Nome da Pasta')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Pasta de Material'
+        verbose_name_plural = 'Pastas de Material'
+
+    def __str__(self):
+        return self.name
+
+
 class Material(models.Model):
     class MaterialType(models.TextChoices):
         VIDEO = 'VIDEO', 'Vídeo'
@@ -126,6 +140,7 @@ class Material(models.Model):
 
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='materials', null=True, blank=True, verbose_name='Aula')
     module = models.ForeignKey(Module, on_delete=models.CASCADE, related_name='materials', null=True, blank=True, verbose_name='Módulo')
+    folder = models.ForeignKey(MaterialFolder, on_delete=models.CASCADE, related_name='materials', null=True, blank=True, verbose_name='Pasta')
     title = models.CharField(max_length=255, verbose_name='Título')
     material_type = models.CharField(max_length=10, choices=MaterialType.choices, default=MaterialType.FILE, verbose_name='Tipo')
     file = models.FileField(upload_to='materials/', blank=True, null=True, verbose_name='Arquivo')

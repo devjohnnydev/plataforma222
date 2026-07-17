@@ -34,5 +34,9 @@ urlpatterns = [
     path('classes/<int:pk>/attendance/', views.class_attendance_view, name='attendance'),
     path('classes/<int:pk>/students/<int:student_pk>/reset-password/', views.teacher_reset_student_password_view, name='reset_student_password'),
     path('classes/<int:pk>/grades/', views.class_grades_view, name='grades'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/create/', views.create_folder_view, name='create_folder'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/delete/', views.delete_folder_view, name='delete_folder'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/download/', views.download_folder_view, name='download_folder'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/post-stream/', views.post_folder_to_mural_view, name='post_folder_to_mural'),
 ]
 

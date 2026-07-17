@@ -40,11 +40,26 @@
                     </div>
                 </div>
 
-                <p class="mt-2 mb-0" style="white-space: pre-wrap;">{{ post.content }}</p>
+                <p class="mt-2 mb-0" style="white-space: pre-wrap;">{{ post.content|urlize }}</p>
 
                 <!-- Attached materials and links display -->
-                {% if post.link_url or post.attachment %}
+                {% if post.link_url or post.attachment or post.folder %}
                 <div class="row g-2 mt-3">
+                    {% if post.folder %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-50 d-flex align-items-center gap-3">
+                            <div class="fs-4 text-warning"><i class="bi bi-folder-fill"></i></div>
+                            <div class="text-truncate flex-grow-1">
+                                <div class="fw-bold small text-white text-truncate" title="{{ post.folder.name }}">{{ post.folder.name }}</div>
+                                <small class="text-muted">Pasta de Materiais</small>
+                            </div>
+                            <a href="{% url 'classes:download_folder' pk=cls.pk lesson_pk=post.folder.lesson.pk folder_pk=post.folder.pk %}" class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;">
+                                <i class="bi bi-download"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if post.attachment %}
                     <div class="col-md-6 col-lg-4">
                         <div class="p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-50 d-flex align-items-center gap-3">

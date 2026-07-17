@@ -422,13 +422,18 @@ def add_lesson_material_view(request, pk, lesson_pk):
     if not (request.user == cls.teacher or request.user.is_superadmin()):
         return HttpResponse(status=403)
 
-    from courses.models import Lesson, Material
+    from courses.models import Lesson, Material, MaterialFolder
     lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
 
     title = request.POST.get('title', '').strip()
     material_type = request.POST.get('material_type', 'FILE')
     url = request.POST.get('url', '').strip()
     files = request.FILES.getlist('file')
+    folder_id = request.POST.get('folder_id', '').strip()
+    
+    folder = None
+    if folder_id:
+        folder = get_object_or_404(MaterialFolder, pk=folder_id, lesson=lesson)
 
     created_count = 0
 
@@ -452,6 +457,7 @@ def add_lesson_material_view(request, pk, lesson_pk):
 
             Material.objects.create(
                 lesson=lesson,
+                folder=folder,
                 title=f_title,
                 material_type=f_type,
                 file=f
@@ -461,6 +467,7 @@ def add_lesson_material_view(request, pk, lesson_pk):
         f_title = title if title else url
         Material.objects.create(
             lesson=lesson,
+            folder=folder,
             title=f_title,
             material_type=material_type,
             url=url
@@ -469,6 +476,7 @@ def add_lesson_material_view(request, pk, lesson_pk):
     elif title:
         Material.objects.create(
             lesson=lesson,
+            folder=folder,
             title=title,
             material_type=material_type,
             url=url
@@ -528,7 +536,7 @@ def post_material_to_mural_view(request, pk, lesson_pk, material_pk):
         post.save()
 
     messages.success(request, 'Material postado no mural com sucesso!')
-    return redirect('classes:detail', pk=pk)
+    return redirect('classes:lessons', pk=pk)
 
 
 @login_required
@@ -1102,6 +1110,116 @@ def teacher_reset_student_password_view(request, pk, student_pk):
 
     messages.success(request, f"A senha do aluno {student.get_full_name() or student.username} foi redefinida para a senha padrão: Braga123")
     return redirect('classes:members', pk=pk)
+
+
+@login_required
+@require_POST
+def create_folder_view(request, pk, lesson_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+        
+    from courses.models import Lesson, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    
+    name = request.POST.get('name', '').strip()
+    if name:
+        MaterialFolder.objects.create(lesson=lesson, name=name)
+        messages.success(request, f'Pasta "{name}" criada com sucesso.')
+    else:
+        messages.error(request, 'Nome da pasta é obrigatório.')
+        
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+@require_POST
+def delete_folder_view(request, pk, lesson_pk, folder_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+        
+    from courses.models import Lesson, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    folder = get_object_or_404(MaterialFolder, pk=folder_pk, lesson=lesson)
+    
+    name = folder.name
+    folder.delete()
+    
+    messages.success(request, f'Pasta "{name}" excluída com sucesso.')
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
+def download_folder_view(request, pk, lesson_pk, folder_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+    
+    from courses.models import Lesson, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    folder = get_object_or_404(MaterialFolder, pk=folder_pk, lesson=lesson)
+    
+    materials = folder.materials.all()
+    
+    import io
+    import zipfile
+    from django.http import FileResponse
+    
+    buffer = io.BytesIO()
+    links = []
+    
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for mat in materials:
+            if mat.file:
+                try:
+                    file_path = mat.file.path
+                    import os
+                    if os.path.exists(file_path):
+                        arcname = os.path.basename(file_path)
+                        zip_file.write(file_path, arcname)
+                    else:
+                        zip_file.writestr(mat.file.name.split('/')[-1], mat.file.read())
+                except Exception:
+                    try:
+                        zip_file.writestr(mat.file.name.split('/')[-1], mat.file.read())
+                    except Exception:
+                        pass
+            elif mat.url:
+                links.append(f"{mat.title}: {mat.url}")
+        
+        if links:
+            links_content = "\n".join(links)
+            zip_file.writestr("links.txt", links_content)
+            
+    buffer.seek(0)
+    response = FileResponse(buffer, as_attachment=True, filename=f"{folder.name}.zip")
+    return response
+
+
+@login_required
+@require_POST
+def post_folder_to_mural_view(request, pk, lesson_pk, folder_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+        
+    from courses.models import Lesson, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    folder = get_object_or_404(MaterialFolder, pk=folder_pk, lesson=lesson)
+    
+    from .models import StreamPost
+    
+    post_content = f"Compartilhou a pasta de materiais: {folder.name}"
+    post = StreamPost.objects.create(
+        target_class=cls,
+        author=request.user,
+        content=post_content,
+        post_type=StreamPost.PostType.MATERIAL,
+        folder=folder
+    )
+    
+    messages.success(request, 'Pasta de materiais postada no mural com sucesso!')
+    return redirect('classes:lessons', pk=pk)
 
 
 

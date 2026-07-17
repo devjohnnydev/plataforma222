@@ -1,4 +1,4 @@
-﻿import uuid
+import uuid
 import string
 import random
 from django.db import models
@@ -73,6 +73,7 @@ class StreamPost(models.Model):
     post_type = models.CharField(max_length=20, choices=PostType.choices, default=PostType.ANNOUNCEMENT, verbose_name='Tipo')
     attachment = models.FileField(upload_to='stream/attachments/', blank=True, null=True, verbose_name='Anexo')
     link_url = models.URLField(max_length=1024, blank=True, null=True, verbose_name='Link')
+    folder = models.ForeignKey('courses.MaterialFolder', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Pasta Anexada')
     is_pinned = models.BooleanField(default=False, verbose_name='Fixado')
     created_at = models.DateTimeField(auto_now_add=True)
 
