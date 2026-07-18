@@ -79,9 +79,9 @@
         color: var(--primary) !important;
     }
 
-    /* Grid Layout for App Modules on Dashboard */
+    /* Grid Layout for App Modules on Dashboard - Target only the dashboard index */
     @media (min-width: 768px) {
-        #content-main {
+        body.dashboard #content-main {
             display: grid !important;
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
             gap: 24px !important;
@@ -328,6 +328,71 @@
     #user-tools a:hover {
         color: var(--primary) !important;
         text-decoration: none !important;
+    }
+
+    /* Change List and Filter Panel Styling */
+    #changelist-filter {
+        background: #161622 !important;
+        border-left: 1px solid var(--border-color) !important;
+        color: #ffffff !important;
+    }
+    #changelist-filter h2 {
+        background: rgba(255, 232, 31, 0.1) !important;
+        color: #FFE81F !important;
+        font-weight: 700 !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        padding: 10px 15px !important;
+        margin: 0 !important;
+    }
+    #changelist-filter ul {
+        margin: 0 !important;
+        padding: 10px 15px !important;
+    }
+    #changelist-filter ul li {
+        list-style-type: none !important;
+        margin-bottom: 8px !important;
+        font-size: 0.85rem !important;
+    }
+    #changelist-filter ul li.selected {
+        border-left: 3px solid #FFE81F !important;
+        padding-left: 8px !important;
+        background: rgba(255, 232, 31, 0.05) !important;
+    }
+    #changelist-filter ul li.selected a {
+        color: #FFE81F !important;
+        font-weight: 700 !important;
+    }
+    #changelist-filter a {
+        color: #cccccc !important;
+    }
+    #changelist-filter a:hover {
+        color: #FFE81F !important;
+        text-decoration: none !important;
+    }
+    #changelist-filter h3 {
+        color: #FFE81F !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        margin: 15px 0 8px 0 !important;
+        padding-bottom: 4px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+    
+    /* Change List Results Table Contrast */
+    #changelist #result_list th, #changelist #result_list td {
+        color: #ffffff !important;
+        font-size: 0.85rem !important;
+        padding: 10px 12px !important;
+    }
+    #changelist #result_list th a {
+        color: #FFE81F !important;
+    }
+    #changelist #result_list th a:hover {
+        color: #E6D11B !important;
+    }
+    #changelist #result_list tbody tr:hover td {
+        background: rgba(255, 252, 220, 0.05) !important;
     }
 </style>
 {% endblock %}
