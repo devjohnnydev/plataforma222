@@ -384,6 +384,7 @@
         color: #ffffff !important;
         font-size: 0.85rem !important;
         padding: 10px 12px !important;
+        border-bottom: 1px solid #2a2a36 !important;
     }
     #changelist #result_list th a {
         color: #FFE81F !important;
@@ -391,9 +392,46 @@
     #changelist #result_list th a:hover {
         color: #E6D11B !important;
     }
-    #changelist #result_list tbody tr:hover td {
-        background: rgba(255, 252, 220, 0.05) !important;
+
+    /* Fix alternating row backgrounds — both must be dark */
+    #changelist #result_list tbody tr {
+        background: #1a1a26 !important;
+    }
+    #changelist #result_list tbody tr.row1 {
+        background: #1a1a26 !important;
+    }
+    #changelist #result_list tbody tr.row2 {
+        background: #141420 !important;
+    }
+
+    /* Fix text color in all rows regardless of state */
+    #changelist #result_list tbody tr td,
+    #changelist #result_list tbody tr td a {
+        color: #e0e0e0 !important;
+    }
+
+    /* Hover state */
+    #changelist #result_list tbody tr:hover {
+        background: rgba(255, 232, 31, 0.06) !important;
+    }
+    #changelist #result_list tbody tr:hover td,
+    #changelist #result_list tbody tr:hover td a {
+        color: #ffffff !important;
+    }
+
+    /* SELECTED row — checkbox checked — high contrast */
+    #changelist #result_list tbody tr.selected {
+        background: #2a2a00 !important;
+        border-left: 3px solid #FFE81F !important;
+        box-shadow: inset 3px 0 0 #FFE81F !important;
+    }
+    #changelist #result_list tbody tr.selected td,
+    #changelist #result_list tbody tr.selected td a {
+        color: #ffffff !important;
+        font-weight: 600 !important;
+    }
+    #changelist #result_list tbody tr.selected td a:hover {
+        color: #FFE81F !important;
     }
 </style>
 {% endblock %}
-
