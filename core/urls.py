@@ -12,4 +12,5 @@ urlpatterns = [
     path('admin/users/<int:user_pk>/delete/', views.admin_delete_user_view, name='admin_delete_user'),
     path('admin/classes/<int:class_pk>/delete/', views.admin_delete_class_view, name='admin_delete_class'),
     path('admin/courses/<int:course_pk>/delete/', views.admin_delete_course_view, name='admin_delete_course'),
+    path('admin/users/<int:user_pk>/toggle-promote/', views.admin_toggle_promote_teacher_view, name='admin_toggle_promote_teacher'),
 ]

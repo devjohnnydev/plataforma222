@@ -233,4 +233,26 @@ def profile_view(request):
     return render(request, 'accounts/profile.html', context)
 
 
+@login_required
+def switch_role_view(request):
+    # Check if the user is a teacher, has a promoted teacher flag, or is a superadmin
+    if request.user.role == 'TEACHER' or getattr(request.user, 'is_promoted_teacher', False) or request.user.is_superuser:
+        from accounts.models import User
+        # Fetch the actual user from DB to know their database role
+        actual_user = User.objects.get(pk=request.user.pk)
+        
+        current_view = request.session.get('view_as')
+        if not current_view:
+            current_view = actual_user.role
+            
+        if current_view == 'TEACHER':
+            request.session['view_as'] = 'STUDENT'
+            messages.success(request, "Visualização alterada para Aluno.")
+        else:
+            request.session['view_as'] = 'TEACHER'
+            messages.success(request, "Visualização alterada para Professor.")
+            
+    return redirect(request.META.get('HTTP_REFERER', 'core:home'))
+
+
 

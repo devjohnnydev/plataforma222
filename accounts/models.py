@@ -1,4 +1,4 @@
-﻿from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
@@ -8,6 +8,7 @@ class User(AbstractUser):
         STUDENT = "STUDENT", "Student"
 
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
+    is_promoted_teacher = models.BooleanField(default=False, verbose_name="Promovido a Professor")
     
     # Common profile fields
     profile_picture = models.URLField(max_length=1024, blank=True, null=True)

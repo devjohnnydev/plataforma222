@@ -403,3 +403,20 @@ def chat_view(request):
     ])
     return render(request, 'core/chat.html', {'chat_history_json': chat_history_json})
 
+
+@login_required
+@require_POST
+def admin_toggle_promote_teacher_view(request, user_pk):
+    if not request.user.is_superadmin():
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+
+    from accounts.models import User
+    user = get_object_or_404(User, pk=user_pk)
+    user.is_promoted_teacher = not user.is_promoted_teacher
+    user.save()
+
+    status_str = "promovido a professor (perfil dual)" if user.is_promoted_teacher else "removido da promoção a professor"
+    messages.success(request, f"O status do usuário '{user.username}' foi alterado para: {status_str}.")
+    return redirect('core:home')
+

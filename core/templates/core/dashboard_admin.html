@@ -205,6 +205,15 @@
                                         {% endfor %}
                                     </select>
                                 </form>
+                                {% if u.role == 'STUDENT' %}
+                                    <form method="POST" action="{% url 'core:admin_toggle_promote_teacher' user_pk=u.pk %}" class="d-inline-block ms-2 align-middle">
+                                        {% csrf_token %}
+                                        <div class="form-check form-switch d-inline-block mb-0" title="Permitir perfil de Professor também">
+                                            <input class="form-check-input" type="checkbox" role="switch" onchange="this.form.submit()" {% if u.is_promoted_teacher %}checked{% endif %} id="promote-switch-{{ u.pk }}">
+                                            <label class="form-check-label text-muted small" style="font-size:0.75rem;" for="promote-switch-{{ u.pk }}">Professor Dual</label>
+                                        </div>
+                                    </form>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if u.is_active %}

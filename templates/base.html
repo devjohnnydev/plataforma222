@@ -359,6 +359,18 @@
                                 <li><span class="dropdown-item-text small text-muted">{{ user.email }}</span></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                                {% if user.role == 'TEACHER' or user.is_promoted_teacher or user.is_superadmin %}
+                                    <li>
+                                        <a class="dropdown-item text-brand fw-semibold" href="{% url 'accounts:switch_role' %}">
+                                            <i class="bi bi-arrow-left-right me-2 text-brand"></i>
+                                            {% if user.role == 'STUDENT' %}
+                                                Visualizar como Professor
+                                            {% else %}
+                                                Visualizar como Aluno
+                                            {% endif %}
+                                        </a>
+                                    </li>
+                                {% endif %}
                                 {% if user.is_student %}
                                     <li><a class="dropdown-item" href="{% url 'core:chat' %}"><i class="bi bi-robot me-2"></i>Perguntar ao Mister</a></li>
                                 {% endif %}
