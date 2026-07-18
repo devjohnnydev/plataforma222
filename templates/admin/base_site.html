@@ -131,20 +131,20 @@
         background: rgba(255, 252, 220, 0.04) !important;
     }
 
-    /* CSS-injected Emojis/Icons for Models */
-    .model-user a::before { content: "👤 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-course a::before { content: "📚 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-class a::before { content: "🏫 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-assignment a::before { content: "📝 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-submission a::before { content: "📤 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-attendance a::before { content: "⏱️ "; font-size: 1.1rem; margin-right: 6px; }
-    .model-streampost a::before { content: "📣 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-materialfolder a::before { content: "📁 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-material a::before { content: "📎 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-certificate a::before { content: "🎓 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-group a::before { content: "👥 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-lesson a::before { content: "📖 "; font-size: 1.1rem; margin-right: 6px; }
-    .model-enrollment a::before { content: "🎫 "; font-size: 1.1rem; margin-right: 6px; }
+    /* CSS-injected Emojis/Icons for Models - MAIN DASHBOARD ONLY to avoid sidebar issues */
+    #content-main .model-user a::before { content: "👤 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-course a::before { content: "📚 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-class a::before { content: "🏫 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-assignment a::before { content: "📝 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-submission a::before { content: "📤 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-attendance a::before { content: "⏱️ "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-streampost a::before { content: "📣 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-materialfolder a::before { content: "📁 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-material a::before { content: "📎 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-certificate a::before { content: "🎓 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-group a::before { content: "👥 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-lesson a::before { content: "📖 "; font-size: 1.1rem; margin-right: 6px; }
+    #content-main .model-enrollment a::before { content: "🎫 "; font-size: 1.1rem; margin-right: 6px; }
 
     /* Action buttons: Add and Change */
     .addlink, .changelink {
@@ -187,8 +187,8 @@
 
     /* Input elements style */
     input[type=text], input[type=password], input[type=email], select, textarea {
-        background: rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid var(--border-color) !important;
+        background: #1a1a24 !important;
+        border: 1px solid #3f3f52 !important;
         color: #fff !important;
         border-radius: 6px !important;
         padding: 8px 12px !important;
@@ -198,6 +198,60 @@
         border-color: var(--primary) !important;
         outline: none !important;
         box-shadow: 0 0 5px rgba(255, 232, 31, 0.3) !important;
+    }
+
+    /* Form Fields and Labels Visibility */
+    .form-row {
+        padding: 16px 20px !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    }
+    .form-row label, .form-row legend {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+    }
+    .help, .info, .description {
+        color: #a0a0b0 !important;
+        font-size: 0.8rem !important;
+        margin-top: 6px !important;
+    }
+    fieldset.module {
+        background: #161622 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+
+    /* Navigation Sidebar Fixes (Avoiding bad contrast on selected items) */
+    #nav-sidebar {
+        background: #111119 !important;
+        border-right: 1px solid var(--border-color) !important;
+    }
+    #nav-sidebar #searchbar {
+        background: #1a1a24 !important;
+        border: 1px solid #3f3f52 !important;
+        color: #ffffff !important;
+    }
+    #nav-sidebar tr {
+        background: transparent !important;
+    }
+    #nav-sidebar tr:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+    #nav-sidebar tr.selected {
+        background: rgba(255, 232, 31, 0.1) !important;
+    }
+    #nav-sidebar tr.selected a {
+        color: #FFE81F !important;
+        font-weight: 700 !important;
+    }
+    #nav-sidebar a {
+        color: #cccccc !important;
+    }
+    #nav-sidebar a:hover {
+        color: #FFE81F !important;
+    }
+    #nav-sidebar .section a {
+        color: #FFE81F !important;
+        font-weight: 700 !important;
     }
 
     /* Buttons */
