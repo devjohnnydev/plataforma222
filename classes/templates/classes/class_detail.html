@@ -525,9 +525,11 @@
                                         </form>
                                     {% endif %}
                                 {% endif %}
-                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#createFolderModal-{{ lesson.pk }}">
-                                    <i class="bi bi-folder-plus me-1"></i>Criar Pasta
-                                </button>
+                                {% if lesson.order == 0 %}
+                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#createFolderModal-{{ lesson.pk }}">
+                                        <i class="bi bi-folder-plus me-1"></i>Criar Pasta
+                                    </button>
+                                {% endif %}
                                 <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addMaterialModal-{{ lesson.pk }}">
                                     <i class="bi bi-plus-lg me-1"></i>Anexar Arquivo/Notion
                                 </button>
@@ -559,160 +561,233 @@
                             <div class="mb-4">
                                 <h6 class="fw-bold mb-3"><i class="bi bi-folder2-open text-brand me-2"></i>Materiais de Apoio</h6>
                                 
-                                {% if lesson.folders.all or lesson.materials.all %}
-                                    <!-- Folders List -->
-                                    {% for folder in lesson.folders.all %}
-                                        <div class="folder-card mb-3" id="folder-card-{{ folder.pk }}">
-                                            <!-- Folder Header (clickable to expand/collapse) -->
-                                            <div class="folder-header d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-2 rounded-top-4 {% if not folder.materials.all %}rounded-bottom-4{% endif %}"
-                                                 style="background: color-mix(in srgb, {{ folder.color }} 18%, #1a1a2e); border: 1.5px solid color-mix(in srgb, {{ folder.color }} 50%, transparent); cursor: pointer; user-select: none;"
-                                                 onclick="toggleFolder({{ folder.pk }}, this)">
+                                {% if lesson.order == 0 %}
+                                    <!-- ONLY show Folders for "Materiais do Curso" (order 0) -->
+                                    {% if lesson.folders.all or lesson.materials.all %}
+                                        <!-- Folders List -->
+                                        {% for folder in lesson.folders.all %}
+                                            <div class="folder-card mb-3" id="folder-card-{{ folder.pk }}">
+                                                <!-- Folder Header (clickable to expand/collapse) -->
+                                                <div class="folder-header d-flex justify-content-between align-items-center flex-wrap gap-2 px-3 py-2 rounded-top-4 {% if not folder.materials.all %}rounded-bottom-4{% endif %}"
+                                                     style="background: color-mix(in srgb, {{ folder.color }} 18%, #1a1a2e); border: 1.5px solid color-mix(in srgb, {{ folder.color }} 50%, transparent); cursor: pointer; user-select: none;"
+                                                     onclick="toggleFolder({{ folder.pk }}, this)">
 
-                                                <!-- Left: icon + name + count badge -->
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <i class="bi bi-folder-fill fs-5 folder-icon-{{ folder.pk }}" style="color: {{ folder.color }};"></i>
-                                                    <span class="fw-semibold text-light">{{ folder.name }}</span>
-                                                    {% if folder.materials.all %}
-                                                        <span class="badge rounded-pill" style="background: {{ folder.color }}; color: #000; font-size: 0.7rem;">{{ folder.materials.count }}</span>
-                                                    {% endif %}
-                                                    <i class="bi bi-chevron-down text-muted folder-chevron-{{ folder.pk }}" style="font-size: 0.75rem; transition: transform 0.25s;"></i>
-                                                </div>
+                                                    <!-- Left: icon + name + count badge -->
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bi bi-folder-fill fs-5 folder-icon-{{ folder.pk }}" style="color: {{ folder.color }};"></i>
+                                                        <span class="fw-semibold text-light">{{ folder.name }}</span>
+                                                        {% if folder.materials.all %}
+                                                            <span class="badge rounded-pill" style="background: {{ folder.color }}; color: #000; font-size: 0.7rem;">{{ folder.materials.count }}</span>
+                                                        {% endif %}
+                                                        <i class="bi bi-chevron-down text-muted folder-chevron-{{ folder.pk }}" style="font-size: 0.75rem; transition: transform 0.25s;"></i>
+                                                    </div>
 
-                                                <!-- Right: action buttons (prevent click propagation) -->
-                                                <div class="d-flex align-items-center gap-2 flex-wrap" onclick="event.stopPropagation()">
-                                                    <a href="{% url 'classes:download_folder' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
-                                                       class="btn btn-xs btn-outline-brand rounded-pill px-2 py-0"
-                                                       style="font-size:0.72rem;" title="Baixar Pasta como ZIP">
-                                                        <i class="bi bi-download me-1"></i>Baixar
-                                                    </a>
-                                                    {% if user == cls.teacher or user.is_superadmin %}
-                                                        <!-- Color Picker Button -->
-                                                        <div class="dropdown d-inline-block">
-                                                            <button type="button"
-                                                                    class="btn btn-xs rounded-pill px-2 py-0"
-                                                                    style="font-size:0.72rem; background: {{ folder.color }}22; border: 1px solid {{ folder.color }}; color: {{ folder.color }};"
-                                                                    data-bs-toggle="dropdown" title="Mudar Cor da Pasta">
-                                                                <i class="bi bi-palette me-1"></i>Cor
-                                                            </button>
-                                                            <div class="dropdown-menu p-3 dropdown-menu-dark" style="min-width: 200px;" onclick="event.stopPropagation()">
-                                                                <p class="text-muted small mb-2">Escolha a cor da pasta:</p>
-                                                                <div class="d-flex flex-wrap gap-2 mb-3">
-                                                                    {% for preset_color in "#F5A623,#4ECDC4,#45B7D1,#96CEB4,#FFEAA7,#DDA0DD,#FF6B6B,#A8E6CF,#FFD93D,#6C5CE7,#00B894,#E17055" %}
-                                                                        <form method="POST" action="{% url 'classes:change_folder_color' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}" class="m-0">
-                                                                            {% csrf_token %}
-                                                                            <input type="hidden" name="color" value="{{ preset_color }}">
-                                                                            <button type="submit" title="{{ preset_color }}"
-                                                                                    style="width:24px; height:24px; border-radius:50%; border: 2px solid rgba(255,255,255,0.3); background: {{ preset_color }}; cursor:pointer; padding:0;"
-                                                                                    {% if folder.color == preset_color %}style="border-color: white !important;"{% endif %}>
-                                                                            </button>
-                                                                        </form>
-                                                                    {% endfor %}
-                                                                </div>
-                                                                <!-- Custom color picker -->
-                                                                <form method="POST" action="{% url 'classes:change_folder_color' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}" class="d-flex gap-2 align-items-center">
-                                                                    {% csrf_token %}
-                                                                    <input type="color" name="color" value="{{ folder.color }}"
-                                                                           style="width:36px; height:28px; border:none; background:none; cursor:pointer; padding:0;"
-                                                                           title="Cor personalizada">
-                                                                    <button type="submit" class="btn btn-xs btn-outline-light rounded-pill px-3 py-0" style="font-size:0.72rem;">
-                                                                        Aplicar
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                        <form method="POST" action="{% url 'classes:post_folder_to_mural' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
-                                                              class="m-0 d-inline" onsubmit="return confirm('Deseja compartilhar esta pasta inteira no mural?')">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0" style="font-size:0.72rem;">
-                                                                <i class="bi bi-megaphone me-1"></i>Mural
-                                                            </button>
-                                                        </form>
-                                                        <form method="POST" action="{% url 'classes:delete_folder' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
-                                                              class="m-0 d-inline" onsubmit="return confirm('Deseja realmente excluir esta pasta e todos os seus materiais?')">
-                                                            {% csrf_token %}
-                                                            <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0" style="font-size:0.72rem;">
-                                                                <i class="bi bi-trash me-1"></i>Excluir
-                                                            </button>
-                                                        </form>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-
-                                            <!-- Folder Body (collapsible) — hidden when empty -->
-                                            {% if folder.materials.all %}
-                                                <div class="folder-body" id="folder-body-{{ folder.pk }}"
-                                                     style="display:none; border: 1.5px solid color-mix(in srgb, {{ folder.color }} 30%, transparent); border-top: none; border-radius: 0 0 1rem 1rem; background: #13131f; padding: 12px;">
-                                                    <div class="row g-2">
-                                                        {% for mat in folder.materials.all %}
-                                                            <div class="col-12 col-sm-6 col-lg-4">
-                                                                <div class="p-2 rounded-3 d-flex align-items-center gap-2"
-                                                                     style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-                                                                    <div class="fs-4 flex-shrink-0"><i class="{{ mat.icon }}"></i></div>
-                                                                    <div class="text-truncate flex-grow-1 min-w-0">
-                                                                        <div class="fw-semibold small text-truncate text-light">{{ mat.title }}</div>
-                                                                        <small class="text-muted" style="font-size: 0.68rem;">{{ mat.get_material_type_display }}</small>
-                                                                    </div>
-                                                                    <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                                                                        {% if mat.url %}
-                                                                            <a href="{{ mat.url }}" target="_blank" class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Abrir Link">
-                                                                                <i class="bi bi-box-arrow-up-right" style="font-size:0.65rem;"></i>
-                                                                            </a>
-                                                                        {% elif mat.file %}
-                                                                            <a href="{{ mat.file.url }}" download class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Baixar">
-                                                                                <i class="bi bi-download" style="font-size:0.65rem;"></i>
-                                                                            </a>
-                                                                        {% endif %}
-                                                                        {% if user == cls.teacher or user.is_superadmin %}
-                                                                            <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
-                                                                                {% csrf_token %}
-                                                                                <div class="dropdown d-inline-block">
-                                                                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" data-bs-toggle="dropdown" title="Mover">
-                                                                                        <i class="bi bi-folder-symlink" style="font-size:0.65rem;"></i>
-                                                                                    </button>
-                                                                                    <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 170px;">
-                                                                                        <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
-                                                                                        <li>
-                                                                                            <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
-                                                                                                <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
-                                                                                            </button>
-                                                                                        </li>
-                                                                                        {% for fld in lesson.folders.all %}
-                                                                                            <li>
-                                                                                                <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
-                                                                                                    <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
-                                                                                                </button>
-                                                                                            </li>
-                                                                                        {% endfor %}
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </form>
-                                                                            <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Compartilhar no mural?')">
-                                                                                {% csrf_token %}
-                                                                                <button type="submit" class="btn btn-sm btn-outline-success rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Postar no Mural">
-                                                                                    <i class="bi bi-megaphone" style="font-size:0.65rem;"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                            <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja excluir este material?')">
-                                                                                {% csrf_token %}
-                                                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Excluir">
-                                                                                    <i class="bi bi-trash" style="font-size:0.65rem;"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                        {% endif %}
-                                                                    </div>
+                                                    <!-- Right: action buttons (prevent click propagation) -->
+                                                    <div class="d-flex align-items-center gap-2 flex-wrap" onclick="event.stopPropagation()">
+                                                        <a href="{% url 'classes:download_folder' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
+                                                           class="btn btn-xs btn-outline-brand rounded-pill px-2 py-0"
+                                                           style="font-size:0.72rem;" title="Baixar Pasta como ZIP">
+                                                            <i class="bi bi-download me-1"></i>Baixar
+                                                        </a>
+                                                        {% if user == cls.teacher or user.is_superadmin %}
+                                                            <!-- Color Picker Button -->
+                                                            <div class="dropdown d-inline-block">
+                                                                <button type="button"
+                                                                        class="btn btn-xs rounded-pill px-2 py-0"
+                                                                        style="font-size:0.72rem; background: {{ folder.color }}22; border: 1px solid {{ folder.color }}; color: {{ folder.color }};"
+                                                                        data-bs-toggle="dropdown" title="Mudar Cor da Pasta">
+                                                                    <i class="bi bi-palette me-1"></i>Cor
+                                                                </button>
+                                                                <div class="dropdown-menu p-3 dropdown-menu-dark" style="min-width: 215px;" onclick="event.stopPropagation()">
+                                                                    <p class="text-muted small mb-2">Escolha a cor da pasta:</p>
+                                                                    <form method="POST" action="{% url 'classes:change_folder_color' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}" class="m-0">
+                                                                        {% csrf_token %}
+                                                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                                                            <button type="submit" name="color" value="#F5A623" title="Laranja" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#F5A623' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #F5A623; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#4ECDC4" title="Turquesa" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#4ECDC4' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #4ECDC4; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#45B7D1" title="Azul" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#45B7D1' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #45B7D1; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#96CEB4" title="Verde Suave" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#96CEB4' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #96CEB4; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#FFEAA7" title="Amarelo Pastel" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#FFEAA7' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #FFEAA7; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#DDA0DD" title="Lilás" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#DDA0DD' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #DDA0DD; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#FF6B6B" title="Vermelho" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#FF6B6B' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #FF6B6B; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#A8E6CF" title="Menta" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#A8E6CF' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #A8E6CF; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#FFD93D" title="Amarelo Sol" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#FFD93D' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #FFD93D; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#6C5CE7" title="Roxo" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#6C5CE7' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #6C5CE7; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#00B894" title="Verde" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#00B894' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #00B894; cursor:pointer; padding:0;"></button>
+                                                                            <button type="submit" name="color" value="#E17055" title="Argila" style="width:24px; height:24px; border-radius:50%; border: 2px solid {% if folder.color == '#E17055' %}#ffffff{% else %}rgba(255,255,255,0.3){% endif %}; background: #E17055; cursor:pointer; padding:0;"></button>
+                                                                        </div>
+                                                                    </form>
+                                                                    <!-- Custom color picker -->
+                                                                    <form method="POST" action="{% url 'classes:change_folder_color' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}" class="d-flex gap-2 align-items-center">
+                                                                        {% csrf_token %}
+                                                                        <input type="color" name="color" value="{{ folder.color }}"
+                                                                               style="width:36px; height:28px; border:none; background:none; cursor:pointer; padding:0;"
+                                                                               title="Cor personalizada">
+                                                                        <button type="submit" class="btn btn-xs btn-outline-light rounded-pill px-3 py-0" style="font-size:0.72rem;">
+                                                                            Aplicar
+                                                                        </button>
+                                                                    </form>
                                                                 </div>
                                                             </div>
-                                                        {% endfor %}
+                                                            <form method="POST" action="{% url 'classes:post_folder_to_mural' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
+                                                                  class="m-0 d-inline" onsubmit="return confirm('Deseja compartilhar esta pasta inteira no mural?')">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0" style="font-size:0.72rem;">
+                                                                    <i class="bi bi-megaphone me-1"></i>Mural
+                                                                </button>
+                                                            </form>
+                                                            <form method="POST" action="{% url 'classes:delete_folder' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
+                                                                  class="m-0 d-inline" onsubmit="return confirm('Deseja realmente excluir esta pasta e todos os seus materiais?')">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0" style="font-size:0.72rem;">
+                                                                    <i class="bi bi-trash me-1"></i>Excluir
+                                                                </button>
+                                                            </form>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
-                                            {% endif %}
-                                        </div>
-                                    {% endfor %}
 
-                                    <!-- Root Materials List (Not in folders) -->
-                                    <div class="row g-2 mt-2">
-                                        {% for mat in lesson.materials.all %}
-                                            {% if not mat.folder %}
+                                                <!-- Folder Body (collapsible) — hidden when empty -->
+                                                {% if folder.materials.all %}
+                                                    <div class="folder-body" id="folder-body-{{ folder.pk }}"
+                                                         style="display:none; border: 1.5px solid color-mix(in srgb, {{ folder.color }} 30%, transparent); border-top: none; border-radius: 0 0 1rem 1rem; background: #13131f; padding: 12px;">
+                                                        <div class="row g-2">
+                                                            {% for mat in folder.materials.all %}
+                                                                <div class="col-12 col-sm-6 col-lg-4">
+                                                                    <div class="p-2 rounded-3 d-flex align-items-center gap-2"
+                                                                         style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                                                                        <div class="fs-4 flex-shrink-0"><i class="{{ mat.icon }}"></i></div>
+                                                                        <div class="text-truncate flex-grow-1 min-w-0">
+                                                                            <div class="fw-semibold small text-truncate text-light">{{ mat.title }}</div>
+                                                                            <small class="text-muted" style="font-size: 0.68rem;">{{ mat.get_material_type_display }}</small>
+                                                                        </div>
+                                                                        <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                                            {% if mat.url %}
+                                                                                <a href="{{ mat.url }}" target="_blank" class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Abrir Link">
+                                                                                    <i class="bi bi-box-arrow-up-right" style="font-size:0.65rem;"></i>
+                                                                                </a>
+                                                                            {% elif mat.file %}
+                                                                                <a href="{{ mat.file.url }}" download class="btn btn-sm btn-outline-brand rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Baixar">
+                                                                                    <i class="bi bi-download" style="font-size:0.65rem;"></i>
+                                                                                </a>
+                                                                            {% endif %}
+                                                                            {% if user == cls.teacher or user.is_superadmin %}
+                                                                                <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
+                                                                                    {% csrf_token %}
+                                                                                    <div class="dropdown d-inline-block">
+                                                                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" data-bs-toggle="dropdown" title="Mover">
+                                                                                            <i class="bi bi-folder-symlink" style="font-size:0.65rem;"></i>
+                                                                                        </button>
+                                                                                        <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 170px;">
+                                                                                            <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
+                                                                                            <li>
+                                                                                                <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
+                                                                                                    <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
+                                                                                                </button>
+                                                                                            </li>
+                                                                                            {% for fld in lesson.folders.all %}
+                                                                                                <li>
+                                                                                                    <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
+                                                                                                        <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
+                                                                                                    </button>
+                                                                                                </li>
+                                                                                            {% endfor %}
+                                                                                        </ul>
+                                                                                    </div>
+                                                                                </form>
+                                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Compartilhar no mural?')">
+                                                                                    {% csrf_token %}
+                                                                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Postar no Mural">
+                                                                                        <i class="bi bi-megaphone" style="font-size:0.65rem;"></i>
+                                                                                    </button>
+                                                                                </form>
+                                                                                <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja excluir este material?')">
+                                                                                    {% csrf_token %}
+                                                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-flex align-items-center justify-content-center" style="width:26px;height:26px;padding:0;" title="Excluir">
+                                                                                        <i class="bi bi-trash" style="font-size:0.65rem;"></i>
+                                                                                    </button>
+                                                                                </form>
+                                                                            {% endif %}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+
+                                        <!-- Root Materials List (Not in folders) -->
+                                        <div class="row g-2 mt-2">
+                                            {% for mat in lesson.materials.all %}
+                                                {% if not mat.folder %}
+                                                    <div class="col-md-6 col-lg-4">
+                                                        <div class="p-3 bg-body rounded-3 border border-secondary d-flex align-items-center gap-3">
+                                                            <div class="fs-3"><i class="{{ mat.icon }}"></i></div>
+                                                            <div class="text-truncate flex-grow-1">
+                                                                <div class="fw-bold small text-truncate text-light">{{ mat.title }}</div>
+                                                                <small class="text-muted">{{ mat.get_material_type_display }}</small>
+                                                            </div>
+                                                            {% if mat.url %}
+                                                                <a href="{{ mat.url }}" target="_blank" class="btn btn-sm btn-outline-brand rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                                                    <i class="bi bi-box-arrow-up-right"></i>
+                                                                </a>
+                                                            {% elif mat.file %}
+                                                                <a href="{{ mat.file.url }}" download class="btn btn-sm btn-outline-brand rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                                                    <i class="bi bi-download"></i>
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if user == cls.teacher or user.is_superadmin %}
+                                                                <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
+                                                                    {% csrf_token %}
+                                                                    <div class="dropdown d-inline-block">
+                                                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;" data-bs-toggle="dropdown" title="Mover para Pasta">
+                                                                            <i class="bi bi-folder-symlink" style="font-size: 0.85rem;"></i>
+                                                                        </button>
+                                                                        <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 180px;">
+                                                                            <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
+                                                                            <li>
+                                                                                <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
+                                                                                    <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
+                                                                                </button>
+                                                                            </li>
+                                                                            {% for fld in lesson.folders.all %}
+                                                                                <li>
+                                                                                    <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
+                                                                                        <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
+                                                                                    </button>
+                                                                                </li>
+                                                                            {% endfor %}
+                                                                        </ul>
+                                                                    </div>
+                                                                </form>
+                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Postar no Mural">
+                                                                        <i class="bi bi-megaphone"></i>
+                                                                    </button>
+                                                                </form>
+                                                                <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Excluir Material">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted small fst-italic mb-0">Nenhum material anexado.</p>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Regular lessons: show simple grid of materials (no folders, no mover dropdown) -->
+                                    {% if lesson.materials.all %}
+                                        <div class="row g-2">
+                                            {% for mat in lesson.materials.all %}
                                                 <div class="col-md-6 col-lg-4">
                                                     <div class="p-3 bg-body rounded-3 border border-secondary d-flex align-items-center gap-3">
                                                         <div class="fs-3"><i class="{{ mat.icon }}"></i></div>
@@ -730,29 +805,6 @@
                                                             </a>
                                                         {% endif %}
                                                         {% if user == cls.teacher or user.is_superadmin %}
-                                                            <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
-                                                                {% csrf_token %}
-                                                                <div class="dropdown d-inline-block">
-                                                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;" data-bs-toggle="dropdown" title="Mover para Pasta">
-                                                                        <i class="bi bi-folder-symlink" style="font-size: 0.85rem;"></i>
-                                                                    </button>
-                                                                    <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 180px;">
-                                                                        <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
-                                                                        <li>
-                                                                            <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
-                                                                                <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
-                                                                            </button>
-                                                                        </li>
-                                                                        {% for fld in lesson.folders.all %}
-                                                                            <li>
-                                                                                <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
-                                                                                    <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
-                                                                                </button>
-                                                                            </li>
-                                                                        {% endfor %}
-                                                                    </ul>
-                                                                </div>
-                                                            </form>
                                                             <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
                                                                 {% csrf_token %}
                                                                 <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Postar no Mural">
@@ -768,11 +820,11 @@
                                                         {% endif %}
                                                     </div>
                                                 </div>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    <p class="text-muted small fst-italic mb-0">Nenhum material anexado a esta aula.</p>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted small fst-italic mb-0">Nenhum material anexado.</p>
+                                    {% endif %}
                                 {% endif %}
                             </div>
 
