@@ -1228,6 +1228,30 @@ def post_folder_to_mural_view(request, pk, lesson_pk, folder_pk):
     return redirect('classes:lessons', pk=pk)
 
 
+@login_required
+@require_POST
+def move_material_view(request, pk, lesson_pk, material_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+        
+    from courses.models import Lesson, Material, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    material = get_object_or_404(Material, pk=material_pk, lesson=lesson)
+    
+    folder_id = request.POST.get('folder_id', '').strip()
+    if folder_id:
+        folder = get_object_or_404(MaterialFolder, pk=folder_id, lesson=lesson)
+        material.folder = folder
+        messages.success(request, f'Material "{material.title}" movido para a pasta "{folder.name}".')
+    else:
+        material.folder = None
+        messages.success(request, f'Material "{material.title}" movido para a raiz.')
+        
+    material.save()
+    return redirect('classes:lessons', pk=pk)
+
+
 
 
 

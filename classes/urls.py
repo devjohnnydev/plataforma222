@@ -38,5 +38,6 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/delete/', views.delete_folder_view, name='delete_folder'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/download/', views.download_folder_view, name='download_folder'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/post-stream/', views.post_folder_to_mural_view, name='post_folder_to_mural'),
+    path('classes/<int:pk>/lessons/<int:lesson_pk>/material/<int:material_pk>/move/', views.move_material_view, name='move_material'),
 ]
 

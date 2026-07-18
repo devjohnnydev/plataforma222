@@ -609,6 +609,29 @@
                                                                         </a>
                                                                     {% endif %}
                                                                     {% if user == cls.teacher or user.is_superadmin %}
+                                                                        <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
+                                                                            {% csrf_token %}
+                                                                            <div class="dropdown d-inline-block">
+                                                                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:28px;height:28px;padding:0;" data-bs-toggle="dropdown" title="Mover para Pasta">
+                                                                                    <i class="bi bi-folder-symlink" style="font-size: 0.75rem;"></i>
+                                                                                </button>
+                                                                                <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 180px;">
+                                                                                    <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
+                                                                                    <li>
+                                                                                        <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
+                                                                                            <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    {% for fld in lesson.folders.all %}
+                                                                                        <li>
+                                                                                            <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
+                                                                                                <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
+                                                                                            </button>
+                                                                                        </li>
+                                                                                    {% endfor %}
+                                                                                </ul>
+                                                                            </div>
+                                                                        </form>
                                                                         <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
                                                                             {% csrf_token %}
                                                                             <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" style="width:28px;height:28px;padding:0;display:flex;align-items:center;justify-content:center;" title="Postar no Mural">
@@ -654,6 +677,29 @@
                                                             </a>
                                                         {% endif %}
                                                         {% if user == cls.teacher or user.is_superadmin %}
+                                                            <form method="POST" action="{% url 'classes:move_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0 d-inline-block">
+                                                                {% csrf_token %}
+                                                                <div class="dropdown d-inline-block">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;padding:0;" data-bs-toggle="dropdown" title="Mover para Pasta">
+                                                                        <i class="bi bi-folder-symlink" style="font-size: 0.85rem;"></i>
+                                                                    </button>
+                                                                    <ul class="dropdown-menu dropdown-menu-dark p-2" style="min-width: 180px;">
+                                                                        <li><h6 class="dropdown-header text-muted small px-2">Mover para:</h6></li>
+                                                                        <li>
+                                                                            <button type="submit" name="folder_id" value="" class="dropdown-item py-1 px-2 small {% if not mat.folder %}active{% endif %}">
+                                                                                <i class="bi bi-folder me-1"></i>Nenhuma (Raiz)
+                                                                            </button>
+                                                                        </li>
+                                                                        {% for fld in lesson.folders.all %}
+                                                                            <li>
+                                                                                <button type="submit" name="folder_id" value="{{ fld.pk }}" class="dropdown-item py-1 px-2 small {% if mat.folder == fld %}active{% endif %}">
+                                                                                    <i class="bi bi-folder-fill text-warning me-1"></i>{{ fld.name }}
+                                                                                </button>
+                                                                            </li>
+                                                                        {% endfor %}
+                                                                    </ul>
+                                                                </div>
+                                                            </form>
                                                             <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
                                                                 {% csrf_token %}
                                                                 <button type="submit" class="btn btn-sm btn-outline-success rounded-circle" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;" title="Postar no Mural">
