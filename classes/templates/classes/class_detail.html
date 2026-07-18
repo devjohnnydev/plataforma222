@@ -1013,6 +1013,7 @@
                                     <input type="file" class="form-control bg-body" name="file" multiple>
                                     <div class="form-text text-muted">Para PDFs, Words, Slides, etc.</div>
                                 </div>
+                                {% if lesson.order == 0 %}
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Pasta (Opcional)</label>
                                     <select class="form-select bg-body text-light" name="folder_id">
@@ -1022,6 +1023,7 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                {% endif %}
                             </div>
                             <div class="modal-footer border-secondary">
                                 <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
