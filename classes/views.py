@@ -1157,6 +1157,27 @@ def delete_folder_view(request, pk, lesson_pk, folder_pk):
 
 
 @login_required
+@require_POST
+def change_folder_color_view(request, pk, lesson_pk, folder_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+
+    from courses.models import Lesson, MaterialFolder
+    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    folder = get_object_or_404(MaterialFolder, pk=folder_pk, lesson=lesson)
+
+    color = request.POST.get('color', '#F5A623')
+    # Validate it's a proper hex color
+    import re
+    if re.match(r'^#[0-9A-Fa-f]{6}$', color):
+        folder.color = color
+        folder.save()
+
+    return redirect('classes:lessons', pk=pk)
+
+
+@login_required
 def download_folder_view(request, pk, lesson_pk, folder_pk):
     cls = get_object_or_404(Class, pk=pk)
     _check_access(request.user, cls)

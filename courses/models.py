@@ -118,6 +118,7 @@ class Lesson(models.Model):
 class MaterialFolder(models.Model):
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='folders', verbose_name='Aula')
     name = models.CharField(max_length=255, verbose_name='Nome da Pasta')
+    color = models.CharField(max_length=7, default='#F5A623', verbose_name='Cor da Pasta')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
