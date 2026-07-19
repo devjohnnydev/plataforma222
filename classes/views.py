@@ -1152,6 +1152,7 @@ def class_attendance_view(request, pk):
 
     # Compute counts
     student_stats = {}
+    attendance_grid = {}
     for enroll in enrollments:
         student_stats[enroll.student.pk] = {
             'present': 0,
@@ -1159,6 +1160,7 @@ def class_attendance_view(request, pk):
             'total': 0,
             'percent': 0
         }
+        attendance_grid[enroll.student.pk] = {}
 
     for att in all_attendance:
         if att.student_id in student_stats:
@@ -1167,6 +1169,8 @@ def class_attendance_view(request, pk):
             else:
                 student_stats[att.student_id]['absent'] += 1
             student_stats[att.student_id]['total'] += 1
+            # Add to full grid mapping
+            attendance_grid[att.student_id][att.date] = att.present
 
     for s_pk, stats in student_stats.items():
         if stats['total'] > 0:
@@ -1183,6 +1187,13 @@ def class_attendance_view(request, pk):
     absent_today = sum(1 for att in today_records.values() if not att.present)
     unregistered_today = total_students - len(today_records)
 
+    # Gather unique lesson dates (order > 0 and publish_date is not null)
+    lesson_dates = list(cls.lessons.filter(order__gt=0, publish_date__isnull=False).order_by('order').values_list('publish_date', flat=True))
+    unique_dates = []
+    for d in lesson_dates:
+        if d not in unique_dates:
+            unique_dates.append(d)
+
     context = {
         'cls': cls,
         'enrollments': enrollments,
@@ -1193,6 +1204,8 @@ def class_attendance_view(request, pk):
         'present_today': present_today,
         'absent_today': absent_today,
         'unregistered_today': unregistered_today,
+        'attendance_grid': attendance_grid,
+        'unique_dates': unique_dates,
         'active_tab': 'attendance',
     }
     return render(request, 'classes/class_detail.html', context)

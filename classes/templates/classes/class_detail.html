@@ -1183,13 +1183,21 @@
                     </div>
                 </div>
                 
-                <div class="row mt-3 g-2 text-dark">
-                    <div class="col-6">
+                <div class="row align-items-center mt-3 g-2 text-dark">
+                    <!-- Left: Class Details -->
+                    <div class="col-5">
                         <div class="mb-1"><strong>Curso:</strong> {{ cls.course.title|default:cls.name }}</div>
                         <div class="mb-1"><strong>Turma:</strong> {{ cls.name }}</div>
                         <div class="mb-1"><strong>Professor:</strong> {{ cls.teacher.get_full_name|default:cls.teacher.username }}</div>
                     </div>
-                    <div class="col-6 text-end">
+                    
+                    <!-- Center: Watermark Logo -->
+                    <div class="col-2 text-center d-flex align-items-center justify-content-center">
+                        <img src="{% static 'images/logo.png' %}?v=2" style="max-height: 80px; opacity: 0.15; filter: grayscale(100%); object-fit: contain;" alt="Braga Treinamentos Watermark">
+                    </div>
+                    
+                    <!-- Right: Statistics -->
+                    <div class="col-5 text-end">
                         <div class="mb-1"><strong>Total de Alunos:</strong> {{ total_students }}</div>
                         <div class="mb-1"><strong>Presentes:</strong> {{ present_today }} | <strong>Ausentes:</strong> {{ absent_today }}</div>
                         {% if unregistered_today > 0 %}
@@ -1204,7 +1212,9 @@
                     <ul class="text-dark small mb-0 ps-3">
                         {% for lesson in cls.lessons.all %}
                             {% if lesson.order > 0 or lesson.title != 'Materiais do Curso' %}
-                                <li>{{ lesson.title }}{% if lesson.duration_minutes %} ({{ lesson.duration_minutes }} min){% endif %}</li>
+                                {% if not lesson.publish_date or lesson.publish_date <= selected_date %}
+                                    <li>{{ lesson.title }}{% if lesson.duration_minutes %} ({{ lesson.duration_minutes }} min){% endif %}</li>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     </ul>
@@ -1242,7 +1252,7 @@
 
             <!-- Students List Table -->
             {% if enrollments %}
-                <div class="table-responsive">
+                <div class="table-responsive d-print-none">
                     <table class="table table-hover align-middle text-light border-secondary">
                         <thead>
                             <tr class="border-secondary text-secondary small">
@@ -1410,6 +1420,55 @@
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Print-Only Full Attendance Grid Table -->
+                <div class="d-none d-print-block">
+                    <table class="table table-bordered table-sm align-middle text-dark border-dark" style="font-size: 0.72rem; border-collapse: collapse; width: 100%; border: 1px solid #333 !important;">
+                        <thead>
+                            <tr style="background-color: #f2f2f2 !important; border-bottom: 2px solid #333 !important;">
+                                <th scope="col" style="min-width: 150px; text-align: left; padding: 6px; color: black !important; border: 1px solid #333 !important;">Aluno</th>
+                                {% for date_obj in unique_dates %}
+                                    <th scope="col" class="vertical-header-cell" style="text-align: center; vertical-align: middle; width: 28px; color: black !important; border: 1px solid #333 !important;">
+                                        <div class="vertical-text">{{ date_obj|date:"d/m" }}</div>
+                                    </th>
+                                {% endfor %}
+                                <th scope="col" class="text-center" style="width: 45px; color: black !important; border: 1px solid #333 !important; font-size: 0.7rem; font-weight: bold;">Pres.</th>
+                                <th scope="col" class="text-center" style="width: 45px; color: black !important; border: 1px solid #333 !important; font-size: 0.7rem; font-weight: bold;">Faltas</th>
+                                <th scope="col" class="text-center" style="width: 55px; color: black !important; border: 1px solid #333 !important; font-size: 0.7rem; font-weight: bold;">Freq</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for enroll in enrollments %}
+                                {% with stats=student_stats|dict_get:enroll.student.pk %}
+                                {% with student_atts=attendance_grid|dict_get:enroll.student.pk %}
+                                <tr style="border-bottom: 1px solid #333 !important;">
+                                    <td style="text-align: left; padding: 6px; font-weight: bold; color: black !important; border: 1px solid #333 !important;">
+                                        {{ enroll.student.get_full_name|default:enroll.student.username }}
+                                        <div class="text-muted" style="font-size: 0.65rem; font-weight: normal; color: #555 !important;">{{ enroll.student.email }}</div>
+                                    </td>
+                                    {% for date_obj in unique_dates %}
+                                        {% with present=student_atts|dict_get:date_obj %}
+                                            <td class="text-center" style="font-weight: bold; width: 28px; color: black !important; border: 1px solid #333 !important;">
+                                                {% if present is True %}
+                                                    <span class="text-success" style="color: #198754 !important;">P</span>
+                                                {% elif present is False %}
+                                                    <span class="text-danger" style="color: #dc3545 !important;">F</span>
+                                                {% else %}
+                                                    <span class="text-muted" style="color: #6c757d !important;">-</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endwith %}
+                                    {% endfor %}
+                                    <td class="text-center font-monospace" style="color: black !important; border: 1px solid #333 !important;">{{ stats.present }}</td>
+                                    <td class="text-center font-monospace" style="color: #dc3545 !important; border: 1px solid #333 !important;">{{ stats.absent }}</td>
+                                    <td class="text-center font-monospace fw-bold" style="color: black !important; border: 1px solid #333 !important;">{{ stats.percent }}%</td>
+                                </tr>
+                                {% endwith %}
+                                {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% else %}
                 <div class="text-center py-5 text-muted">
                     <i class="bi bi-people display-4 opacity-25"></i>
@@ -1482,6 +1541,21 @@
     /* Hide interactive components */
     .btn, form, input, select, .navbar, .sidebar, .sidebar-toggle-btn {
         display: none !important;
+    }
+    
+    /* New styles for vertical dates in attendance grid */
+    .vertical-header-cell {
+        height: 65px !important;
+        white-space: nowrap !important;
+        padding: 4px 1px !important;
+    }
+    .vertical-text {
+        writing-mode: vertical-rl !important;
+        transform: rotate(180deg) !important;
+        text-align: center !important;
+        margin: 0 auto !important;
+        font-size: 0.72rem !important;
+        font-weight: bold !important;
     }
 }
 </style>
