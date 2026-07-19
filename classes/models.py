@@ -25,6 +25,10 @@ class Class(models.Model):
     checkin_open = models.BooleanField(default=False, verbose_name='Check-in Liberado')
     checkin_opened_at = models.DateTimeField(blank=True, null=True, verbose_name='Check-in Aberto Em')
     created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField(blank=True, null=True, verbose_name='Data de Início')
+    total_hours = models.PositiveIntegerField(blank=True, null=True, verbose_name='Carga Horária Total (horas)')
+    hours_per_day = models.PositiveIntegerField(blank=True, null=True, verbose_name='Horas por Dia')
+    days_of_week = models.CharField(max_length=50, blank=True, null=True, verbose_name='Dias da Semana (0=Seg, 1=Ter, etc.)')
 
     @property
     def is_checkin_currently_open(self):

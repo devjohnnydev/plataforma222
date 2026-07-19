@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% load custom_filters %}
 
 {% block title %}Criar Nova Turma — Braga Treinamentos{% endblock %}
@@ -73,6 +73,62 @@
                             {% endfor %}
                         </div>
                         <input type="hidden" id="color" name="color" value="#FFE81F">
+                    </div>
+
+                    <!-- Configuração do Cronograma (Opcional) -->
+                    <div class="card bg-dark bg-opacity-20 border border-secondary border-opacity-50 rounded-4 p-4 mb-4">
+                        <h6 class="fw-bold mb-3 text-brand"><i class="bi bi-calendar-event me-2"></i>Gerador Automático de Cronograma (Aulas)</h6>
+                        
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label small fw-semibold">Data de Início das Aulas</label>
+                            <input type="date" class="form-control bg-body" id="start_date" name="start_date">
+                            <div class="form-text text-muted">Data a partir da qual as aulas serão agendadas no calendário.</div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label for="total_hours" class="form-label small fw-semibold">Carga Horária Total (Horas)</label>
+                                <input type="number" min="1" class="form-control bg-body" id="total_hours" name="total_hours" placeholder="Ex: 40">
+                            </div>
+                            <div class="col-6">
+                                <label for="hours_per_day" class="form-label small fw-semibold">Horas por Aula (Dia)</label>
+                                <input type="number" min="1" class="form-control bg-body" id="hours_per_day" name="hours_per_day" placeholder="Ex: 4">
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold text-secondary">Dias da Semana com Aulas</label>
+                            <div class="d-flex flex-wrap gap-3 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="0" id="day-0">
+                                    <label class="form-check-label small" for="day-0">Seg</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="1" id="day-1">
+                                    <label class="form-check-label small" for="day-1">Ter</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="2" id="day-2">
+                                    <label class="form-check-label small" for="day-2">Qua</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="3" id="day-3">
+                                    <label class="form-check-label small" for="day-3">Qui</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="4" id="day-4">
+                                    <label class="form-check-label small" for="day-4">Sex</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="5" id="day-5">
+                                    <label class="form-check-label small" for="day-5">Sáb</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="days_of_week" value="6" id="day-6">
+                                    <label class="form-check-label small" for="day-6">Dom</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Preview -->

@@ -79,7 +79,40 @@ def create_class_view(request):
         if not name:
             messages.error(request, 'O nome da turma é obrigatório.')
         else:
+            import datetime
+            import math
+            from courses.models import Lesson
+
             course = get_object_or_404(Course, pk=course_id, teacher=request.user) if course_id else None
+            
+            # Parse scheduling inputs
+            start_date_str = request.POST.get('start_date')
+            start_date = None
+            if start_date_str:
+                try:
+                    start_date = datetime.datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            
+            total_hours_str = request.POST.get('total_hours')
+            total_hours = None
+            if total_hours_str:
+                try:
+                    total_hours = int(total_hours_str)
+                except ValueError:
+                    pass
+            
+            hours_per_day_str = request.POST.get('hours_per_day')
+            hours_per_day = None
+            if hours_per_day_str:
+                try:
+                    hours_per_day = int(hours_per_day_str)
+                except ValueError:
+                    pass
+
+            days_list = request.POST.getlist('days_of_week')
+            days_of_week_str = ",".join(days_list) if days_list else None
+
             new_class = Class.objects.create(
                 name=name,
                 description=description,
@@ -87,9 +120,106 @@ def create_class_view(request):
                 teacher=request.user,
                 color=color,
                 banner_image=banner_image,
+                start_date=start_date,
+                total_hours=total_hours,
+                hours_per_day=hours_per_day,
+                days_of_week=days_of_week_str,
             )
-            if course:
+
+            # Generate automatic schedule lessons if inputs are valid
+            if start_date and total_hours and hours_per_day and days_list:
+                try:
+                    days_of_week_ints = [int(d) for d in days_list]
+                    num_lessons = math.ceil(total_hours / hours_per_day)
+                    
+                    # Ensure "Materiais do Curso" exists (order=0)
+                    Lesson.objects.get_or_create(
+                        target_class=new_class,
+                        order=0,
+                        defaults={
+                            'title': 'Materiais do Curso',
+                            'content': 'Espaço destinado para o plano de curso, cronograma e materiais gerais da turma.',
+                            'is_published': True,
+                        }
+                    )
+
+                    current_date = start_date
+                    lessons_created = 0
+                    order_idx = 1
+                    weekdays_names = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo']
+
+                    if course:
+                        # Get template lessons from course
+                        from courses.models import Material
+                        course_lessons = list(Lesson.objects.filter(module__course=course).order_by('module__order', 'order'))
+                        
+                        while lessons_created < num_lessons:
+                            if current_date.weekday() in days_of_week_ints:
+                                date_str = current_date.strftime('%d/%m')
+                                day_name = weekdays_names[current_date.weekday()]
+                                
+                                if lessons_created < len(course_lessons):
+                                    cl = course_lessons[lessons_created]
+                                    title = f"Aula {order_idx}: {cl.title} ({date_str})"
+                                    new_lesson = Lesson.objects.create(
+                                        target_class=new_class,
+                                        title=title,
+                                        content=cl.content or f"Aula programada para {day_name}.",
+                                        order=order_idx,
+                                        duration_minutes=hours_per_day * 60,
+                                        is_published=True,
+                                        publish_date=current_date,
+                                    )
+                                    # Copy materials
+                                    for mat in cl.materials.all():
+                                        Material.objects.create(
+                                            lesson=new_lesson,
+                                            title=mat.title,
+                                            material_type=mat.material_type,
+                                            file=mat.file,
+                                            url=mat.url,
+                                            description=mat.description
+                                        )
+                                else:
+                                    title = f"Aula {order_idx} ({date_str} - {day_name})"
+                                    Lesson.objects.create(
+                                        target_class=new_class,
+                                        title=title,
+                                        content=f"Aula programada para {day_name}, dia {current_date.strftime('%d/%m/%Y')}.",
+                                        order=order_idx,
+                                        duration_minutes=hours_per_day * 60,
+                                        is_published=True,
+                                        publish_date=current_date,
+                                    )
+                                lessons_created += 1
+                                order_idx += 1
+                            current_date += datetime.timedelta(days=1)
+                    else:
+                        # No course selected, generate generic scheduled lessons
+                        while lessons_created < num_lessons:
+                            if current_date.weekday() in days_of_week_ints:
+                                date_str = current_date.strftime('%d/%m')
+                                day_name = weekdays_names[current_date.weekday()]
+                                title = f"Aula {order_idx} ({date_str} - {day_name})"
+                                
+                                Lesson.objects.create(
+                                    target_class=new_class,
+                                    title=title,
+                                    content=f"Aula programada para {day_name}, dia {current_date.strftime('%d/%m/%Y')}.",
+                                    order=order_idx,
+                                    duration_minutes=hours_per_day * 60,
+                                    is_published=True,
+                                    publish_date=current_date,
+                                )
+                                lessons_created += 1
+                                order_idx += 1
+                            current_date += datetime.timedelta(days=1)
+                except Exception as e:
+                    messages.warning(request, f"Erro ao gerar cronograma de aulas: {str(e)}")
+            elif course:
+                # Normal copy if course selected but no schedule details
                 copy_course_lessons_to_class(course, new_class)
+
             messages.success(request, f'Turma "{new_class.name}" criada com sucesso! Código: {new_class.join_code}')
             return redirect('classes:detail', pk=new_class.pk)
 

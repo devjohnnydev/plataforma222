@@ -199,6 +199,9 @@ def _teacher_dashboard(request):
     from classes.models import Class
     from assignments.models import Submission
     from courses.models import Course
+    from courses.models import Lesson
+    from django.urls import reverse
+    import json
 
     my_classes = Class.objects.filter(teacher=request.user).select_related('course')
     total_students = sum(c.student_count for c in my_classes)
@@ -210,6 +213,24 @@ def _teacher_dashboard(request):
         grade__isnull=True,
     ).select_related('assignment', 'student', 'assignment__target_class').order_by('-submitted_at')
 
+    # Get calendar events for teacher's classes
+    calendar_lessons = Lesson.objects.filter(
+        target_class__in=my_classes,
+        publish_date__isnull=False
+    ).select_related('target_class')
+    
+    events = []
+    for l in calendar_lessons:
+        events.append({
+            'date': l.publish_date.strftime('%Y-%m-%d'),
+            'title': l.title,
+            'class_name': l.target_class.name,
+            'color': l.target_class.color,
+            'url': reverse('classes:lessons', args=[l.target_class.pk])
+        })
+    
+    events_json = json.dumps(events)
+
     context = {
         'my_classes': my_classes,
         'total_students': total_students,
@@ -217,6 +238,7 @@ def _teacher_dashboard(request):
         'pending_subs_list': pending_subs,
         'class_count': my_classes.count(),
         'course_count': my_courses_count,
+        'events_json': events_json,
     }
     return render(request, 'core/dashboard_teacher.html', context)
 
@@ -224,6 +246,9 @@ def _teacher_dashboard(request):
 def _student_dashboard(request):
     from classes.models import Class, Enrollment
     from assignments.models import Assignment, Submission
+    from courses.models import Lesson
+    from django.urls import reverse
+    import json
 
     enrollments = Enrollment.objects.filter(
         student=request.user,
@@ -231,6 +256,34 @@ def _student_dashboard(request):
     ).select_related('enrolled_class__course', 'enrolled_class__teacher')
 
     my_classes = [e.enrolled_class for e in enrollments]
+
+    # Calculate course progress for student
+    today_date = timezone.now().date()
+    for cls in my_classes:
+        total_lessons = cls.lessons.exclude(order=0).count()
+        cls_total_hours = cls.total_hours or (total_lessons * (cls.hours_per_day or 0)) or 0
+        
+        # Completed lessons (published and publish_date is today or past)
+        completed_lessons_count = cls.lessons.filter(
+            is_published=True,
+            publish_date__lte=today_date
+        ).exclude(order=0).count()
+        
+        cls_hours_completed = completed_lessons_count * (cls.hours_per_day or 0)
+        if cls_total_hours > 0:
+            cls_hours_completed = min(cls_hours_completed, cls_total_hours)
+            progress_pct = int((cls_hours_completed / cls_total_hours) * 100)
+            hours_remaining = max(0, cls_total_hours - cls_hours_completed)
+        else:
+            progress_pct = 0
+            hours_remaining = 0
+            
+        cls.calc_total_hours = cls_total_hours
+        cls.calc_hours_completed = cls_hours_completed
+        cls.calc_hours_remaining = hours_remaining
+        cls.calc_progress_pct = progress_pct
+        cls.calc_total_lessons = total_lessons
+        cls.calc_completed_lessons = completed_lessons_count
 
     # Upcoming assignments (due in future, not yet submitted)
     now = timezone.now()
@@ -262,12 +315,31 @@ def _student_dashboard(request):
         if cls.is_checkin_currently_open and cls.pk not in checked_in_class_ids
     ]
 
+    # Get calendar events for student's classes
+    calendar_lessons = Lesson.objects.filter(
+        target_class__in=my_classes,
+        publish_date__isnull=False
+    ).select_related('target_class')
+    
+    events = []
+    for l in calendar_lessons:
+        events.append({
+            'date': l.publish_date.strftime('%Y-%m-%d'),
+            'title': l.title,
+            'class_name': l.target_class.name,
+            'color': l.target_class.color,
+            'url': reverse('classes:lessons', args=[l.target_class.pk])
+        })
+    
+    events_json = json.dumps(events)
+
     context = {
         'my_classes': my_classes,
         'upcoming_assignments': upcoming_assignments,
         'overdue_assignments': overdue_assignments,
         'class_count': len(my_classes),
         'open_checkins': open_checkins,
+        'events_json': events_json,
     }
     return render(request, 'core/dashboard_student.html', context)
 
