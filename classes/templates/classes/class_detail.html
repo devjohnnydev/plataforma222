@@ -125,6 +125,12 @@
             </a>
         </li>
         {% endif %}
+        <li class="nav-item">
+            <a class="nav-link {% if active_tab == 'notes' %}active{% endif %}"
+               href="{% url 'classes:notes' pk=cls.pk %}">
+                <i class="bi bi-pencil-square me-1"></i>Anotações
+            </a>
+        </li>
     </ul>
 </div>
 
@@ -1699,6 +1705,98 @@
         </div>
     </div>
 </div>
+{% endif %}
+
+{% if active_tab == 'notes' %}
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square text-brand me-2"></i>Anotações / Lembretes da Turma</h5>
+                
+                {% if user == cls.teacher or user.is_superadmin %}
+                    <button class="btn btn-brand btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#createNoteModal">
+                        <i class="bi bi-plus-lg me-1"></i>Adicionar Lembrete
+                    </button>
+                {% endif %}
+            </div>
+
+            {% if notes %}
+                <div class="row g-3">
+                    {% for note in notes %}
+                        <div class="col-md-6">
+                            <div class="card bg-body border-secondary border-opacity-25 rounded-3 h-100 shadow-sm">
+                                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                            <span class="badge bg-warning bg-opacity-15 text-warning border border-warning border-opacity-25 px-2.5 py-1.5 small">
+                                                <i class="bi bi-calendar-event me-1"></i>{{ note.date|date:"d/m/Y" }}
+                                            </span>
+                                            
+                                            {% if user == cls.teacher or user.is_superadmin %}
+                                                <form method="POST" action="{% url 'classes:delete_note' pk=cls.pk note_pk=note.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este lembrete?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none" title="Excluir Lembrete">
+                                                        <i class="bi bi-trash3 fs-6"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                        <p class="text-light mb-0 text-break" style="white-space: pre-wrap; font-size: 0.92rem;">{{ note.content }}</p>
+                                    </div>
+                                    <div class="border-top border-secondary border-opacity-25 mt-3 pt-2 d-flex justify-content-between align-items-center">
+                                        <small class="text-muted" style="font-size: 0.72rem;">Criado por: {{ note.author.get_full_name|default:note.author.username }}</small>
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ note.created_at|date:"d/m/y H:i" }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-pencil-square display-4 opacity-25"></i>
+                    <p class="mt-2 mb-0">Nenhuma anotação ou lembrete criado para esta turma ainda.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if user == cls.teacher or user.is_superadmin %}
+    <!-- Create Note Modal -->
+    <div class="modal fade" id="createNoteModal" tabindex="-1" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-body-tertiary border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="createNoteModalLabel">
+                        <i class="bi bi-pencil-square me-2 text-brand"></i>Novo Lembrete / Anotação
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'classes:create_note' pk=cls.pk %}">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="note_date" class="form-label fw-semibold text-light small">Data do Lembrete</label>
+                            <input type="date" class="form-control bg-body border-secondary text-light" id="note_date" name="date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="note_content" class="form-label fw-semibold text-light small">Conteúdo</label>
+                            <textarea class="form-control bg-body border-secondary text-light" id="note_content" name="content" rows="4" placeholder="Ex.: Próxima aula trazer o livro para o aluno X..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-brand rounded-pill px-4">
+                            <i class="bi bi-check2 me-1"></i>Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
 {% endif %}
 
 <!-- Join Code Zoom Modal -->

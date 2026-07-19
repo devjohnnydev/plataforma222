@@ -1416,6 +1416,73 @@ def move_material_view(request, pk, lesson_pk, material_pk):
     return redirect('classes:lessons', pk=pk)
 
 
+@login_required
+def class_notes_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+    
+    notes = cls.notes.all().select_related('author')
+    
+    context = {
+        'cls': cls,
+        'notes': notes,
+        'active_tab': 'notes',
+    }
+    return render(request, 'classes/class_detail.html', context)
+
+
+@login_required
+@require_POST
+def create_note_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        messages.error(request, "Acesso restrito ao professor.")
+        return redirect('classes:detail', pk=pk)
+        
+    date_str = request.POST.get('date', '').strip()
+    content = request.POST.get('content', '').strip()
+    
+    if not content:
+        messages.error(request, "O conteúdo da anotação não pode ser vazio.")
+        return redirect('classes:notes', pk=pk)
+        
+    if not date_str:
+        messages.error(request, "A data do lembrete é obrigatória.")
+        return redirect('classes:notes', pk=pk)
+        
+    try:
+        date_obj = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, "Data inválida.")
+        return redirect('classes:notes', pk=pk)
+        
+    from .models import ClassNote
+    ClassNote.objects.create(
+        target_class=cls,
+        author=request.user,
+        date=date_obj,
+        content=content
+    )
+    
+    messages.success(request, "Anotação/Lembrete adicionado com sucesso!")
+    return redirect('classes:notes', pk=pk)
+
+
+@login_required
+@require_POST
+def delete_note_view(request, pk, note_pk):
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return HttpResponse(status=403)
+        
+    from .models import ClassNote
+    note = get_object_or_404(ClassNote, pk=note_pk, target_class=cls)
+    note.delete()
+    
+    messages.warning(request, "Anotação/Lembrete removido com sucesso.")
+    return redirect('classes:notes', pk=pk)
+
+
 
 
 

@@ -228,6 +228,17 @@ def _teacher_dashboard(request):
             'color': l.target_class.color,
             'url': reverse('classes:lessons', args=[l.target_class.pk])
         })
+        
+    from classes.models import ClassNote
+    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False).select_related('target_class')
+    for n in notes:
+        events.append({
+            'date': n.date.strftime('%Y-%m-%d'),
+            'title': f"Lembrete: {n.content}",
+            'class_name': n.target_class.name,
+            'color': '#ffc107',
+            'url': reverse('classes:notes', args=[n.target_class.pk])
+        })
     
     events_json = json.dumps(events)
 
@@ -329,6 +340,17 @@ def _student_dashboard(request):
             'class_name': l.target_class.name,
             'color': l.target_class.color,
             'url': reverse('classes:lessons', args=[l.target_class.pk])
+        })
+        
+    from classes.models import ClassNote
+    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False).select_related('target_class')
+    for n in notes:
+        events.append({
+            'date': n.date.strftime('%Y-%m-%d'),
+            'title': f"Lembrete: {n.content}",
+            'class_name': n.target_class.name,
+            'color': '#ffc107',
+            'url': reverse('classes:notes', args=[n.target_class.pk])
         })
     
     events_json = json.dumps(events)

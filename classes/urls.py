@@ -40,5 +40,8 @@ urlpatterns = [
     path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/post-stream/', views.post_folder_to_mural_view, name='post_folder_to_mural'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/folder/<int:folder_pk>/color/', views.change_folder_color_view, name='change_folder_color'),
     path('classes/<int:pk>/lessons/<int:lesson_pk>/material/<int:material_pk>/move/', views.move_material_view, name='move_material'),
+    path('classes/<int:pk>/notes/', views.class_notes_view, name='notes'),
+    path('classes/<int:pk>/notes/create/', views.create_note_view, name='create_note'),
+    path('classes/<int:pk>/notes/<int:note_pk>/delete/', views.delete_note_view, name='delete_note'),
 ]
 

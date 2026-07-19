@@ -209,3 +209,19 @@ class LessonComment(models.Model):
         return f"Comentário de {self.author.username} em {self.lesson.title}"
 
 
+class ClassNote(models.Model):
+    target_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='notes', verbose_name='Turma')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_notes', verbose_name='Autor')
+    date = models.DateField(verbose_name='Data')
+    content = models.TextField(verbose_name='Anotação / Lembrete')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['date', '-created_at']
+        verbose_name = 'Anotação da Turma'
+        verbose_name_plural = 'Anotações da Turma'
+
+    def __str__(self):
+        return f"Anotação em {self.date} para {self.target_class.name}"
+
+
