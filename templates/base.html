@@ -306,6 +306,16 @@
                     {% endif %}
                 </ul>
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Access Help Lightbulb Button -->
+                    <button class="btn btn-link text-light text-decoration-none p-0 d-flex align-items-center justify-content-center animate-pulse-bulb" 
+                            id="access-help-btn" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#accessHelpModal"
+                            title="Endereço da Plataforma"
+                            style="width: 32px; height: 32px;">
+                        <i class="bi bi-lightbulb-fill text-warning fs-5"></i>
+                    </button>
+
                     <!-- Theme Toggle -->
                     <button class="btn btn-link text-light text-decoration-none p-0" id="theme-toggle" title="Alternar tema">
                         <i class="bi bi-moon-stars-fill"></i>
@@ -517,9 +527,11 @@
                 </div>
 
                 <!-- Footer -->
-                <footer class="border-top border-secondary mt-5 pt-4 pb-2 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                    <span class="text-muted small">© 2026 Braga Treinamentos · <a href="https://bragatreinamentos.com" target="_blank" class="text-muted text-decoration-none hover-brand">bragatreinamentos.com</a></span>
-                    <div class="d-flex gap-3">
+                <footer class="border-top border-secondary mt-5 pt-4 pb-3 text-center">
+                    <div class="text-muted small mb-2">
+                        © 2026 Braga Treinamentos · <a href="https://www.bragatreinamentos.com.br" target="_blank" class="text-muted text-decoration-none hover-brand">bragatreinamentos.com.br</a>
+                    </div>
+                    <div class="d-flex justify-content-center gap-3">
                         <a href="https://www.linkedin.com/in/johnny-braga-1b3b1148/" target="_blank" class="text-muted text-decoration-none small hover-brand">
                             <i class="bi bi-linkedin me-1 text-primary"></i>LinkedIn
                         </a>
@@ -569,6 +581,75 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Access Help Modal -->
+    <div class="modal fade" id="accessHelpModal" tabindex="-1" aria-labelledby="accessHelpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-body-tertiary border-secondary shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header border-secondary py-3" style="background: rgba(255, 255, 255, 0.02);">
+                    <h5 class="modal-title d-flex align-items-center gap-2" id="accessHelpModalLabel">
+                        <i class="bi bi-lightbulb-fill text-warning"></i>
+                        <span class="fw-bold">Acesso à Plataforma</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-5 px-4 position-relative">
+                    <!-- Subtle background lightbulb glow -->
+                    <div class="position-absolute top-50 start-50 translate-middle opacity-5 pointer-events-none" style="z-index: 0; pointer-events: none;">
+                        <i class="bi bi-lightbulb-fill" style="font-size: 15rem; color: var(--brand-primary);"></i>
+                    </div>
+                    
+                    <div class="position-relative" style="z-index: 1;">
+                        <p class="text-secondary mb-2" style="font-size: 1.1rem;">Para entrar na plataforma ou compartilhar com os alunos, acesse:</p>
+                        
+                        <!-- Giant Website URL -->
+                        <div class="my-4 py-3 px-4 rounded-3 bg-dark border border-secondary border-opacity-75 d-flex align-items-center justify-content-center gap-3 mx-auto shadow-sm" 
+                             style="max-width: 620px;">
+                            <span class="fw-bold text-brand user-select-all" 
+                                  id="platform-url-text"
+                                  style="font-size: 2.2rem; letter-spacing: -0.5px; font-family: 'Inter', sans-serif;">
+                                www.bragatreinamentos.com.br
+                            </span>
+                            <button class="btn btn-outline-warning btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center" 
+                                    onclick="copyPlatformUrl()" 
+                                    title="Copiar endereço"
+                                    style="width: 40px; height: 40px; flex-shrink: 0;">
+                                <i class="bi bi-copy fs-5" id="copy-url-icon"></i>
+                            </button>
+                        </div>
+                        
+                        <p class="text-muted small mb-0 mt-3">
+                            <i class="bi bi-info-circle me-1 text-warning"></i>
+                            Dica: Você pode copiar o endereço acima e colar no grupo dos alunos ou no mural da turma para facilitar o acesso.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary justify-content-center bg-body-tertiary">
+                    <button type="button" class="btn btn-secondary px-4 py-2 rounded-pill" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    function copyPlatformUrl() {
+        const urlText = "www.bragatreinamentos.com.br";
+        navigator.clipboard.writeText(urlText).then(() => {
+            const icon = document.getElementById("copy-url-icon");
+            icon.classList.remove("bi-copy");
+            icon.classList.add("bi-check-lg");
+            icon.classList.add("text-success");
+            
+            setTimeout(() => {
+                icon.classList.remove("bi-check-lg");
+                icon.classList.remove("text-success");
+                icon.classList.add("bi-copy");
+            }, 2000);
+        }).catch(err => {
+            console.error("Erro ao copiar link: ", err);
+        });
+    }
+    </script>
 
     <!-- Global CSRF Token for JavaScript -->
     {% csrf_token %}
