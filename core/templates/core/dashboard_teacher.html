@@ -3,6 +3,157 @@
 {% block title %}Dashboard do Professor — Braga Treinamentos{% endblock %}
 
 {% block content %}
+<style>
+/* Premium Style Overrides */
+.stat-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 232, 31, 0.25) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+.stat-glow {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    opacity: 0.7;
+    filter: blur(2px);
+}
+.bg-brand { background-color: var(--brand-primary) !important; }
+
+/* Interactive Class Cards styling */
+.class-card {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    min-height: 250px;
+    background-color: #1a1a20 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.class-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 232, 31, 0.35) !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Quick link button layout to replace raw blue links */
+.quick-link-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-decoration: none !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.quick-link-btn i {
+    font-size: 1.15rem;
+    margin-bottom: 5px;
+    color: var(--brand-primary) !important;
+    transition: transform 0.25s ease, color 0.25s ease;
+}
+.quick-link-btn:hover {
+    background: rgba(255, 232, 31, 0.06) !important;
+    border-color: rgba(255, 232, 31, 0.2) !important;
+    color: var(--brand-primary) !important;
+}
+.quick-link-btn:hover i {
+    transform: translateY(-2px);
+    color: #ffffff !important;
+}
+
+/* Copy Join Code Badge */
+.join-code-badge {
+    transition: all 0.2s ease;
+}
+.join-code-badge:hover {
+    background-color: var(--brand-primary) !important;
+    color: #000000 !important;
+    border-color: var(--brand-primary) !important;
+    transform: scale(1.05);
+}
+.cursor-pointer { cursor: pointer; }
+
+/* Background glows for setup guide */
+.bg-dark-glow {
+    background: linear-gradient(145deg, rgba(255, 232, 31, 0.04) 0%, rgba(18, 18, 22, 1) 100%) !important;
+}
+.text-light-opacity {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+.text-shadow-sm {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+.italic-muted {
+    font-style: italic;
+    color: var(--bs-secondary-color);
+}
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.hover-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-scale:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(255, 232, 31, 0.2) !important;
+}
+.wave-emoji {
+    animation: wave-animation 2s infinite;
+    transform-origin: 70% 70%;
+    display: inline-block;
+}
+
+/* Calendar styling overrides */
+.calendar-day {
+    width: 14.28%;
+    height: 38px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.calendar-day:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.calendar-day.today {
+    background-color: var(--brand-primary) !important;
+    color: #121214 !important;
+    font-weight: bold;
+}
+.calendar-day.today span {
+    color: #121214 !important;
+}
+.calendar-day.has-events {
+    border: 1px solid rgba(255, 232, 31, 0.3) !important;
+}
+
+@keyframes wave-animation {
+    0% { transform: rotate( 0.0deg) }
+    10% { transform: rotate(14.0deg) }
+    20% { transform: rotate(-8.0deg) }
+    30% { transform: rotate(14.0deg) }
+    40% { transform: rotate(-4.0deg) }
+    50% { transform: rotate(10.0deg) }
+    60% { transform: rotate( 0.0deg) }
+    100% { transform: rotate( 0.0deg) }
+}
+</style>
+
 <!-- Premium Header -->
 <div class="row align-items-center mb-5 g-3">
     <div class="col-md-8">
@@ -40,15 +191,15 @@
         <a href="#classesGrid" class="text-decoration-none h-100 d-block">
             <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 position-relative overflow-hidden stat-card">
                 <div class="card-body d-flex align-items-center gap-3 p-4">
-                    <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(13, 202, 240, 0.1); width: 60px; height: 60px;">
-                        <i class="bi bi-people text-info fs-3"></i>
+                    <div class="rounded-4 p-3 d-flex align-items-center justify-content-center" style="background: rgba(255, 232, 31, 0.1); width: 60px; height: 60px;">
+                        <i class="bi bi-people text-brand fs-3"></i>
                     </div>
                     <div>
                         <h6 class="text-secondary text-uppercase fw-bold mb-1" style="font-size:0.75rem; letter-spacing:.08em;">Alunos Ativos</h6>
                         <h2 class="fw-extrabold text-white mb-0">{{ total_students }}</h2>
                     </div>
                 </div>
-                <div class="stat-glow bg-info"></div>
+                <div class="stat-glow bg-brand"></div>
             </div>
         </a>
     </div>
@@ -93,7 +244,7 @@
         </div>
 
         {% if my_classes %}
-        <div class="row g-3 mb-5" id="classesGrid">
+        <div class="row g-4 mb-5" id="classesGrid">
             {% for cls in my_classes %}
             <div class="col-md-6 class-card-wrapper" data-class-name="{{ cls.name|lower }}" data-course-title="{% if cls.course %}{{ cls.course.title|lower }}{% endif %}">
                 <div class="card bg-dark border border-secondary border-opacity-25 shadow-sm rounded-4 h-100 overflow-hidden class-card position-relative d-flex flex-column">
@@ -128,8 +279,8 @@
                     <div class="card-body px-4 py-3 bg-dark bg-opacity-50 flex-grow-1 d-flex flex-column justify-content-between">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="text-secondary small d-flex align-items-center gap-1.5">
-                                <i class="bi bi-people-fill text-info"></i>
-                                <strong>{{ cls.student_count }}</strong> aluno{{ cls.student_count|pluralize:"s" }} matriculado{{ cls.student_count|pluralize:"s" }}
+                                <i class="bi bi-people-fill text-brand"></i>
+                                <strong class="text-white">{{ cls.student_count }}</strong> aluno{{ cls.student_count|pluralize:"s" }} matriculado{{ cls.student_count|pluralize:"s" }}
                             </span>
                         </div>
                         
@@ -142,7 +293,7 @@
                     </div>
 
                     <!-- Card Footer with Action Links -->
-                    <div class="card-footer bg-dark bg-opacity-50 border-0 p-0 overflow-hidden">
+                    <div class="card-footer bg-dark bg-opacity-50 border-0 p-0 overflow-hidden" style="border-top: 1px solid rgba(255,255,255,0.05) !important;">
                         <div class="row g-0">
                             <div class="col-3">
                                 <a href="{% url 'classes:lessons' pk=cls.pk %}" class="quick-link-btn" title="Aulas e Conteúdos">
@@ -279,19 +430,18 @@
             <!-- Calendar Grid -->
             <div class="d-flex flex-wrap text-center" style="font-size: 0.85rem;">
                 <template x-for="day in days">
-                    <div class="p-1 d-flex flex-column align-items-center justify-content-center position-relative cursor-pointer"
+                    <div class="calendar-day"
                          @click="selectDay(day)"
-                         style="width: 14.28%; height: 38px; border-radius: 6px;"
                          :class="{
                             'text-muted opacity-25': !day.isCurrentMonth,
-                            'bg-brand text-dark fw-bold': day.isToday,
+                            'today': day.isToday,
                             'text-light': day.isCurrentMonth && !day.isToday,
-                            'border border-secondary border-opacity-50': day.events.length > 0 && !day.isToday
+                            'has-events': day.events.length > 0 && !day.isToday
                          }">
                         <span x-text="day.number"></span>
-                        <div class="d-flex justify-content-center gap-0.5 position-absolute bottom-0 start-50 translate-middle-x pb-0.5" style="width: 100%;">
+                        <div class="d-flex justify-content-center gap-0.5 position-absolute bottom-0 start-50 translate-middle-x pb-1" style="width: 100%;">
                             <template x-for="ev in day.events.slice(0, 3)">
-                                <span class="rounded-circle" :style="'width: 4px; height: 4px; background-color: ' + ev.color" :title="ev.title"></span>
+                                <span class="rounded-circle" :style="'width: 5px; height: 5px; background-color: ' + ev.color" :title="ev.title"></span>
                             </template>
                         </div>
                     </div>
@@ -325,128 +475,8 @@
 </script>
 {% endblock %}
 
-{% block extra_js %}
-<!-- Custom Premium Dashboard Styles & Interactivity scripts -->
-<style>
-/* Stats cards glow effects */
-.stat-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-.stat-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(255, 232, 31, 0.25) !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-}
-.stat-glow {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    opacity: 0.7;
-    filter: blur(2px);
-}
-.bg-brand { background-color: var(--brand-primary) !important; }
-
-/* Interactive Class Cards styling */
-.class-card {
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-    min-height: 200px;
-}
-.class-card:hover {
-    transform: translateY(-5px);
-    border-color: rgba(255, 232, 31, 0.35) !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45) !important;
-}
-
-/* Quick link button layout */
-.quick-link-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 6px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    color: #f8f9fa !important;
-    text-decoration: none !important;
-    transition: all 0.2s ease;
-    font-size: 0.72rem;
-    font-weight: 500;
-}
-.quick-link-btn i {
-    font-size: 1.1rem;
-    margin-bottom: 5px;
-    transition: transform 0.2s ease;
-}
-.quick-link-btn:hover {
-    background: rgba(255, 232, 31, 0.08);
-    border-color: rgba(255, 232, 31, 0.2);
-    color: var(--brand-primary) !important;
-}
-.quick-link-btn:hover i {
-    transform: translateY(-2px);
-}
-
-/* Copy Join Code Badge */
-.join-code-badge {
-    transition: all 0.2s ease;
-}
-.join-code-badge:hover {
-    background-color: var(--brand-primary) !important;
-    color: #000000 !important;
-    border-color: var(--brand-primary) !important;
-    transform: scale(1.05);
-}
-.cursor-pointer { cursor: pointer; }
-
-/* Background glows for setup guide */
-.bg-dark-glow {
-    background: linear-gradient(145deg, rgba(255, 232, 31, 0.04) 0%, rgba(18, 18, 22, 1) 100%) !important;
-}
-.text-light-opacity {
-    color: rgba(255, 255, 255, 0.8) !important;
-}
-.text-shadow-sm {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-}
-.italic-muted {
-    font-style: italic;
-    color: var(--bs-secondary-color);
-}
-.text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.hover-scale {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.hover-scale:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 15px rgba(255, 232, 31, 0.2) !important;
-}
-.wave-emoji {
-    animation: wave-animation 2s infinite;
-    transform-origin: 70% 70%;
-    display: inline-block;
-}
-
-@keyframes wave-animation {
-    0% { transform: rotate( 0.0deg) }
-    10% { transform: rotate(14.0deg) }
-    20% { transform: rotate(-8.0deg) }
-    30% { transform: rotate(14.0deg) }
-    40% { transform: rotate(-4.0deg) }
-    50% { transform: rotate(10.0deg) }
-    60% { transform: rotate( 0.0deg) }
-    100% { transform: rotate( 0.0deg) }
-}
-</style>
-
-<!-- Live Search and Copy scripts -->
+{% block extra_scripts %}
+<!-- Live Search, Copy and Calendar scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('classSearchInput');
