@@ -233,6 +233,20 @@
             border-bottom-color: var(--bs-border-color);
         }
 
+        /* ── Horizontally Scrollable Tabs on Mobile ── */
+        .class-tabs, #adminTabs {
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        .class-tabs::-webkit-scrollbar, #adminTabs::-webkit-scrollbar {
+            display: none !important; /* Safari and Chrome */
+        }
+        .class-tabs .nav-item, #adminTabs .nav-item {
+            flex: 0 0 auto !important;
+        }
+
         /* ── Class header banner ── */
         .class-banner {
             border-radius: 16px;

@@ -192,7 +192,38 @@
                                     {% endif %}
                                     <div>
                                         <div class="fw-bold">{{ u.get_full_name|default:u.username }}</div>
-                                        <small class="text-muted">{{ u.email }}</small>
+                                        <small class="text-muted d-block">{{ u.email }}</small>
+                                        
+                                        <!-- Turmas vinculadas -->
+                                        {% if u.role == 'TEACHER' %}
+                                            {% if u.teaching_classes.all %}
+                                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                                    <small class="text-info d-block" style="font-size: 0.72rem; margin-top: 2px;">
+                                                        <strong>Leciona em:</strong> 
+                                                        {% for c in u.teaching_classes.all %}
+                                                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 me-1" style="font-size: 0.65rem;">{{ c.name }}</span>
+                                                        {% endfor %}
+                                                    </small>
+                                                </div>
+                                            {% else %}
+                                                <small class="text-muted d-block" style="font-size: 0.72rem; margin-top: 2px;">Nenhuma turma como professor</small>
+                                            {% endif %}
+                                        {% elif u.role == 'STUDENT' %}
+                                            {% if u.enrollments.all %}
+                                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                                    <small class="text-warning d-block" style="font-size: 0.72rem; margin-top: 2px;">
+                                                        <strong>Matriculado:</strong> 
+                                                        {% for e in u.enrollments.all %}
+                                                            {% if e.status == 'ACTIVE' %}
+                                                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 me-1" style="font-size: 0.65rem;">{{ e.enrolled_class.name }}</span>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </small>
+                                                </div>
+                                            {% else %}
+                                                <small class="text-muted d-block" style="font-size: 0.72rem; margin-top: 2px;">Nenhuma matrícula ativa</small>
+                                            {% endif %}
+                                        {% endif %}
                                     </div>
                                 </div>
                             </td>
