@@ -94,11 +94,16 @@ WSGI_APPLICATION = 'johnny_lms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+db_config = dj_database_url.config(
+    default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    conn_max_age=600
+)
+if db_config.get('ENGINE') == 'django.db.backends.sqlite3':
+    db_config.setdefault('OPTIONS', {})
+    db_config['OPTIONS']['timeout'] = 20
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
-    )
+    'default': db_config
 }
 
 
