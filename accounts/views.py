@@ -14,11 +14,14 @@ def login_view(request):
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
 
-        # Lookup user by email
+        # Lookup user by email or username (case-insensitive)
         try:
-            user_obj = User.objects.get(email=email)
-            user = authenticate(request, username=user_obj.username, password=password)
-        except User.DoesNotExist:
+            user_obj = User.objects.filter(email__iexact=email).first() or User.objects.filter(username__iexact=email).first()
+            if user_obj:
+                user = authenticate(request, username=user_obj.username, password=password)
+            else:
+                user = None
+        except Exception:
             user = None
 
         if user is not None:

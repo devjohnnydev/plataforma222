@@ -234,7 +234,7 @@ def create_class_view(request):
 @login_required
 @require_POST
 def join_class_view(request):
-    code = request.POST.get('join_code', '').strip().upper()
+    code = (request.POST.get('join_code') or request.POST.get('code') or '').strip().upper()
     next_url = request.POST.get('next', 'core:home')
 
     if not code:
@@ -242,7 +242,7 @@ def join_class_view(request):
         return redirect(next_url)
 
     try:
-        cls = Class.objects.get(join_code=code, is_active=True)
+        cls = Class.objects.get(join_code__iexact=code, is_active=True)
     except Class.DoesNotExist:
         messages.error(request, f'Código "{code}" inválido ou turma inativa.')
         return redirect(next_url)
@@ -454,10 +454,11 @@ def class_lessons_view(request, pk):
 
     enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
     
-    # Pre-fetch comments and submissions for lessons to be displayable
-    # We can handle comments in template logic.
-    from courses.models import Material
-    material_types = Material.MaterialType.choices
+    from .models import StreamPost
+    stream_posts = cls.stream_posts.all()
+    posted_folder_ids = set(p.folder_id for p in stream_posts if p.folder_id)
+    posted_link_urls = set(p.link_url for p in stream_posts if p.link_url)
+    posted_attachments = set(p.attachment.name for p in stream_posts if p.attachment)
 
     context = {
         'cls': cls,
@@ -469,6 +470,9 @@ def class_lessons_view(request, pk):
         'enrollments': enrollments,
         'active_tab': 'lessons',
         'material_types': material_types,
+        'posted_folder_ids': posted_folder_ids,
+        'posted_link_urls': posted_link_urls,
+        'posted_attachments': posted_attachments,
     }
     return render(request, 'classes/class_detail.html', context)
 
@@ -1400,17 +1404,30 @@ def move_material_view(request, pk, lesson_pk, material_pk):
         return HttpResponse(status=403)
         
     from courses.models import Lesson, Material, MaterialFolder
-    lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
-    material = get_object_or_404(Material, pk=material_pk, lesson=lesson)
+    current_lesson = get_object_or_404(Lesson, pk=lesson_pk, target_class=cls)
+    material = get_object_or_404(Material, pk=material_pk, lesson=current_lesson)
     
+    target_lesson_id = request.POST.get('target_lesson_id', '').strip()
     folder_id = request.POST.get('folder_id', '').strip()
-    if folder_id:
-        folder = get_object_or_404(MaterialFolder, pk=folder_id, lesson=lesson)
-        material.folder = folder
-        messages.success(request, f'Material "{material.title}" movido para a pasta "{folder.name}".')
+    
+    if target_lesson_id:
+        target_lesson = get_object_or_404(Lesson, pk=target_lesson_id, target_class=cls)
+        material.lesson = target_lesson
+        if folder_id:
+            folder = get_object_or_404(MaterialFolder, pk=folder_id, lesson=target_lesson)
+            material.folder = folder
+            messages.success(request, f'Material "{material.title}" movido para "{target_lesson.title}" > Pasta "{folder.name}".')
+        else:
+            material.folder = None
+            messages.success(request, f'Material "{material.title}" movido para a aula "{target_lesson.title}".')
     else:
-        material.folder = None
-        messages.success(request, f'Material "{material.title}" movido para a raiz.')
+        if folder_id:
+            folder = get_object_or_404(MaterialFolder, pk=folder_id, lesson=current_lesson)
+            material.folder = folder
+            messages.success(request, f'Material "{material.title}" movido para a pasta "{folder.name}".')
+        else:
+            material.folder = None
+            messages.success(request, f'Material "{material.title}" mantido na raiz da aula.')
         
     material.save()
     return redirect('classes:lessons', pk=pk)
