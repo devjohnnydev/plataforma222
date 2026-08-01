@@ -816,6 +816,20 @@
                                                                                 {% endif %}
                                                                             {% endfor %}
                                                                         </ul>
+                                                                    </div>
+                                                                </form>
+                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
+                                                                    {% csrf_token %}
+                                                                    {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
+                                                                        <button type="submit" class="btn btn-sm btn-success text-white rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Já publicado no mural (clique para publicar novamente)">
+                                                                            <i class="bi bi-check-lg" style="font-size:0.85rem; stroke-width: 2;"></i>
+                                                                        </button>
+                                                                    {% else %}
+                                                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Postar no Mural">
+                                                                            <i class="bi bi-megaphone" style="font-size:0.75rem;"></i>
+                                                                        </button>
+                                                                    {% endif %}
+                                                                </form>
                                                              <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
                                                                     {% csrf_token %}
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Excluir Material">
