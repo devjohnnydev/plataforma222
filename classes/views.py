@@ -409,7 +409,7 @@ def class_lessons_view(request, pk):
     _check_access(request.user, cls)
 
     # Ensure "Materiais do Curso" exists
-    from courses.models import Lesson
+    from courses.models import Lesson, Material
     Lesson.objects.get_or_create(
         target_class=cls,
         order=0,
@@ -469,7 +469,7 @@ def class_lessons_view(request, pk):
         'user_submissions': user_submissions,
         'enrollments': enrollments,
         'active_tab': 'lessons',
-        'material_types': material_types,
+        'material_types': Material.MaterialType.choices,
         'posted_folder_ids': posted_folder_ids,
         'posted_link_urls': posted_link_urls,
         'posted_attachments': posted_attachments,

@@ -13,6 +13,26 @@ def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
         password = request.POST.get('password', '')
+        
+        # IP / Email rate limiting key for lockout
+        from django.core.cache import cache
+        import time
+
+        client_ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', '')).split(',')[0].strip()
+        cache_key_attempts = f"login_attempts_{client_ip}_{email.lower()}"
+        cache_key_lockout = f"login_lockout_{client_ip}_{email.lower()}"
+
+        # Check if user is currently locked out
+        lockout_until = cache.get(cache_key_lockout)
+        if lockout_until:
+            remaining_seconds = int(lockout_until - time.time())
+            if remaining_seconds > 0:
+                remaining_minutes = max(1, (remaining_seconds + 59) // 60)
+                messages.error(request, f'Você errou a senha 5 vezes seguidas. Aguarde {remaining_minutes} minuto(s) para tentar novamente.')
+                return render(request, 'accounts/login.html')
+            else:
+                cache.delete(cache_key_lockout)
+                cache.delete(cache_key_attempts)
 
         # Lookup user by email or username (case-insensitive)
         try:
@@ -25,15 +45,29 @@ def login_view(request):
             user = None
 
         if user is not None:
+            # Clear failed attempts on success
+            cache.delete(cache_key_attempts)
+            cache.delete(cache_key_lockout)
             login(request, user)
             next_url = request.GET.get('next', 'core:home')
             return redirect(next_url)
         else:
-            # Check if user exists but is inactive
-            if User.objects.filter(email=email, is_active=False).exists():
-                messages.error(request, 'Sua conta de professor está em análise pelo administrador. Aguarde a aprovação.')
+            # Increment failed attempts
+            attempts = cache.get(cache_key_attempts, 0) + 1
+            if attempts >= 5:
+                # Lock out for 5 minutes (300 seconds)
+                lockout_until_time = time.time() + 300
+                cache.set(cache_key_lockout, lockout_until_time, 300)
+                cache.delete(cache_key_attempts)
+                messages.error(request, 'Você errou a senha 5 vezes seguidas. Aguarde 5 minutos para tentar novamente.')
             else:
-                messages.error(request, 'E-mail ou senha inválidos. Tente novamente.')
+                cache.set(cache_key_attempts, attempts, 600)
+                # Check if user exists but is inactive
+                if User.objects.filter(email=email, is_active=False).exists():
+                    messages.error(request, 'Sua conta de professor está em análise pelo administrador. Aguarde a aprovação.')
+                else:
+                    remaining_attempts = 5 - attempts
+                    messages.error(request, f'E-mail ou senha inválidos. Você tem mais {remaining_attempts} tentativa(s) antes do bloqueio por 5 minutos.')
 
     return render(request, 'accounts/login.html')
 
