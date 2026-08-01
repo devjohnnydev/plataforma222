@@ -333,21 +333,21 @@
 <!-- Modal for Joining Class -->
 <div class="modal fade" id="joinClassModal" tabindex="-1" aria-labelledby="joinClassModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark text-light border-secondary">
-            <div class="modal-header border-secondary">
+        <div class="modal-content bg-body-tertiary text-body border border-secondary border-opacity-25 rounded-4 shadow">
+            <div class="modal-header border-bottom border-secondary border-opacity-25">
                 <h5 class="modal-title fw-bold" id="joinClassModalLabel"><i class="bi bi-door-open text-brand me-2"></i>Entrar em Turma</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{% url 'classes:join' %}">
                 {% csrf_token %}
                 <div class="modal-body text-start">
                     <div class="mb-3">
-                        <label for="join_code" class="form-label small fw-semibold">Código da Turma</label>
-                        <input type="text" name="join_code" id="join_code" class="form-control bg-body border-secondary text-light text-center font-monospace" placeholder="Ex: X89Y7Z" required>
-                        <div class="form-text text-muted">Peça o código de acesso para o professor responsável pela turma.</div>
+                        <label for="join_code" class="form-label small fw-semibold text-body-secondary">Código da Turma</label>
+                        <input type="text" name="join_code" id="join_code" class="form-control bg-body text-body border-secondary text-center font-monospace fs-4 fw-bold py-2" placeholder="Ex: X89Y7Z" maxlength="20" autocomplete="off" required style="letter-spacing: 0.15em;">
+                        <div class="form-text text-muted mt-2">Peça o código de acesso para o professor responsável pela turma.</div>
                     </div>
                 </div>
-                <div class="modal-footer border-secondary">
+                <div class="modal-footer border-top border-secondary border-opacity-25">
                     <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-brand rounded-pill px-4">Entrar na Turma</button>
                 </div>
