@@ -594,7 +594,7 @@
                                                         {% endif %}
                                                         {% if folder.pk in posted_folder_ids %}
                                                             <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 ms-1" style="font-size: 0.68rem;" title="Esta pasta já foi postada no mural da turma">
-                                                                <i class="bi bi-megaphone-fill me-1"></i>No Mural
+                                                                <i class="bi bi-megaphone-fill me-1"></i>Publicado no Mural
                                                             </span>
                                                         {% endif %}
                                                         <i class="bi bi-chevron-down text-muted folder-chevron-{{ folder.pk }}" style="font-size: 0.75rem; transition: transform 0.25s;"></i>
@@ -679,8 +679,8 @@
                                                                             <div class="fw-semibold small text-truncate text-light d-flex align-items-center gap-1">
                                                                                 <span class="text-truncate">{{ mat.title }}</span>
                                                                                 {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
-                                                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 flex-shrink-0" style="font-size:0.6rem;" title="Postado no mural">
-                                                                                        <i class="bi bi-megaphone-fill"></i>
+                                                                                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-40 flex-shrink-0" style="font-size:0.6rem; padding: 3px 6px; border-radius: 10px;" title="Publicado no mural da turma">
+                                                                                        <i class="bi bi-megaphone-fill me-1"></i>Publicado no Mural
                                                                                     </span>
                                                                                 {% endif %}
                                                                             </div>
@@ -765,8 +765,8 @@
                                                                 <div class="fw-bold small text-truncate text-light flex-grow-1 d-flex align-items-center gap-1">
                                                                     <span class="text-truncate">{{ mat.title }}</span>
                                                                     {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
-                                                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 flex-shrink-0" style="font-size:0.65rem;" title="Postado no mural">
-                                                                            <i class="bi bi-megaphone-fill me-1"></i>No Mural
+                                                                        <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-40 flex-shrink-0" style="font-size:0.65rem; padding: 3px 8px; border-radius: 12px;" title="Publicado no mural da turma">
+                                                                            <i class="bi bi-megaphone-fill me-1"></i>Publicado no Mural
                                                                         </span>
                                                                     {% endif %}
                                                                 </div>
