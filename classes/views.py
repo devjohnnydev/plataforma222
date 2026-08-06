@@ -1126,27 +1126,85 @@ def class_attendance_view(request, pk):
     if export_format == 'csv':
         import csv
         from django.http import HttpResponse
+        from .models import Attendance
+        from assignments.models import Assignment, Submission
+
         response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-        response['Content-Disposition'] = f'attachment; filename="Chamada_{cls.name}_{selected_date}.csv"'
+        response['Content-Disposition'] = f'attachment; filename="Relatorio_Completo_Chamada_{cls.name}.csv"'
 
         writer = csv.writer(response)
-        writer.writerow(['Nome do Aluno', 'E-mail', 'Data', 'Status de Presenca', 'Observacao'])
 
-        # Get attendance for all students for this date
-        from .models import Attendance
-        att_map = {att.student_id: att for att in Attendance.objects.filter(enrolled_class=cls, date=selected_date)}
+        # Retrieve all unique dates where attendance was recorded for this class
+        class_dates = list(
+            Attendance.objects.filter(enrolled_class=cls)
+            .values_list('date', flat=True)
+            .distinct()
+            .order_by('date')
+        )
+
+        # Header row construction
+        header = ['Nome do Aluno', 'E-mail']
+        for d in class_dates:
+            header.append(d.strftime('%d/%m/%Y'))
+        header.extend(['Total Presencas', 'Total Faltas', 'Frequencia (%)', 'Nota Media', 'Status Certificado'])
+        writer.writerow(header)
+
+        # Fetch all attendance records for this class
+        all_attendance = Attendance.objects.filter(enrolled_class=cls)
+        attendance_map = {}
+        for att in all_attendance:
+            attendance_map[(att.student_id, att.date)] = att.present
+
+        # Fetch all assignments and student grades for average calculation
+        assignments = cls.assignments.all()
 
         for enroll in enrollments:
-            att = att_map.get(enroll.student.pk)
-            status = 'Presente' if (att and att.present) else ('Ausente' if (att and not att.present) else 'Nao Registrado')
-            note = att.note if (att and att.note) else ''
-            writer.writerow([
-                enroll.student.get_full_name() or enroll.student.username,
-                enroll.student.email,
-                selected_date.strftime('%d/%m/%Y'),
-                status,
-                note
+            student = enroll.student
+            row = [student.get_full_name() or student.username, student.email]
+
+            present_count = 0
+            absent_count = 0
+            for d in class_dates:
+                is_present = attendance_map.get((student.pk, d))
+                if is_present is True:
+                    row.append('P')
+                    present_count += 1
+                elif is_present is False:
+                    row.append('F')
+                    absent_count += 1
+                else:
+                    row.append('-')
+
+            total_days = present_count + absent_count
+            freq_pct = round((present_count / total_days * 100), 1) if total_days > 0 else 0.0
+
+            # Calculate average grade
+            submissions = Submission.objects.filter(assignment__target_class=cls, student=student).select_related('grade')
+            sub_map = {sub.assignment_id: sub for sub in submissions}
+
+            total_weighted_score = 0.0
+            total_weight = 0.0
+            for assignment in assignments:
+                sub = sub_map.get(assignment.pk)
+                if sub and hasattr(sub, 'grade') and sub.grade.score is not None:
+                    total_weighted_score += float(sub.grade.score) * float(assignment.weight)
+                    total_weight += float(assignment.weight)
+
+            average_grade = round(total_weighted_score / total_weight, 2) if total_weight > 0 else None
+
+            # Certificate Status: Approved if grade > 50, otherwise left blank
+            status_cert = 'Aprovado' if (average_grade is not None and average_grade > 50) else ''
+
+            row.extend([
+                present_count,
+                absent_count,
+                f"{freq_pct}%",
+                average_grade if average_grade is not None else '',
+                status_cert
             ])
+
+            writer.writerow(row)
+
         return response
 
     # Calculate stats per student: total presences, total absences, % presence
