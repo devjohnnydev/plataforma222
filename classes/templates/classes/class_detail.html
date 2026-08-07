@@ -1252,8 +1252,11 @@
                     </form>
 
                     <!-- Export Actions -->
-                    <a href="{% url 'classes:attendance' pk=cls.pk %}?date={{ selected_date|date:'Y-m-d' }}&export=csv" class="btn btn-outline-success rounded-pill px-3 py-1.5 small">
-                        <i class="bi bi-file-earmark-excel me-1"></i>Baixar Planilha (Excel)
+                    <a href="{% url 'classes:attendance' pk=cls.pk %}?date={{ selected_date|date:'Y-m-d' }}&export=excel" class="btn btn-success text-white fw-bold rounded-pill px-3 py-1.5 small shadow-sm" style="background-color: #198754 !important; border-color: #198754 !important;">
+                        <i class="bi bi-file-earmark-excel-fill me-1"></i>Baixar Planilha (Excel .xlsx)
+                    </a>
+                    <a href="{% url 'classes:attendance' pk=cls.pk %}?date={{ selected_date|date:'Y-m-d' }}&export=csv" class="btn btn-outline-light rounded-pill px-2.5 py-1.5 small text-light opacity-75" title="Baixar em formato CSV">
+                        <i class="bi bi-filetype-csv me-1"></i>CSV
                     </a>
                     
                     <button onclick="window.print()" class="btn btn-outline-info rounded-pill px-3 py-1.5 small">

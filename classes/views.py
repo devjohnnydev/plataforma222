@@ -1121,18 +1121,13 @@ def class_attendance_view(request, pk):
 
     enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
 
-    # Handle CSV Export if requested
+    # Handle Excel / CSV Export if requested
     export_format = request.GET.get('export')
-    if export_format == 'csv':
+    if export_format in ['csv', 'excel', 'xlsx']:
         import csv
         from django.http import HttpResponse
         from .models import Attendance
         from assignments.models import Assignment, Submission
-
-        response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
-        response['Content-Disposition'] = f'attachment; filename="Relatorio_Completo_Chamada_{cls.name}.csv"'
-
-        writer = csv.writer(response)
 
         # Retrieve all unique dates where attendance was recorded for this class
         class_dates = list(
@@ -1146,18 +1141,16 @@ def class_attendance_view(request, pk):
         header = ['Nome do Aluno', 'E-mail']
         for d in class_dates:
             header.append(d.strftime('%d/%m/%Y'))
-        header.extend(['Total Presencas', 'Total Faltas', 'Frequencia (%)', 'Nota Media', 'Status Certificado'])
-        writer.writerow(header)
+        header.extend(['Total Presencias', 'Total Faltas', 'Frequencia (%)', 'Nota Media', 'Status Certificado'])
 
         # Fetch all attendance records for this class
         all_attendance = Attendance.objects.filter(enrolled_class=cls)
-        attendance_map = {}
-        for att in all_attendance:
-            attendance_map[(att.student_id, att.date)] = att.present
+        attendance_map = {(att.student_id, att.date): att.present for att in all_attendance}
 
         # Fetch all assignments and student grades for average calculation
         assignments = cls.assignments.all()
 
+        rows = []
         for enroll in enrollments:
             student = enroll.student
             row = [student.get_full_name() or student.username, student.email]
@@ -1192,8 +1185,8 @@ def class_attendance_view(request, pk):
 
             average_grade = round(total_weighted_score / total_weight, 2) if total_weight > 0 else None
 
-            # Certificate Status: Approved if grade > 50, otherwise left blank
-            status_cert = 'Aprovado' if (average_grade is not None and average_grade > 50) else ''
+            # Certificate Status: Approved if grade >= 50, otherwise left blank
+            status_cert = 'Aprovado' if (average_grade is not None and average_grade >= 50) else ''
 
             row.extend([
                 present_count,
@@ -1202,10 +1195,103 @@ def class_attendance_view(request, pk):
                 average_grade if average_grade is not None else '',
                 status_cert
             ])
+            rows.append(row)
 
-            writer.writerow(row)
+        if export_format in ['excel', 'xlsx']:
+            import openpyxl
+            from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+            from openpyxl.utils import get_column_letter
 
-        return response
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = "Frequencia e Notas"
+
+            # Title block in Excel
+            num_cols = len(header)
+            ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=num_cols)
+            title_cell = ws.cell(row=1, column=1)
+            title_cell.value = f"Relatório de Frequência e Certificados — {cls.name}"
+            title_cell.font = Font(name='Calibri', size=13, bold=True, color='FFFFFF')
+            title_cell.fill = PatternFill(start_color='1F497D', end_color='1F497D', fill_type='solid')
+            title_cell.alignment = Alignment(horizontal='center', vertical='center')
+            ws.row_dimensions[1].height = 32
+
+            # Header row
+            header_fill = PatternFill(start_color='DCE6F1', end_color='DCE6F1', fill_type='solid')
+            header_font = Font(name='Calibri', size=10, bold=True, color='1F497D')
+            thin_border = Border(
+                left=Side(style='thin', color='D9D9D9'),
+                right=Side(style='thin', color='D9D9D9'),
+                top=Side(style='thin', color='D9D9D9'),
+                bottom=Side(style='medium', color='1F497D')
+            )
+
+            header_row_num = 2
+            ws.row_dimensions[header_row_num].height = 24
+            for col_num, cell_value in enumerate(header, 1):
+                cell = ws.cell(row=header_row_num, column=col_num, value=cell_value)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.border = thin_border
+
+            # Data rows
+            data_border = Border(
+                left=Side(style='thin', color='E0E0E0'),
+                right=Side(style='thin', color='E0E0E0'),
+                top=Side(style='thin', color='E0E0E0'),
+                bottom=Side(style='thin', color='E0E0E0')
+            )
+
+            for r_idx, row_data in enumerate(rows, start=3):
+                ws.row_dimensions[r_idx].height = 20
+                for c_idx, val in enumerate(row_data, start=1):
+                    cell = ws.cell(row=r_idx, column=c_idx, value=val)
+                    cell.border = data_border
+                    if c_idx in [1, 2]:
+                        cell.alignment = Alignment(horizontal='left', vertical='center')
+                    else:
+                        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+                    if val == 'P':
+                        cell.fill = PatternFill(start_color='E2EFDA', end_color='E2EFDA', fill_type='solid')
+                        cell.font = Font(color='375623', bold=True)
+                    elif val == 'F':
+                        cell.fill = PatternFill(start_color='FCE4D6', end_color='FCE4D6', fill_type='solid')
+                        cell.font = Font(color='C65911', bold=True)
+                    elif val == 'Aprovado':
+                        cell.fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+                        cell.font = Font(color='006100', bold=True)
+
+            # Auto-adjust column width
+            for col in ws.columns:
+                max_len = 0
+                col_letter = get_column_letter(col[0].column)
+                for cell in col:
+                    if cell.row == 1:
+                        continue
+                    if cell.value is not None:
+                        max_len = max(max_len, len(str(cell.value)))
+                ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+            safe_cls_name = "".join(c for c in cls.name if c.isalnum() or c in (' ', '_', '-')).strip()
+            response = HttpResponse(
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = f'attachment; filename="Relatorio_Chamada_{safe_cls_name}.xlsx"'
+            wb.save(response)
+            return response
+
+        else:
+            # CSV export
+            safe_cls_name = "".join(c for c in cls.name if c.isalnum() or c in (' ', '_', '-')).strip()
+            response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+            response['Content-Disposition'] = f'attachment; filename="Relatorio_Chamada_{safe_cls_name}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(header)
+            for row in rows:
+                writer.writerow(row)
+            return response
 
     # Calculate stats per student: total presences, total absences, % presence
     from .models import Attendance
