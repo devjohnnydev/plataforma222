@@ -1301,16 +1301,23 @@ def class_attendance_view(request, pk):
                 bottom=Side(style='thin', color='E0E0E0')
             )
 
+            num_dates = len(class_dates)
+            start_date_col = get_column_letter(3) if num_dates > 0 else ''
+            end_date_col = get_column_letter(2 + num_dates) if num_dates > 0 else ''
+
             for r_idx, row_data in enumerate(rows, start=3):
                 ws.row_dimensions[r_idx].height = 20
                 for c_idx, val in enumerate(row_data, start=1):
                     cell = ws.cell(row=r_idx, column=c_idx, value=val)
                     cell.border = data_border
+
+                    # Alignment
                     if c_idx in [1, 2]:
                         cell.alignment = Alignment(horizontal='left', vertical='center')
                     else:
                         cell.alignment = Alignment(horizontal='center', vertical='center')
 
+                    # Highlight P, F, Aprovado
                     if val == 'P':
                         cell.fill = PatternFill(start_color='E2EFDA', end_color='E2EFDA', fill_type='solid')
                         cell.font = Font(color='375623', bold=True)
@@ -1320,6 +1327,29 @@ def class_attendance_view(request, pk):
                     elif val == 'Aprovado':
                         cell.fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
                         cell.font = Font(color='006100', bold=True)
+
+                # Overwrite calculated columns with dynamic Excel formulas if date columns exist
+                if num_dates > 0:
+                    date_range = f"{start_date_col}{r_idx}:{end_date_col}{r_idx}"
+                    
+                    pres_col_idx = 3 + num_dates
+                    abs_col_idx = 4 + num_dates
+                    freq_col_idx = 5 + num_dates
+
+                    # Dynamic Total Presences Formula: =COUNTIF(C3:I3, "P")
+                    pres_cell = ws.cell(row=r_idx, column=pres_col_idx)
+                    pres_cell.value = f'=COUNTIF({date_range}, "P")'
+                    pres_cell.number_format = '#,##0'
+
+                    # Dynamic Total Absences Formula: =COUNTIF(C3:I3, "F")
+                    abs_cell = ws.cell(row=r_idx, column=abs_col_idx)
+                    abs_cell.value = f'=COUNTIF({date_range}, "F")'
+                    abs_cell.number_format = '#,##0'
+
+                    # Dynamic Frequency % Formula requested by user: =SEERRO(CONT.SE(C3:I3;"P")/(CONT.SE(C3:I3;"P")+CONT.SE(C3:I3;"F"));0)
+                    freq_cell = ws.cell(row=r_idx, column=freq_col_idx)
+                    freq_cell.value = f'=IFERROR(COUNTIF({date_range}, "P") / (COUNTIF({date_range}, "P") + COUNTIF({date_range}, "F")), 0)'
+                    freq_cell.number_format = '0.0%'
 
             # Auto-adjust column width
             for col in ws.columns:
