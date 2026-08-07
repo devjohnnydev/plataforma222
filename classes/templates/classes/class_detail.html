@@ -100,14 +100,12 @@
                 <i class="bi bi-people me-1"></i>Membros
             </a>
         </li>
-        {% if user.pk == cls.teacher.pk or user.is_superadmin %}
         <li class="nav-item">
             <a class="nav-link {% if active_tab == 'attendance' %}active{% endif %}"
                href="{% url 'classes:attendance' pk=cls.pk %}">
                 <i class="bi bi-calendar-check me-1"></i>Chamada
             </a>
         </li>
-        {% endif %}
         <li class="nav-item">
             <a class="nav-link {% if active_tab == 'grades' %}active{% endif %}"
                href="{% url 'classes:grades' pk=cls.pk %}">
@@ -1232,6 +1230,7 @@
 {% endif %}
 
 {% if active_tab == 'attendance' %}
+{% if is_teacher_or_admin %}
 <div class="row">
     <div class="col-12">
         <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4" id="attendance-print-card">
@@ -1572,6 +1571,138 @@
         </div>
     </div>
 </div>
+{% else %}
+<!-- Vista do Aluno (Minha Frequência e Histórico de Presenças) -->
+<div class="row">
+    <div class="col-12">
+        <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-calendar-check text-brand me-2"></i>Minha Frequência & Histórico de Presenças</h5>
+                    <p class="text-secondary small mb-0">Confira abaixo todos os dias de aula registrados, suas presenças e a forma como foram confirmadas.</p>
+                </div>
+            </div>
+
+            <!-- Dashboard Summary Cards for Student -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary text-center">
+                        <span class="text-secondary small d-block mb-1">Aulas Registradas</span>
+                        <span class="fs-4 fw-bold text-light">{{ total_days }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25 text-center">
+                        <span class="text-success small d-block mb-1">Minhas Presenças</span>
+                        <span class="fs-4 fw-bold text-success">{{ presences_count }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 text-center">
+                        <span class="text-danger small d-block mb-1">Minhas Faltas</span>
+                        <span class="fs-4 fw-bold text-danger">{{ absences_count }}</span>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-info border-opacity-25 text-center">
+                        <span class="text-info small d-block mb-1">Frequência Geral</span>
+                        <span class="fs-4 fw-bold {% if frequency_percent >= 75 %}text-success{% else %}text-danger{% endif %}">{{ frequency_percent }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Progress Bar -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small text-muted fw-semibold">Percentual de Frequência</span>
+                    <span class="small {% if frequency_percent >= 75 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                        {% if frequency_percent >= 75 %}
+                            <i class="bi bi-shield-check me-1"></i>Frequência Suficiente (>= 75%)
+                        {% else %}
+                            <i class="bi bi-exclamation-triangle me-1"></i>Atenção: Frequência abaixo de 75%
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="progress bg-dark" style="height: 10px;">
+                    <div class="progress-bar {% if frequency_percent >= 75 %}bg-success{% else %}bg-danger{% endif %}" 
+                         role="progressbar" style="width: {{ frequency_percent }}%;" 
+                         aria-valuenow="{{ frequency_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <!-- Student Attendance Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle text-light border-secondary">
+                    <thead>
+                        <tr class="border-secondary text-secondary small">
+                            <th scope="col">Data da Aula</th>
+                            <th scope="col" class="text-center">Status da Presença</th>
+                            <th scope="col">Forma de Registro (Como foi enviada)</th>
+                            <th scope="col">Observação do Professor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if attendance_history %}
+                            {% for item in attendance_history %}
+                                <tr class="border-secondary">
+                                    <td class="fw-semibold">
+                                        <i class="bi bi-calendar-event me-2 text-primary"></i>{{ item.date|date:"d/m/Y" }}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if item.status == 'PRESENT' %}
+                                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-3 py-1.5 rounded-pill">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Presente
+                                            </span>
+                                        {% elif item.status == 'ABSENT' %}
+                                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 px-3 py-1.5 rounded-pill">
+                                                <i class="bi bi-x-circle-fill me-1"></i>Ausente
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-1.5 rounded-pill">
+                                                - Não registrada
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.status == 'PRESENT' or item.status == 'ABSENT' %}
+                                            {% if item.origin == 'CHECKIN' %}
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 px-2.5 py-1.5 rounded-pill" title="Presença confirmada pelo aluno através do botão de Check-in">
+                                                    <i class="bi bi-phone-fill me-1"></i>Enviada via Check-in (Você)
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-pill" title="Presença lançada diretamente pelo professor">
+                                                    <i class="bi bi-person-badge-fill me-1"></i>Marcada pelo Professor
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if item.note %}
+                                            <span class="text-light-opacity small"><i class="bi bi-chat-left-text me-1 text-warning"></i>{{ item.note }}</span>
+                                        {% else %}
+                                            <span class="text-muted small">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-5">
+                                    <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                    Nenhuma chamada foi registrada nesta turma ainda.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <style>
 .print-watermark {

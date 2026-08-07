@@ -952,10 +952,11 @@ def student_checkin_view(request, pk):
         enrolled_class=cls,
         student=request.user,
         date=today,
-        defaults={'present': True}
+        defaults={'present': True, 'created_via': Attendance.Origin.CHECKIN}
     )
     if not created:
         attendance.present = True
+        attendance.created_via = Attendance.Origin.CHECKIN
         attendance.save()
 
     messages.success(request, 'Sua presença foi confirmada com sucesso!')
@@ -1078,7 +1079,8 @@ def teacher_update_attendance_view(request, pk, student_pk):
     attendance, created = Attendance.objects.get_or_create(
         enrolled_class=cls,
         student=student,
-        date=today
+        date=today,
+        defaults={'created_via': Attendance.Origin.TEACHER}
     )
 
     if status == 'present':
@@ -1086,6 +1088,7 @@ def teacher_update_attendance_view(request, pk, student_pk):
     else:
         attendance.present = False
 
+    attendance.created_via = Attendance.Origin.TEACHER
     attendance.save()
 
     if request.headers.get('HX-Request'):
@@ -1104,10 +1107,65 @@ def class_attendance_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
     _check_access(request.user, cls)
 
-    # Only teachers and admins can access the attendance panel
-    if not (request.user.pk == cls.teacher.pk or request.user.is_superadmin()):
-        messages.error(request, "Acesso restrito ao professor da turma.")
-        return redirect('classes:detail', pk=pk)
+    is_teacher_or_admin = (request.user.pk == cls.teacher.pk or request.user.is_superadmin())
+
+    from .models import Attendance
+
+    # If student, render student attendance overview
+    if not is_teacher_or_admin:
+        recorded_dates = list(
+            Attendance.objects.filter(enrolled_class=cls)
+            .values_list('date', flat=True)
+            .distinct()
+            .order_by('-date')
+        )
+
+        my_attendances = {
+            att.date: att for att in Attendance.objects.filter(enrolled_class=cls, student=request.user)
+        }
+
+        attendance_history = []
+        presences_count = 0
+        absences_count = 0
+
+        for d in recorded_dates:
+            att = my_attendances.get(d)
+            if att:
+                if att.present:
+                    presences_count += 1
+                    status = 'PRESENT'
+                else:
+                    absences_count += 1
+                    status = 'ABSENT'
+                origin = att.created_via
+                note = att.note
+            else:
+                status = 'NOT_REGISTERED'
+                origin = None
+                note = ''
+
+            attendance_history.append({
+                'date': d,
+                'status': status,
+                'origin': origin,
+                'note': note,
+                'attendance': att
+            })
+
+        total_days = presences_count + absences_count
+        frequency_percent = round((presences_count / total_days * 100), 1) if total_days > 0 else 100.0
+
+        context = {
+            'cls': cls,
+            'active_tab': 'attendance',
+            'is_teacher_or_admin': False,
+            'attendance_history': attendance_history,
+            'presences_count': presences_count,
+            'absences_count': absences_count,
+            'total_days': total_days,
+            'frequency_percent': frequency_percent,
+        }
+        return render(request, 'classes/class_detail.html', context)
 
     # Get chosen date or default to local today
     date_str = request.GET.get('date')
@@ -1355,6 +1413,7 @@ def class_attendance_view(request, pk):
         'attendance_grid': attendance_grid,
         'unique_dates': unique_dates,
         'active_tab': 'attendance',
+        'is_teacher_or_admin': True,
     }
     return render(request, 'classes/class_detail.html', context)
 

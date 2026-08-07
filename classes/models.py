@@ -159,6 +159,11 @@ class CalendarEvent(models.Model):
 
 
 class Attendance(models.Model):
+    class Origin(models.TextChoices):
+        TEACHER = 'TEACHER', 'Marcado pelo Professor'
+        CHECKIN = 'CHECKIN', 'Check-in pelo Aluno'
+        SYSTEM = 'SYSTEM', 'Sistema'
+
     enrolled_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='attendances', verbose_name='Turma')
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='attendances', verbose_name='Aluno')
     event = models.ForeignKey(CalendarEvent, on_delete=models.CASCADE, related_name='attendances', null=True, blank=True, verbose_name='Aula/Evento')
@@ -166,6 +171,7 @@ class Attendance(models.Model):
     present = models.BooleanField(default=False, verbose_name='Presente')
     justified = models.BooleanField(default=False, verbose_name='Justificado')
     note = models.CharField(max_length=255, blank=True, null=True, verbose_name='Observação')
+    created_via = models.CharField(max_length=20, choices=Origin.choices, default=Origin.TEACHER, verbose_name='Origem do Registro')
 
     class Meta:
         unique_together = ('enrolled_class', 'student', 'date')
