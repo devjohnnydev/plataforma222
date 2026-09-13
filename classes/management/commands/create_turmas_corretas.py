@@ -22,7 +22,7 @@ class Command(BaseCommand):
             fallback_teacher = User.objects.filter(is_staff=True).first()
 
         teacher_excel = excel_course.teacher if excel_course and excel_course.teacher else fallback_teacher
-        teacher_pbi = pbi_course.teacher if pbi_course and pbi_course.teacher else fallback_teacher
+        teacher_pbi = pbi_course.teacher if pbi_course and pbi_course.teacher else teacher_excel
 
         # ---- EXCEL AVANCADO ----
         excel_class, _ = Class.objects.get_or_create(
