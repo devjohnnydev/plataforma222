@@ -469,14 +469,14 @@ def chat_view(request):
             genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
             
             gemini_history = []
+            gemini_history.append({"role": "user", "parts": [f"System instructions (follow strictly):\n{system_prompt}"]})
+            gemini_history.append({"role": "model", "parts": ["Entendido. Seguirei todas as instruções rigorosamente e manterei minha identidade como Mister."]})
+            
             for msg in history[-10:]:
                 role = "user" if msg["role"] == "user" else "model"
                 gemini_history.append({"role": role, "parts": [msg["content"]]})
                 
-            model = genai.GenerativeModel(
-                model_name="gemini-1.5-flash-latest",
-                system_instruction=system_prompt
-            )
+            model = genai.GenerativeModel("gemini-pro")
             
             chat = model.start_chat(history=gemini_history)
             response = chat.send_message(message)
