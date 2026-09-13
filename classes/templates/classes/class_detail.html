@@ -425,13 +425,13 @@
 
                         {% if user.pk == cls.teacher.pk or user.is_superadmin %}
                         <div class="d-flex align-items-center gap-2">
-                            <form method="POST" action="{% url 'classes:reset_student_password' pk=cls.pk student_pk=enrollment.student.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente redefinir a senha do aluno {{ enrollment.student.get_full_name|default:enrollment.student.username }} para Braga123?')">
+                            <form method="POST" action="{% url 'classes:reset_student_password' pk=cls.pk student_pk=enrollment.student.pk %}" class="m-0" data-confirm="Deseja realmente redefinir a senha do aluno {{ enrollment.student.get_full_name|default:enrollment.student.username }} para Braga123?">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-warning rounded-pill px-3">
                                     <i class="bi bi-key me-1"></i>Resetar Senha
                                 </button>
                             </form>
-                            <form method="POST" action="{% url 'classes:remove_student' pk=cls.pk student_pk=enrollment.student.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente remover o aluno {{ enrollment.student.get_full_name|default:enrollment.student.username }} da turma?')">
+                            <form method="POST" action="{% url 'classes:remove_student' pk=cls.pk student_pk=enrollment.student.pk %}" class="m-0" data-confirm="Deseja realmente remover o aluno {{ enrollment.student.get_full_name|default:enrollment.student.username }} da turma?">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                     <i class="bi bi-person-x me-1"></i>Remover
@@ -542,7 +542,7 @@
                                     <i class="bi bi-pencil me-1"></i>Editar Aula
                                 </button>
                                 {% if lesson.order != 0 %}
-                                    <form method="POST" action="{% url 'classes:delete_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir esta aula permanentemente?')">
+                                    <form method="POST" action="{% url 'classes:delete_lesson' pk=cls.pk lesson_pk=lesson.pk %}" class="m-0" data-confirm="Deseja realmente excluir esta aula permanentemente?">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                             <i class="bi bi-trash me-1"></i>Excluir
@@ -647,14 +647,14 @@
                                                                 </div>
                                                             </div>
                                                             <form method="POST" action="{% url 'classes:post_folder_to_mural' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
-                                                                  class="m-0 d-inline" onsubmit="return confirm('Deseja compartilhar esta pasta inteira no mural?')">
+                                                                  class="m-0 d-inline" data-confirm="Deseja compartilhar esta pasta inteira no mural?">
                                                                 {% csrf_token %}
                                                                 <button type="submit" class="btn btn-xs btn-outline-success rounded-pill px-2 py-0" style="font-size:0.72rem;">
                                                                     <i class="bi bi-megaphone me-1"></i>Mural
                                                                 </button>
                                                             </form>
                                                             <form method="POST" action="{% url 'classes:delete_folder' pk=cls.pk lesson_pk=lesson.pk folder_pk=folder.pk %}"
-                                                                  class="m-0 d-inline" onsubmit="return confirm('Deseja realmente excluir esta pasta e todos os seus materiais?')">
+                                                                  class="m-0 d-inline" data-confirm="Deseja realmente excluir esta pasta e todos os seus materiais?">
                                                                 {% csrf_token %}
                                                                 <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-2 py-0" style="font-size:0.72rem;">
                                                                     <i class="bi bi-trash me-1"></i>Excluir
@@ -727,7 +727,7 @@
                                                                                         </ul>
                                                                                     </div>
                                                                                 </form>
-                                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Compartilhar no mural?')">
+                                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Compartilhar no mural?">
                                                                                     {% csrf_token %}
                                                                                     {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
                                                                                         <button type="submit" class="btn btn-sm btn-success text-white rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Já publicado no mural (clique para publicar novamente)">
@@ -739,7 +739,7 @@
                                                                                         </button>
                                                                                     {% endif %}
                                                                                 </form>
-                                                                                <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja excluir este material?')">
+                                                                                <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Deseja excluir este material?">
                                                                                     {% csrf_token %}
                                                                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Excluir">
                                                                                         <i class="bi bi-trash" style="font-size:0.75rem;"></i>
@@ -816,7 +816,7 @@
                                                                         </ul>
                                                                     </div>
                                                                 </form>
-                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
+                                                                <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Deseja compartilhar este material diretamente no mural?">
                                                                     {% csrf_token %}
                                                                     {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
                                                                         <button type="submit" class="btn btn-sm btn-success text-white rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Já publicado no mural (clique para publicar novamente)">
@@ -828,7 +828,7 @@
                                                                         </button>
                                                                     {% endif %}
                                                                 </form>
-                                                             <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                             <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Deseja realmente excluir este material?">
                                                                     {% csrf_token %}
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Excluir Material">
                                                                         <i class="bi bi-trash" style="font-size:0.75rem;"></i>
@@ -888,7 +888,7 @@
                                                                     </ul>
                                                                 </div>
                                                             </form>
-                                                            <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja compartilhar este material diretamente no mural?')">
+                                                            <form method="POST" action="{% url 'classes:post_material_to_mural' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Deseja compartilhar este material diretamente no mural?">
                                                                 {% csrf_token %}
                                                                 {% if mat.url and mat.url in posted_link_urls or mat.file and mat.file.name in posted_attachments %}
                                                                     <button type="submit" class="btn btn-sm btn-success text-white rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Já publicado no mural (clique para publicar novamente)">
@@ -900,7 +900,7 @@
                                                                     </button>
                                                                 {% endif %}
                                                             </form>
-                                                            <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                            <form method="POST" action="{% url 'classes:delete_lesson_material' pk=cls.pk lesson_pk=lesson.pk material_pk=mat.pk %}" class="m-0" data-confirm="Deseja realmente excluir este material?">
                                                                 {% csrf_token %}
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;min-width:32px;min-height:32px;padding:0;" title="Excluir Material">
                                                                     <i class="bi bi-trash" style="font-size:0.75rem;"></i>
@@ -1953,7 +1953,7 @@
                                             </span>
                                             
                                             {% if user == cls.teacher or user.is_superadmin %}
-                                                <form method="POST" action="{% url 'classes:delete_note' pk=cls.pk note_pk=note.pk %}" class="m-0" onsubmit="return confirm('Deseja realmente excluir este lembrete?');">
+                                                <form method="POST" action="{% url 'classes:delete_note' pk=cls.pk note_pk=note.pk %}" class="m-0" data-confirm="Deseja realmente excluir este lembrete?">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none" title="Excluir Lembrete">
                                                         <i class="bi bi-trash3 fs-6"></i>
@@ -2075,7 +2075,7 @@
             </div>
             <div class="modal-footer border-secondary d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-danger rounded-pill px-3" 
-                        onclick="if(confirm('Tem certeza que deseja excluir esta turma permanentemente? Todos os posts, entregas e notas serão perdidos.')) { document.getElementById('deleteClassForm').submit(); }">
+                        data-confirm="Tem certeza que deseja excluir esta turma permanentemente? Todos os posts, entregas e notas serão perdidos." onclick="document.getElementById('deleteClassForm').submit();">
                     <i class="bi bi-trash me-1"></i>Excluir Turma
                 </button>
                 <div>

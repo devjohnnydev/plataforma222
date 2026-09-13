@@ -25,9 +25,35 @@ def _get_user_classes(user):
 
 @login_required
 def class_list_view(request):
-    classes = _get_user_classes(request.user)
-    context = {'classes': classes}
+    all_classes = _get_user_classes(request.user)
+    active_classes = all_classes.filter(is_archived=False)
+    archived_classes = all_classes.filter(is_archived=True)
+    context = {
+        'classes': active_classes,
+        'archived_classes': archived_classes,
+    }
     return render(request, 'classes/class_list.html', context)
+
+
+@login_required
+@require_POST
+def archive_class_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk, teacher=request.user)
+    cls.is_archived = True
+    cls.save(update_fields=['is_archived'])
+    messages.success(request, f'Turma "{cls.name}" arquivada com sucesso.')
+    return redirect('classes:list')
+
+
+@login_required
+@require_POST
+def unarchive_class_view(request, pk):
+    cls = get_object_or_404(Class, pk=pk, teacher=request.user)
+    cls.is_archived = False
+    cls.save(update_fields=['is_archived'])
+    messages.success(request, f'Turma "{cls.name}" desarquivada com sucesso.')
+    return redirect('classes:list')
+
 
 
 def copy_course_lessons_to_class(course, target_class):

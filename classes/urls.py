@@ -43,5 +43,7 @@ urlpatterns = [
     path('classes/<int:pk>/notes/', views.class_notes_view, name='notes'),
     path('classes/<int:pk>/notes/create/', views.create_note_view, name='create_note'),
     path('classes/<int:pk>/notes/<int:note_pk>/delete/', views.delete_note_view, name='delete_note'),
+    path('classes/<int:pk>/archive/', views.archive_class_view, name='archive'),
+    path('classes/<int:pk>/unarchive/', views.unarchive_class_view, name='unarchive'),
 ]
 

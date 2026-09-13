@@ -99,7 +99,7 @@
                                                 {% endif %}
 
                                                 {% if user == course.teacher or user.is_superadmin %}
-                                                    <form method="POST" action="{% url 'courses:delete_material' slug=course.slug les_pk=lesson.pk material_pk=material.pk %}" class="m-0 ms-auto" onsubmit="return confirm('Deseja realmente excluir este material?')">
+                                                    <form method="POST" action="{% url 'courses:delete_material' slug=course.slug les_pk=lesson.pk material_pk=material.pk %}" class="m-0 ms-auto" data-confirm="Deseja realmente excluir este material?">
                                                         {% csrf_token %}
                                                         <button type="submit" class="btn btn-link text-danger p-0 m-0 border-0" style="line-height: 1;" title="Excluir Material">
                                                             <i class="bi bi-trash"></i>

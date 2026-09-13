@@ -29,6 +29,8 @@ class Class(models.Model):
     total_hours = models.PositiveIntegerField(blank=True, null=True, verbose_name='Carga Horária Total (horas)')
     hours_per_day = models.PositiveIntegerField(blank=True, null=True, verbose_name='Horas por Dia')
     days_of_week = models.CharField(max_length=50, blank=True, null=True, verbose_name='Dias da Semana (0=Seg, 1=Ter, etc.)')
+    is_archived = models.BooleanField(default=False, verbose_name='Arquivada')
+
 
     @property
     def is_checkin_currently_open(self):

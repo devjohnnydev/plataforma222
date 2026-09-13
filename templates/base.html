@@ -744,6 +744,78 @@
     </script>
 
     {% block extra_scripts %}{% endblock %}
+
+    <!-- Modal de Confirmacao Glassmorphism Global -->
+    <div class="modal fade" id="glassConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border border-white border-opacity-10 shadow-lg rounded-4 overflow-hidden"
+                 style="background: rgba(var(--bs-body-bg-rgb, 33,37,41), 0.85); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3">
+                        <div style="width:56px;height:56px;border-radius:50%;background:rgba(242,200,17,.15);display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                            <i class="bi bi-exclamation-triangle" style="font-size:1.7rem;color:#F2C811;"></i>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold mb-3" id="glassConfirmMessage" style="line-height:1.5;">Tem certeza?</h6>
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn rounded-pill px-4 fw-semibold" id="glassConfirmBtn"
+                                style="background:#F2C811;color:#000;">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('glassConfirmModal');
+        if (!modalEl) return;
+        var confirmModal = new bootstrap.Modal(modalEl);
+        var confirmBtn = document.getElementById('glassConfirmBtn');
+        var confirmMsg = document.getElementById('glassConfirmMessage');
+        var pendingCallback = null;
+
+        function showConfirm(message, callback) {
+            confirmMsg.textContent = message;
+            var newBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+            confirmBtn = newBtn;
+            confirmBtn.addEventListener('click', function() {
+                confirmModal.hide();
+                if (callback) callback();
+            });
+            confirmModal.show();
+        }
+
+        // Intercept forms with data-confirm
+        document.addEventListener('submit', function(e) {
+            var form = e.target;
+            if (form && form.hasAttribute('data-confirm')) {
+                e.preventDefault();
+                var msg = form.getAttribute('data-confirm');
+                showConfirm(msg, function() {
+                    form.removeAttribute('data-confirm');
+                    form.submit();
+                });
+            }
+        }, true);
+
+        // Intercept buttons/links with data-confirm (not submit type)
+        document.addEventListener('click', function(e) {
+            var target = e.target.closest('[data-confirm]:not(form)');
+            if (!target) return;
+            var tag = target.tagName.toLowerCase();
+            if (tag === 'button' && target.type === 'submit') return; // handled by form submit
+            e.preventDefault();
+            var msg = target.getAttribute('data-confirm');
+            showConfirm(msg, function() {
+                if (tag === 'a') { window.location.href = target.href; }
+                else { target.removeAttribute('data-confirm'); target.click(); }
+            });
+        });
+    });
+    </script>
 </body>
 </html>
 

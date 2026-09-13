@@ -122,7 +122,7 @@
                                 <i class="bi bi-check-circle me-1"></i>Aprovar
                             </button>
                         </form>
-                        <form method="POST" action="{% url 'accounts:reject_teacher' pk=teacher.pk %}" onsubmit="return confirm('Tem certeza que deseja recusar este professor?');">
+                        <form method="POST" action="{% url 'accounts:reject_teacher' pk=teacher.pk %}" data-confirm="Tem certeza que deseja recusar este professor?">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                 <i class="bi bi-x-circle me-1"></i>Recusar
@@ -267,7 +267,7 @@
                                             {% if u.is_active %}<i class="bi bi-person-x me-1"></i>Desativar{% else %}<i class="bi bi-person-check me-1"></i>Ativar{% endif %}
                                         </button>
                                     </form>
-                                    <form method="POST" action="{% url 'core:admin_delete_user' user_pk=u.pk %}" onsubmit="return confirm('Tem certeza absoluta que deseja excluir o usuário {{ u.username }} permanentemente?');" class="d-inline">
+                                    <form method="POST" action="{% url 'core:admin_delete_user' user_pk=u.pk %}" data-confirm="Tem certeza absoluta que deseja excluir o usuário {{ u.username }} permanentemente?" class="d-inline">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2.5" {% if u == user %}disabled{% endif %}>
                                             <i class="bi bi-trash"></i>
@@ -362,7 +362,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <form method="POST" action="{% url 'core:admin_delete_course' course_pk=c.pk %}" onsubmit="return confirm('Excluir este curso irá remover todos os módulos e lições associadas permanentemente. Confirmar?');">
+                                    <form method="POST" action="{% url 'core:admin_delete_course' course_pk=c.pk %}" data-confirm="Excluir este curso irá remover todos os módulos e lições associadas permanentemente. Confirmar?">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                             <i class="bi bi-trash me-1"></i>Excluir
@@ -418,7 +418,7 @@
                                 <td><code class="font-monospace text-brand">{{ cls.join_code }}</code></td>
                                 <td class="text-center">{{ cls.student_count }}</td>
                                 <td class="text-end">
-                                    <form method="POST" action="{% url 'core:admin_delete_class' class_pk=cls.pk %}" onsubmit="return confirm('Deseja realmente excluir a turma {{ cls.name }} permanentemente?');">
+                                    <form method="POST" action="{% url 'core:admin_delete_class' class_pk=cls.pk %}" data-confirm="Deseja realmente excluir a turma {{ cls.name }} permanentemente?">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
                                             <i class="bi bi-trash me-1"></i>Excluir
