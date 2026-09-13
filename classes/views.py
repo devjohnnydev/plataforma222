@@ -512,12 +512,16 @@ def class_lessons_view(request, pk):
     
     progress_percent = int((published_lessons / total_lessons) * 100) if total_lessons > 0 else 0
 
-    # Retrieve student submissions
+    # Retrieve student submissions and moods
     user_submissions = {}
+    user_moods = {}
     if request.user.is_student():
-        from .models import LessonSubmission
+        from .models import LessonSubmission, LessonMood
         subs = LessonSubmission.objects.filter(student=request.user, lesson__in=lessons)
         user_submissions = {s.lesson_id: s for s in subs}
+        
+        moods = LessonMood.objects.filter(student=request.user, lesson__in=lessons)
+        user_moods = {m.lesson_id: m for m in moods}
 
     enrollments = cls.enrollments.filter(status='ACTIVE').select_related('student')
     
@@ -534,6 +538,7 @@ def class_lessons_view(request, pk):
         'published_lessons': published_lessons,
         'progress_percent': progress_percent,
         'user_submissions': user_submissions,
+        'user_moods': user_moods,
         'enrollments': enrollments,
         'active_tab': 'lessons',
         'material_types': Material.MaterialType.choices,
@@ -1808,10 +1813,79 @@ def delete_note_view(request, pk, note_pk):
     
     messages.warning(request, "Anotação/Lembrete removido com sucesso.")
     return redirect('classes:notes', pk=pk)
+@login_required
+@require_POST
+def student_justify_absence_view(request, pk, date):
+    cls = get_object_or_404(Class, pk=pk)
+    _check_access(request.user, cls)
+    
+    if not request.user.is_student():
+        messages.error(request, "Apenas alunos podem justificar faltas.")
+        return redirect('classes:members', pk=pk)
+        
+    justification_text = request.POST.get('justification', '').strip()
+    if not justification_text:
+        messages.error(request, "A justificativa não pode ser vazia.")
+        return redirect('classes:members', pk=pk)
+
+    try:
+        date_obj = timezone.datetime.strptime(date, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, "Data inválida.")
+        return redirect('classes:members', pk=pk)
+
+    from .models import Attendance
+    attendance = get_object_or_404(Attendance, enrolled_class=cls, student=request.user, date=date_obj)
+    
+    if attendance.present:
+        messages.warning(request, "Você já tem presença marcada nesta data.")
+        return redirect('classes:members', pk=pk)
+        
+    attendance.justified = True
+    attendance.note = f"Justificativa: {justification_text}"
+    attendance.save()
+    
+    messages.success(request, "Sua justificativa foi enviada com sucesso!")
+    return redirect('classes:members', pk=pk)
 
 
-
-
+@login_required
+@require_POST
+def set_lesson_mood_view(request, lesson_pk):
+    from courses.models import Lesson
+    lesson = get_object_or_404(Lesson, pk=lesson_pk)
+    
+    # Optional access check depending on course/class setup
+    if not request.user.is_student():
+        return HttpResponse(status=403)
+        
+    mood = request.POST.get('mood', '').strip()
+    from .models import LessonMood
+    
+    # Ensure mood is valid
+    if mood not in dict(LessonMood.MoodChoices.choices):
+        messages.error(request, "Estado de espírito inválido.")
+        # If HTMX or Fetch, handle differently, but here we can just redirect
+        return redirect('courses:lesson_detail', pk=lesson.module.course.pk, lesson_pk=lesson.pk)
+        
+    lesson_mood, created = LessonMood.objects.update_or_create(
+        lesson=lesson,
+        student=request.user,
+        defaults={'mood': mood}
+    )
+    
+    messages.success(request, f"Seu estado de espírito ({lesson_mood.get_mood_display()}) foi registrado!")
+    
+    if request.headers.get('HX-Request'):
+        # If we use HTMX, we can return just the updated emoji bar or an empty response
+        return HttpResponse(f"<span class='text-success small'>Humor registrado! ({lesson_mood.get_mood_display()})</span>")
+        
+    # Redirect logic based on where this is called from
+    # usually it's from the class classwork view or lesson detail view.
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('core:home')
 
 
 

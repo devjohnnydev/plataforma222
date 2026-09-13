@@ -232,4 +232,24 @@ class ClassNote(models.Model):
     def __str__(self):
         return f"Anotação em {self.date} para {self.target_class.name}"
 
+class LessonMood(models.Model):
+    class MoodChoices(models.TextChoices):
+        FOCUSED = 'FOCUSED', 'Focado 🎯'
+        HAPPY = 'HAPPY', 'Feliz 😊'
+        SAD = 'SAD', 'Triste 😢'
+        CONFUSED = 'CONFUSED', 'Confuso 😕'
+        TIRED = 'TIRED', 'Cansado 😴'
+        EXCITED = 'EXCITED', 'Animado 🤩'
 
+    lesson = models.ForeignKey('courses.Lesson', on_delete=models.CASCADE, related_name='moods', verbose_name='Aula')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lesson_moods', verbose_name='Aluno')
+    mood = models.CharField(max_length=20, choices=MoodChoices.choices, verbose_name='Estado de Espírito')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('lesson', 'student')
+        verbose_name = 'Estado de Espírito'
+        verbose_name_plural = 'Estados de Espírito'
+
+    def __str__(self):
+        return f"{self.student.username} se sentiu {self.get_mood_display()} na aula {self.lesson.title}"

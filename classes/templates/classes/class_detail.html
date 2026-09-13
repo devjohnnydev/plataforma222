@@ -562,6 +562,23 @@
                                 </div>
                             {% endif %}
 
+                            {% if request.user.is_student %}
+                            {% with my_mood=user_moods|dict_get:lesson.pk %}
+                            <div class="mb-4 p-3 bg-dark bg-opacity-25 border border-secondary border-opacity-50 rounded-4">
+                                <h6 class="fw-bold mb-3 small text-secondary"><i class="bi bi-emoji-smile me-2"></i>Como você está se sentindo nesta aula?</h6>
+                                <form method="post" action="{% url 'classes:set_lesson_mood' lesson.pk %}" class="d-flex flex-wrap gap-2">
+                                    {% csrf_token %}
+                                    <button type="submit" name="mood" value="FOCUSED" class="btn btn-sm rounded-pill {% if my_mood.mood == 'FOCUSED' %}btn-brand text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">🎯 Focado</button>
+                                    <button type="submit" name="mood" value="HAPPY" class="btn btn-sm rounded-pill {% if my_mood.mood == 'HAPPY' %}btn-success text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">😊 Feliz</button>
+                                    <button type="submit" name="mood" value="EXCITED" class="btn btn-sm rounded-pill {% if my_mood.mood == 'EXCITED' %}btn-warning text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">🤩 Animado</button>
+                                    <button type="submit" name="mood" value="CONFUSED" class="btn btn-sm rounded-pill {% if my_mood.mood == 'CONFUSED' %}btn-info text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">😕 Confuso</button>
+                                    <button type="submit" name="mood" value="TIRED" class="btn btn-sm rounded-pill {% if my_mood.mood == 'TIRED' %}btn-secondary text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">😴 Cansado</button>
+                                    <button type="submit" name="mood" value="SAD" class="btn btn-sm rounded-pill {% if my_mood.mood == 'SAD' %}btn-danger text-dark fw-bold{% else %}btn-outline-secondary{% endif %}">😢 Triste</button>
+                                </form>
+                            </div>
+                            {% endwith %}
+                            {% endif %}
+
                             <!-- Support Materials Section -->
                             <div class="mb-4">
                                 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
@@ -1702,7 +1719,36 @@
                                         {% if item.note %}
                                             <span class="text-light-opacity small"><i class="bi bi-chat-left-text me-1 text-warning"></i>{{ item.note }}</span>
                                         {% else %}
-                                            <span class="text-muted small">-</span>
+                                            {% if item.status == 'ABSENT' %}
+                                                <button class="btn btn-sm btn-outline-warning border-opacity-50 text-warning px-2 py-0" data-bs-toggle="modal" data-bs-target="#justifyModal{{ forloop.counter }}">
+                                                    <i class="bi bi-pen me-1"></i>Justificar
+                                                </button>
+                                                
+                                                <!-- Justify Modal -->
+                                                <div class="modal fade" id="justifyModal{{ forloop.counter }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered border-secondary border">
+                                                        <div class="modal-content bg-dark text-light border-secondary">
+                                                            <form method="post" action="{% url 'classes:justify_absence' cls.pk item.date|date:'Y-m-d' %}">
+                                                                {% csrf_token %}
+                                                                <div class="modal-header border-secondary border-opacity-25 bg-dark">
+                                                                    <h5 class="modal-title fs-5"><i class="bi bi-journal-text me-2 text-warning"></i>Justificar Falta - {{ item.date|date:"d/m/Y" }}</h5>
+                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body p-4 bg-dark">
+                                                                    <p class="small text-secondary mb-3">Escreva em poucas palavras o motivo da sua ausência para o professor.</p>
+                                                                    <textarea name="justification" class="form-control bg-dark border-secondary text-light" rows="3" placeholder="Ex: Fui ao médico..." required></textarea>
+                                                                </div>
+                                                                <div class="modal-footer border-secondary border-opacity-25 bg-dark">
+                                                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-warning"><i class="bi bi-send me-1"></i>Enviar Justificativa</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted small">-</span>
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>

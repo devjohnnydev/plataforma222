@@ -45,5 +45,7 @@ urlpatterns = [
     path('classes/<int:pk>/notes/<int:note_pk>/delete/', views.delete_note_view, name='delete_note'),
     path('classes/<int:pk>/archive/', views.archive_class_view, name='archive'),
     path('classes/<int:pk>/unarchive/', views.unarchive_class_view, name='unarchive'),
+    path('classes/<int:pk>/attendance/<str:date>/justify/', views.student_justify_absence_view, name='justify_absence'),
+    path('lessons/<int:lesson_pk>/mood/', views.set_lesson_mood_view, name='set_lesson_mood'),
 ]
 
