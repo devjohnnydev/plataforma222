@@ -465,21 +465,22 @@ def chat_view(request):
                 + "\n\nSe o usuário perguntar sobre suas notas, atividades pendentes ou turmas, use as informações acima para responder de forma precisa e direta."
             )
 
-            # Prepare messages list for Groq API
-            groq_messages = [{"role": "system", "content": system_prompt}]
+            import google.generativeai as genai
+            genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+            
+            gemini_history = []
             for msg in history[-10:]:
-                groq_messages.append({"role": msg["role"], "content": msg["content"]})
-            groq_messages.append({"role": "user", "content": message})
-
-            from groq import Groq
-            client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-            completion = client.chat.completions.create(
-                model="llama3-8b-8192",
-                messages=groq_messages,
-                temperature=0.7,
-                max_tokens=1024,
+                role = "user" if msg["role"] == "user" else "model"
+                gemini_history.append({"role": role, "parts": [msg["content"]]})
+                
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=system_prompt
             )
-            response_text = completion.choices[0].message.content
+            
+            chat = model.start_chat(history=gemini_history)
+            response = chat.send_message(message)
+            response_text = response.text
 
             # Append to history
             history.append({"role": "user", "content": message})
