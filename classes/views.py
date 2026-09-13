@@ -359,6 +359,43 @@ def class_members_view(request, pk):
         'active_tab': 'members',
         'today_attendance': today_attendance,
     }
+
+    if request.user.is_student():
+        from .models import Attendance
+        student_attendances = Attendance.objects.filter(
+            student=request.user, 
+            enrolled_class=cls
+        ).order_by('-date')
+        
+        attendance_history = []
+        presences = 0
+        absences = 0
+        
+        for att in student_attendances:
+            status = 'PRESENT' if att.present else 'ABSENT'
+            if att.present: 
+                presences += 1
+            else: 
+                absences += 1
+                
+            attendance_history.append({
+                'date': att.date,
+                'status': status,
+                'origin': att.created_via,
+                'note': att.note
+            })
+            
+        total_days = presences + absences
+        frequency_percent = int((presences / total_days) * 100) if total_days > 0 else 0
+        
+        context.update({
+            'attendance_history': attendance_history,
+            'presences_count': presences,
+            'absences_count': absences,
+            'total_days': total_days,
+            'frequency_percent': frequency_percent,
+        })
+
     return render(request, 'classes/class_detail.html', context)
 
 
