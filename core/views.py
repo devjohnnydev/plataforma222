@@ -476,7 +476,7 @@ def chat_view(request):
                 role = "user" if msg["role"] == "user" else "model"
                 gemini_history.append({"role": role, "parts": [msg["content"]]})
                 
-            model = genai.GenerativeModel("gemini-pro")
+            model = genai.GenerativeModel("gemini-3.8-flash")
             
             chat = model.start_chat(history=gemini_history)
             response = chat.send_message(message)
