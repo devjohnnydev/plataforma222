@@ -899,16 +899,26 @@ def edit_lesson_view(request, pk, lesson_pk):
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         content = request.POST.get('content', '').strip()
+        publish_date_str = request.POST.get('publish_date', '').strip()
 
         if title:
             lesson.title = title
             lesson.content = content
+            if publish_date_str:
+                from datetime import datetime
+                try:
+                    lesson.publish_date = datetime.strptime(publish_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+            else:
+                lesson.publish_date = None
             lesson.save()
             messages.success(request, 'Aula atualizada com sucesso.')
         else:
             messages.error(request, 'O título da aula é obrigatório.')
 
     return redirect('classes:lessons', pk=pk)
+
 
 
 @login_required

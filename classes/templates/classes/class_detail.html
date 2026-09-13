@@ -1160,9 +1160,15 @@
                                     <label class="form-label fw-semibold">Título da Aula</label>
                                     <input type="text" class="form-control bg-body" name="title" value="{{ lesson.title }}" required>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Conteúdo / Descrição</label>
-                                    <textarea class="form-control bg-body" name="content" rows="4">{{ lesson.content }}</textarea>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold"><i class="bi bi-calendar3 me-1"></i>Data da Aula</label>
+                                        <input type="date" class="form-control bg-body" name="publish_date" value="{{ lesson.publish_date|date:'Y-m-d' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold"><i class="bi bi-clock me-1"></i>Horário</label>
+                                        <input type="text" class="form-control bg-body" name="content" value="{{ lesson.content }}" placeholder="Ex.: 14h às 17h">
+                                    </div>
                                 </div>
                             </div>
                             <div class="modal-footer border-secondary">
@@ -1170,6 +1176,7 @@
                                 <button type="submit" class="btn btn-brand rounded-pill">Salvar Alterações</button>
                             </div>
                         </form>
+
                     </div>
                 </div>
                 {% endif %}
@@ -2079,9 +2086,16 @@
                     <i class="bi bi-trash me-1"></i>Excluir Turma
                 </button>
                 <div>
+                    <form method="POST" action="{% url 'classes:archive' pk=cls.pk %}" class="d-inline" data-confirm="Arquivar '{{ cls.name }}'? A turma sairá da lista principal mas todos os dados e alunos serão mantidos.">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-warning rounded-pill me-2">
+                            <i class="bi bi-archive me-1"></i>Arquivar Turma
+                        </button>
+                    </form>
                     <button type="button" class="btn btn-outline-secondary rounded-pill me-2" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-brand rounded-pill px-4">Salvar Alterações</button>
                 </div>
+
             </div>
         </form>
     </div>
