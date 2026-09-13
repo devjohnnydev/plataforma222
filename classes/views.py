@@ -268,7 +268,7 @@ def join_class_view(request):
         return redirect(next_url)
 
     try:
-        cls = Class.objects.get(join_code__iexact=code, is_active=True)
+        cls = Class.objects.get(join_code__iexact=code, is_active=True, is_archived=False)
     except Class.DoesNotExist:
         messages.error(request, f'Código "{code}" inválido ou turma inativa.')
         return redirect(next_url)

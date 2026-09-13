@@ -272,7 +272,7 @@ def _student_dashboard(request):
     today_date = timezone.now().date()
     for cls in my_classes:
         total_lessons = cls.lessons.exclude(order=0).count()
-        cls_total_hours = cls.total_hours or (total_lessons * (cls.hours_per_day or 0)) or 0
+        cls_total_hours = cls.total_hours or 0
         
         # Completed lessons (published and publish_date is today or past)
         completed_lessons_count = cls.lessons.filter(
@@ -280,14 +280,13 @@ def _student_dashboard(request):
             publish_date__lte=today_date
         ).exclude(order=0).count()
         
-        cls_hours_completed = completed_lessons_count * (cls.hours_per_day or 0)
-        if cls_total_hours > 0:
-            cls_hours_completed = min(cls_hours_completed, cls_total_hours)
-            progress_pct = int((cls_hours_completed / cls_total_hours) * 100)
-            hours_remaining = max(0, cls_total_hours - cls_hours_completed)
+        if total_lessons > 0:
+            progress_pct = int((completed_lessons_count / total_lessons) * 100)
         else:
             progress_pct = 0
-            hours_remaining = 0
+            
+        cls_hours_completed = completed_lessons_count * (cls.hours_per_day or 0)
+        hours_remaining = max(0, cls_total_hours - cls_hours_completed)
             
         cls.calc_total_hours = cls_total_hours
         cls.calc_hours_completed = cls_hours_completed
