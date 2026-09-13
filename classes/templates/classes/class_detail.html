@@ -1590,30 +1590,43 @@
                 </div>
             </div>
 
-            <!-- Dashboard Summary Cards for Student -->
+            <!-- Dashboard Summary Cards and Chart for Student -->
             <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary text-center">
-                        <span class="text-secondary small d-block mb-1">Aulas Registradas</span>
-                        <span class="fs-4 fw-bold text-light">{{ total_days }}</span>
+                <div class="col-12 col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary text-center h-100 d-flex flex-column justify-content-center">
+                                <span class="text-secondary small d-block mb-1">Aulas Registradas</span>
+                                <span class="fs-4 fw-bold text-light">{{ total_days }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25 text-center h-100 d-flex flex-column justify-content-center">
+                                <span class="text-success small d-block mb-1">Minhas Presenças</span>
+                                <span class="fs-4 fw-bold text-success">{{ presences_count }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 text-center h-100 d-flex flex-column justify-content-center">
+                                <span class="text-danger small d-block mb-1">Minhas Faltas</span>
+                                <span class="fs-4 fw-bold text-danger">{{ absences_count }}</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-info border-opacity-25 text-center h-100 d-flex flex-column justify-content-center">
+                                <span class="text-info small d-block mb-1">Frequência Geral</span>
+                                <span class="fs-4 fw-bold {% if frequency_percent >= 75 %}text-success{% else %}text-danger{% endif %}">{{ frequency_percent }}%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-success border-opacity-25 text-center">
-                        <span class="text-success small d-block mb-1">Minhas Presenças</span>
-                        <span class="fs-4 fw-bold text-success">{{ presences_count }}</span>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-danger border-opacity-25 text-center">
-                        <span class="text-danger small d-block mb-1">Minhas Faltas</span>
-                        <span class="fs-4 fw-bold text-danger">{{ absences_count }}</span>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-info border-opacity-25 text-center">
-                        <span class="text-info small d-block mb-1">Frequência Geral</span>
-                        <span class="fs-4 fw-bold {% if frequency_percent >= 75 %}text-success{% else %}text-danger{% endif %}">{{ frequency_percent }}%</span>
+                <div class="col-12 col-lg-4 d-flex align-items-center justify-content-center">
+                    <div class="p-3 rounded-3 bg-dark bg-opacity-25 border border-secondary border-opacity-25 w-100 d-flex align-items-center justify-content-center" style="height: 180px;">
+                        {% if total_days > 0 %}
+                            <canvas id="attendanceChart" style="max-height: 150px;"></canvas>
+                        {% else %}
+                            <span class="text-secondary small">Sem dados para exibir o gráfico</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -2208,5 +2221,45 @@ document.querySelectorAll('.folder-header').forEach(header => {
     }
 });
 </script>
+<!-- Load Chart.js for student frequency chart if applicable -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var canvas = document.getElementById('attendanceChart');
+        if(canvas) {
+            var ctx = canvas.getContext('2d');
+            var presences = parseInt("{{ presences_count|default:0 }}");
+            var absences = parseInt("{{ absences_count|default:0 }}");
+            
+            if (presences > 0 || absences > 0) {
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Presenças', 'Faltas'],
+                        datasets: [{
+                            data: [presences, absences],
+                            backgroundColor: ['#198754', '#dc3545'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#f8f9fa',
+                                    font: { size: 12 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
 {% endblock %}
-
