@@ -474,7 +474,7 @@ def chat_view(request):
             from groq import Groq
             client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
             completion = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="llama3-8b-8192",
                 messages=groq_messages,
                 temperature=0.7,
                 max_tokens=1024,
