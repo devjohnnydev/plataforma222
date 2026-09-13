@@ -48,6 +48,6 @@ print('Conta do professor configurada com sucesso!')
 "
 
 echo "==> Criando novas turmas 2 (Excel Online 2 e Power BI Presencial 2)..."
-python manage.py create_turmas2
+python manage.py create_turmas_corretas
 
 echo "==> Release concluído com sucesso!"

@@ -2086,12 +2086,9 @@
                     <i class="bi bi-trash me-1"></i>Excluir Turma
                 </button>
                 <div>
-                    <form method="POST" action="{% url 'classes:archive' pk=cls.pk %}" class="d-inline" data-confirm="Arquivar '{{ cls.name }}'? A turma sairá da lista principal mas todos os dados e alunos serão mantidos.">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-warning rounded-pill me-2">
-                            <i class="bi bi-archive me-1"></i>Arquivar Turma
-                        </button>
-                    </form>
+                    <button type="button" class="btn btn-outline-warning rounded-pill me-2" data-confirm="Arquivar '{{ cls.name }}'? A turma sairá da lista principal mas todos os dados e alunos serão mantidos." onclick="document.getElementById('archiveClassForm').submit();">
+                        <i class="bi bi-archive me-1"></i>Arquivar Turma
+                    </button>
                     <button type="button" class="btn btn-outline-secondary rounded-pill me-2" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-brand rounded-pill px-4">Salvar Alterações</button>
                 </div>
@@ -2103,6 +2100,11 @@
 
 <!-- Hidden form for deleting the class -->
 <form id="deleteClassForm" method="POST" action="{% url 'classes:delete' pk=cls.pk %}">
+    {% csrf_token %}
+</form>
+
+<!-- Hidden form for archiving the class -->
+<form id="archiveClassForm" method="POST" action="{% url 'classes:archive' pk=cls.pk %}">
     {% csrf_token %}
 </form>
 
