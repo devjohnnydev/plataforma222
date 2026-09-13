@@ -47,4 +47,7 @@ u.save()
 print('Conta do professor configurada com sucesso!')
 "
 
+echo "==> Restaurando turma de Power BI e alunos..."
+python manage.py restore_powerbi
+
 echo "==> Release concluído com sucesso!"
