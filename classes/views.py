@@ -467,8 +467,12 @@ def class_lessons_view(request, pk):
             )
         ).order_by('sort_priority', 'order', 'created_at')
 
-    total_lessons = cls.lessons.count()
-    published_lessons = cls.lessons.filter(is_published=True).count()
+    total_lessons = cls.lessons.exclude(order=0).count()
+    
+    from django.utils import timezone
+    today_date = timezone.now().date()
+    published_lessons = cls.lessons.filter(is_published=True, publish_date__lte=today_date).exclude(order=0).count()
+    
     progress_percent = int((published_lessons / total_lessons) * 100) if total_lessons > 0 else 0
 
     # Retrieve student submissions
