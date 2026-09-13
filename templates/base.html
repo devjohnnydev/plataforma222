@@ -490,6 +490,7 @@
                                 <span class="sidebar-section-label">Minhas Turmas</span>
                             </li>
                             {% for cls in teacher_classes %}
+                            {% if not cls.is_archived %}
                             <li class="nav-item">
                                 <a class="nav-link text-body {% if request.path == '/classes/'|add:cls.pk|stringformat:'s'|add:'/' %}active{% endif %}"
                                    href="{% url 'classes:detail' pk=cls.pk %}">
@@ -499,6 +500,7 @@
                                     </div>
                                 </a>
                             </li>
+                            {% endif %}
                             {% endfor %}
                             {% endif %}
                             {% endwith %}
@@ -509,7 +511,7 @@
                                 <span class="sidebar-section-label">Turmas Matriculadas</span>
                             </li>
                             {% for enrollment in student_enrollments %}
-                            {% if enrollment.status == 'ACTIVE' %}
+                            {% if enrollment.status == 'ACTIVE' and not enrollment.enrolled_class.is_archived %}
                             <li class="nav-item">
                                 <a class="nav-link text-body" href="{% url 'classes:detail' pk=enrollment.enrolled_class.pk %}">
                                     <div class="d-flex align-items-center gap-2">
