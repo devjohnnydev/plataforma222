@@ -63,7 +63,7 @@ def _admin_dashboard(request):
     if role_filter:
         users = users.filter(role=role_filter)
 
-    classes = Class.objects.all().select_related('course', 'teacher').order_by('-created_at')
+    classes = Class.objects.filter(is_archived=False).select_related('course', 'teacher').order_by('-created_at')
     courses = Course.objects.all().select_related('teacher').order_by('-created_at')
 
     context = {
@@ -203,7 +203,7 @@ def _teacher_dashboard(request):
     from django.urls import reverse
     import json
 
-    my_classes = Class.objects.filter(teacher=request.user).select_related('course')
+    my_classes = Class.objects.filter(teacher=request.user, is_archived=False).select_related('course')
     total_students = sum(c.student_count for c in my_classes)
     my_courses_count = Course.objects.filter(teacher=request.user).count()
 
@@ -266,7 +266,7 @@ def _student_dashboard(request):
         status='ACTIVE'
     ).select_related('enrolled_class__course', 'enrolled_class__teacher')
 
-    my_classes = [e.enrolled_class for e in enrollments]
+    my_classes = [e.enrolled_class for e in enrollments if not e.enrolled_class.is_archived]
 
     # Calculate course progress for student
     today_date = timezone.now().date()
