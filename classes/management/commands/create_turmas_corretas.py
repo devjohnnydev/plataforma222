@@ -13,25 +13,31 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         Class.objects.filter(name__in=["Curso de Excel - Online 2", "Curso de Power BI - Presencial 2"]).delete()
         
-        teacher = User.objects.filter(username__icontains="johnny").first()
-        if not teacher:
-            teacher = User.objects.filter(is_staff=True).first()
-
         excel_course = Course.objects.filter(title__icontains="Excel").first()
         pbi_course = Course.objects.filter(title__icontains="Power BI").first()
+
+        # Try to infer the correct teacher from the course, fallback to superuser
+        fallback_teacher = User.objects.filter(is_superuser=True).first()
+        if not fallback_teacher:
+            fallback_teacher = User.objects.filter(is_staff=True).first()
+
+        teacher_excel = excel_course.teacher if excel_course and excel_course.teacher else fallback_teacher
+        teacher_pbi = pbi_course.teacher if pbi_course and pbi_course.teacher else fallback_teacher
 
         # ---- EXCEL AVANCADO ----
         excel_class, _ = Class.objects.get_or_create(
             name="Turma de Excel Avançado",
-            teacher=teacher,
             defaults={
+                "teacher": teacher_excel,
                 "course": excel_course,
                 "description": "Treinamento online de Excel Avancado. CH Total: 40h.",
                 "color": "#1D6F42",
                 "total_hours": 40,
             }
         )
-        if not excel_class.course and excel_course:
+        # Force update in case it was created with wrong teacher previously
+        if excel_class.teacher != teacher_excel or excel_class.course != excel_course:
+            excel_class.teacher = teacher_excel
             excel_class.course = excel_course
             excel_class.save()
 
@@ -61,15 +67,16 @@ class Command(BaseCommand):
         # ---- POWER BI ----
         pbi_class, _ = Class.objects.get_or_create(
             name="Turma de Power BI",
-            teacher=teacher,
             defaults={
+                "teacher": teacher_pbi,
                 "course": pbi_course,
                 "description": "Curso de Power BI - Presencial. CH Total: 32h.",
                 "color": "#F2C811",
                 "total_hours": 32,
             }
         )
-        if not pbi_class.course and pbi_course:
+        if pbi_class.teacher != teacher_pbi or pbi_class.course != pbi_course:
+            pbi_class.teacher = teacher_pbi
             pbi_class.course = pbi_course
             pbi_class.save()
 
