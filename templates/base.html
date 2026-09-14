@@ -964,10 +964,14 @@
             }
 
             window.createNewStickyNote = function() {
+                // Check if we are on a class page to link the note automatically
+                const match = window.location.pathname.match(/\/classes\/(\d+)\//);
+                const target_class_id = match ? parseInt(match[1]) : null;
+
                 fetch('/api/sticky-notes/', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({content: 'Nova anotação...', color: '#ffeb3b'})
+                    body: JSON.stringify({content: 'Nova anotação...', color: '#ffeb3b', target_class_id: target_class_id})
                 })
                 .then(res => res.json())
                 .then(newNote => {
@@ -1031,6 +1035,7 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button class="btn btn-link text-dark p-0 btn-minimize" style="line-height: 1;"><i class="bi bi-dash-lg"></i></button>
+                            <button class="btn btn-link text-danger p-0 btn-delete-note" title="Excluir" style="line-height: 1;"><i class="bi bi-trash"></i></button>
                             <button class="btn btn-link text-dark p-0 btn-close-note" style="line-height: 1;"><i class="bi bi-x-lg"></i></button>
                         </div>
                     </div>
@@ -1101,6 +1106,24 @@
                     state.open = false;
                     saveState();
                     noteEl.remove();
+                });
+
+                // Delete
+                noteEl.querySelector('.btn-delete-note').addEventListener('click', () => {
+                    if(confirm('Tem certeza que deseja excluir esta anotação? Esta ação não pode ser desfeita.')) {
+                        fetch(`/api/sticky-notes/${note.id}/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken')
+                            }
+                        }).then(() => {
+                            noteEl.remove();
+                            delete savedNoteStates[note.id];
+                            saveState();
+                            allNotes = allNotes.filter(n => n.id !== note.id);
+                            renderHub();
+                        });
+                    }
                 });
             }
 

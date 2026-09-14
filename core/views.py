@@ -565,6 +565,7 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 def sticky_notes_api_view(request, note_id=None):
     from classes.models import ClassNote
+    import json
     
     if request.method == 'GET':
         notes = ClassNote.objects.filter(author=request.user).order_by('-created_at')
@@ -583,18 +584,28 @@ def sticky_notes_api_view(request, note_id=None):
             body = json.loads(request.body)
             content = body.get('content', '').strip()
             color = body.get('color', '#ffeb3b')
+            target_class_id = body.get('target_class_id')
             
             if not content:
                 return JsonResponse({'error': 'Content is required'}, status=400)
+                
+            from classes.models import Class
+            from django.utils import timezone
+            target_class = None
+            if target_class_id:
+                try:
+                    target_class = Class.objects.get(pk=target_class_id)
+                except Class.DoesNotExist:
+                    pass
                 
             note = ClassNote.objects.create(
                 author=request.user,
                 content=content,
                 color=color,
-                target_class=None,
-                date=None
+                target_class=target_class,
+                date=timezone.localtime(timezone.now()).date() if target_class else None
             )
-            return JsonResponse({'id': note.pk, 'content': note.content, 'color': note.color, 'target_class_name': None})
+            return JsonResponse({'id': note.pk, 'content': note.content, 'color': note.color, 'target_class_name': target_class.name if target_class else None})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
             
