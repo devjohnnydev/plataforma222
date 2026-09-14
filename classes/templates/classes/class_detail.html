@@ -1403,6 +1403,12 @@
                                             <div>
                                                 <div class="fw-semibold">{{ enroll.student.get_full_name|default:enroll.student.username }}</div>
                                                 <small class="text-muted d-block" style="font-size:0.75rem;">{{ enroll.student.email }}</small>
+                                                
+                                                {% if user == cls.teacher or user.is_superadmin %}
+                                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill mt-2 py-0 px-2" style="font-size:0.7rem;" data-bs-toggle="modal" data-bs-target="#remoteSupportModal" data-student-id="{{ enroll.student.pk }}" data-student-name="{{ enroll.student.get_full_name|default:enroll.student.username }}">
+                                                    <i class="bi bi-display me-1"></i>Suporte Remoto
+                                                </button>
+                                                {% endif %}
                                             </div>
                                         </div>
                                     </td>
