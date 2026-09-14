@@ -1,4 +1,4 @@
-﻿from django.contrib import admin
+from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -11,6 +11,7 @@ urlpatterns = [
     path('', include('assignments.urls', namespace='assignments')),
     path('', include('courses.urls', namespace='courses')),
     path('', include('notifications.urls', namespace='notifications')),
+    path('remote/', include('remote_support.urls', namespace='remote_support')),
 ]
 
 if settings.DEBUG:
