@@ -25,9 +25,6 @@ def home_view(request):
     courses = Course.objects.filter(status='PUBLISHED').select_related('teacher')[:6]
     # Get teachers for the teachers carousel
     teachers = User.objects.filter(role='TEACHER').exclude(profile_picture__isnull=True).exclude(profile_picture='')
-    if not teachers.exists():
-        # Fallback to any teachers if none have profile pictures
-        teachers = User.objects.filter(role='TEACHER')
         
     context = {
         'courses': courses,
