@@ -322,7 +322,10 @@
     async function startScreenShare() {
         try {
             stream = await navigator.mediaDevices.getDisplayMedia({
-                video: { cursor: "always" },
+                video: { 
+                    cursor: "always",
+                    displaySurface: "window"
+                },
                 audio: false
             });
 
