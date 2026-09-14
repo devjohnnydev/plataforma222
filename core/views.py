@@ -488,7 +488,12 @@ def chat_view(request):
 
             return JsonResponse({"response": response_text})
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            error_message = str(e)
+            if "429" in error_message or "quota" in error_message.lower() or "limit" in error_message.lower():
+                friendly_reply = "Oops! Meu cérebro virtual está recebendo muitas mensagens neste momento. Por favor, aguarde uns 15 segundinhos e pergunte novamente! 🤖"
+            else:
+                friendly_reply = "Desculpe, tive um pequeno problema técnico para processar sua mensagem. Tente novamente daqui a pouco!"
+            return JsonResponse({"response": friendly_reply})
 
     # For GET requests, render page and pass existing history to Alpine.js
     chat_history_json = json.dumps([
