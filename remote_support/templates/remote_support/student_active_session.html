@@ -239,15 +239,20 @@
             });
 
             video.srcObject = stream;
+            await video.play();
 
             stream.getVideoTracks()[0].onended = function () {
                 stopScreenShare();
             };
 
             if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({action: 'chat_message', sender: 'student', text: 'Conectado! Compartilhamento iniciado.'}));
                 beginStreaming();
             } else {
-                socket.onopen = beginStreaming;
+                socket.onopen = function() {
+                    socket.send(JSON.stringify({action: 'chat_message', sender: 'student', text: 'Conectado! Compartilhamento iniciado.'}));
+                    beginStreaming();
+                };
             }
 
         } catch (err) {
