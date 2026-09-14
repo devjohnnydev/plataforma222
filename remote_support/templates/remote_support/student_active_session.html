@@ -19,21 +19,19 @@
                         <h6 class="fw-bold mb-3 text-light">Estado atual:</h6>
                         <div class="d-flex align-items-center mb-2">
                             <i class="bi bi-circle-fill text-success small me-2"></i>
-                            <span class="text-light">Tela compartilhada</span>
+                            <span class="text-light">Transmitindo Tela via Navegador</span>
                         </div>
-                        {% if session.request_control %}
                         <div class="d-flex align-items-center">
-                            <i class="bi bi-circle-fill text-success small me-2"></i>
-                            <span class="text-light">Controle remoto autorizado</span>
+                            <i class="bi bi-circle-fill text-warning small me-2"></i>
+                            <span class="text-light">Apenas Visualização (Controle Remoto desativado)</span>
                         </div>
-                        {% endif %}
                     </div>
 
                     <p class="small text-muted mb-4">
                         O professor está visualizando sua tela no momento.
                     </p>
 
-                    <form method="POST">
+                    <form method="POST" id="end-session-form">
                         {% csrf_token %}
                         <button type="submit" name="action" value="end" class="btn btn-danger rounded-pill px-5 fw-bold">
                             ENCERRAR ACESSO
@@ -44,4 +42,92 @@
         </div>
     </div>
 </div>
+
+<!-- Elementos invisíveis para capturar a tela -->
+<video id="screen-video" autoplay muted style="display: none;"></video>
+<canvas id="screen-canvas" style="display: none;"></canvas>
+
+<script>
+    const sessionCode = "{{ session.session_code }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/remote/' + sessionCode + '/');
+
+    const video = document.getElementById('screen-video');
+    const canvas = document.getElementById('screen-canvas');
+    const ctx = canvas.getContext('2d');
+    const endForm = document.getElementById('end-session-form');
+
+    let stream = null;
+    let captureInterval = null;
+
+    async function startScreenShare() {
+        try {
+            // Solicita permissão para compartilhar a tela
+            stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { cursor: "always" },
+                audio: false
+            });
+
+            video.srcObject = stream;
+
+            // Quando o aluno clicar no botão nativo "Parar compartilhamento" do navegador
+            stream.getVideoTracks()[0].onended = function () {
+                stopScreenShare();
+            };
+
+            // Inicia o envio de frames assim que o socket abrir
+            if (socket.readyState === WebSocket.OPEN) {
+                beginStreaming();
+            } else {
+                socket.onopen = beginStreaming;
+            }
+
+        } catch (err) {
+            console.error("Erro ao compartilhar tela:", err);
+            alert("Você precisa permitir o compartilhamento de tela para o professor ver.");
+            // Se ele cancelar o pop-up, encerra a sessão
+            endForm.submit();
+        }
+    }
+
+    function beginStreaming() {
+        // Envia um frame a cada 100ms (~10 fps)
+        captureInterval = setInterval(() => {
+            if (video.videoWidth === 0) return;
+
+            const MAX_WIDTH = 1280;
+            const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
+            canvas.width = video.videoWidth * scale;
+            canvas.height = video.videoHeight * scale;
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Converte para JPEG com 50% de qualidade
+            const base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    action: 'screen_frame',
+                    image: base64Image
+                }));
+            }
+        }, 100);
+    }
+
+    function stopScreenShare() {
+        if (captureInterval) clearInterval(captureInterval);
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'finished'
+            }));
+        }
+        endForm.submit();
+    }
+
+    // Dispara a requisição do navegador assim que a página carrega
+    window.addEventListener('load', startScreenShare);
+</script>
 {% endblock %}
