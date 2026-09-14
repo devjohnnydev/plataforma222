@@ -25,12 +25,12 @@
 <!-- ── Class Banner ── -->
 <div class="class-banner mb-0 rounded-bottom-0 position-relative" id="main-class-banner" style="{% if cls.banner_image %}background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%), url('{{ cls.banner_image.url }}'); background-position: center, {{ cls.banner_alignment|default:'center' }}; background-size: cover, cover; background-repeat: no-repeat, no-repeat; min-height: 180px;{% else %}background-color: {{ cls.color }};{% endif %}">
     {% if cls.banner_image and request.user == cls.teacher or request.user.is_superadmin %}
-    <div class="position-absolute top-0 end-0 p-3 z-1" id="reposition-controls">
+    <div class="position-absolute bottom-0 end-0 p-3 z-1" id="reposition-controls">
         <button type="button" class="btn btn-sm btn-light bg-opacity-75 rounded-pill px-3 fw-semibold text-dark shadow-sm" onclick="startBannerReposition()">
             <i class="bi bi-arrows-collapse me-1"></i>Reposicionar
         </button>
     </div>
-    <div class="position-absolute top-0 end-0 p-3 z-1 d-none d-flex gap-2" id="reposition-actions">
+    <div class="position-absolute bottom-0 end-0 p-3 z-1 d-none d-flex gap-2" id="reposition-actions">
         <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold shadow-sm" onclick="saveBannerReposition('{% url 'classes:update_banner_alignment' pk=cls.pk %}')">
             Salvar
         </button>
