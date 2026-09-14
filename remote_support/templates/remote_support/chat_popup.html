@@ -150,8 +150,7 @@
         if (data.type === 'remote_message') {
             const msg = data.message;
             if (msg.action === 'finished') {
-                appendMessage("A sessão foi encerrada.", 'msg-system');
-                chatInput.disabled = true;
+                window.close();
             } else if (msg.action === 'chat_message') {
                 if (msg.sender !== myRole) {
                     appendMessage(msg.text, 'msg-received');
@@ -161,7 +160,7 @@
     };
 
     socket.onclose = function(e) {
-        appendMessage("Conexão perdida com o servidor.", 'msg-system');
+        window.close();
     };
 </script>
 {% endblock %}

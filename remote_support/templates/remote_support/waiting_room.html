@@ -496,8 +496,7 @@
                 statusBadge.className = 'badge bg-danger';
                 statusBadge.innerText = 'Recusado';
             } else if (msg.action === 'finished') {
-                appendMessage("O aluno encerrou o compartilhamento.", 'msg-system');
-                showGlassModal("Sessão Encerrada", "O aluno encerrou o compartilhamento da tela.", true);
+                window.location.href = "{% url 'core:home' %}";
             } else if (msg.action === 'screen_frame') {
                 if (waitingOverlay.style.display !== 'none') {
                     waitingOverlay.style.display = 'none';
@@ -513,10 +512,7 @@
     };
 
     socket.onclose = function(e) {
-        appendMessage("Conexão perdida com o servidor.", 'msg-system');
-        statusBadge.className = 'badge bg-secondary';
-        statusBadge.innerText = 'Desconectado';
-        showGlassModal("Desconectado", "Conexão perdida com o servidor.", true);
+        window.location.href = "{% url 'core:home' %}";
     };
 
     function endSession() {

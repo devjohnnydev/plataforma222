@@ -328,8 +328,7 @@
         if (data.type === 'remote_message') {
             const msg = data.message;
             if (msg.action === 'finished') {
-                appendMessage("O professor encerrou a sessão.", 'msg-system');
-                showGlassModal("Sessão Encerrada", "O professor encerrou a sessão de suporte.", true);
+                window.location.href = "{% url 'core:home' %}";
             } else if (msg.action === 'chat_message' && msg.sender === 'teacher') {
                 appendMessage(msg.text, 'msg-received');
             }
@@ -337,8 +336,7 @@
     };
 
     socket.onclose = function(e) {
-        appendMessage("Conexão perdida com o servidor.", 'msg-system');
-        showGlassModal("Desconectado", "Conexão perdida com o servidor.", true);
+        window.location.href = "{% url 'core:home' %}";
     };
 
     // -- SCREEN SHARE LOGIC --
