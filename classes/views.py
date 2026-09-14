@@ -904,6 +904,27 @@ def class_grades_view(request, pk):
 # ── Class Management Views ───────────────────────────────────────────────────
 
 @login_required
+@require_POST
+def update_banner_alignment_view(request, pk):
+    import json
+    from django.http import JsonResponse
+    cls = get_object_or_404(Class, pk=pk)
+    if not (request.user == cls.teacher or request.user.is_superadmin()):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        alignment = data.get('banner_alignment')
+        if alignment:
+            cls.banner_alignment = alignment
+            cls.save()
+            return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
 def edit_class_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
     if not (request.user == cls.teacher or request.user.is_superadmin()):
