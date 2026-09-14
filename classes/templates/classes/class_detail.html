@@ -2175,6 +2175,14 @@
                     <input type="file" class="form-control bg-body" name="banner_image">
                     <div class="form-text text-muted">Substitua a imagem do cabeçalho da turma (recomenda-se proporções horizontais amplas).</div>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Alinhamento da Imagem</label>
+                    <select class="form-select bg-body" name="banner_alignment">
+                        <option value="top" {% if cls.banner_alignment == 'top' %}selected{% endif %}>Topo (Ideal para textos no alto)</option>
+                        <option value="center" {% if cls.banner_alignment == 'center' %}selected{% endif %}>Centro</option>
+                        <option value="bottom" {% if cls.banner_alignment == 'bottom' %}selected{% endif %}>Fundo</option>
+                    </select>
+                </div>
             </div>
             <div class="modal-footer border-secondary d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-danger rounded-pill px-3" 

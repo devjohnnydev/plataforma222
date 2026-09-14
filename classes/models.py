@@ -21,6 +21,16 @@ class Class(models.Model):
     join_code = models.CharField(max_length=20, unique=True, default=generate_join_code, verbose_name='Código de Acesso')
     color = models.CharField(max_length=7, default='#4285f4', verbose_name='Cor da Turma')
     banner_image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name='Imagem de Banner')
+    banner_alignment = models.CharField(
+        max_length=20, 
+        default='center',
+        choices=[
+            ('top', 'Topo'),
+            ('center', 'Centro'),
+            ('bottom', 'Fundo')
+        ],
+        verbose_name='Alinhamento do Banner'
+    )
     is_active = models.BooleanField(default=True, verbose_name='Ativa')
     checkin_open = models.BooleanField(default=False, verbose_name='Check-in Liberado')
     checkin_opened_at = models.DateTimeField(blank=True, null=True, verbose_name='Check-in Aberto Em')

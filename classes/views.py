@@ -101,6 +101,7 @@ def create_class_view(request):
         course_id = request.POST.get('course')
         color = request.POST.get('color', '#FFE81F')
         banner_image = request.FILES.get('banner_image')
+        banner_alignment = request.POST.get('banner_alignment', 'center')
 
         if not name:
             messages.error(request, 'O nome da turma é obrigatório.')
@@ -146,6 +147,7 @@ def create_class_view(request):
                 teacher=request.user,
                 color=color,
                 banner_image=banner_image,
+                banner_alignment=banner_alignment,
                 start_date=start_date,
                 total_hours=total_hours,
                 hours_per_day=hours_per_day,
@@ -912,11 +914,13 @@ def edit_class_view(request, pk):
         description = request.POST.get('description', '').strip()
         color = request.POST.get('color', cls.color)
         banner_image = request.FILES.get('banner_image')
+        banner_alignment = request.POST.get('banner_alignment', 'center')
 
         if name:
             cls.name = name
             cls.description = description
             cls.color = color
+            cls.banner_alignment = banner_alignment
             if banner_image:
                 cls.banner_image = banner_image
             cls.save()
