@@ -40,4 +40,7 @@ class RemoteSupportConsumer(AsyncWebsocketConsumer):
         message = event['message']
 
         # Send message to WebSocket
-        await self.send(text_data=json.dumps(message))
+        await self.send(text_data=json.dumps({
+            'type': 'remote_message',
+            'message': message
+        }))
