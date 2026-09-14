@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5 mt-5">
+<div id="waiting-ui" class="container py-5 mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card bg-body border-secondary shadow-lg">
@@ -32,6 +32,34 @@
     </div>
 </div>
 
+<div id="remote-ui" style="display: none; height: calc(100vh - 60px); width: 100%; flex-direction: column;" class="bg-dark mt-5">
+    <div class="d-flex justify-content-between align-items-center p-2 bg-black border-bottom border-secondary">
+        <div class="text-light">
+            <i class="bi bi-record-circle-fill text-danger me-2 shadow-pulse"></i> 
+            Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-light" onclick="document.documentElement.requestFullscreen()"><i class="bi bi-arrows-fullscreen"></i> Tela Cheia</button>
+            <button class="btn btn-sm btn-danger ms-2" onclick="window.location.href='{% url 'core:home' %}'">Encerrar</button>
+        </div>
+    </div>
+    <div class="flex-grow-1 position-relative overflow-hidden" id="canvas-container" style="display: flex; justify-content: center; align-items: center;">
+        <!-- Display remote screen here -->
+        <img id="remote-screen" style="max-width: 100%; max-height: 100%; object-fit: contain; cursor: crosshair;" draggable="false" />
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    .shadow-pulse {
+        animation: pulse 2s infinite;
+    }
+</style>
+
 <script>
     const sessionCode = "{{ session.session_code }}";
     
@@ -39,29 +67,90 @@
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const socket = new WebSocket(protocol + window.location.host + '/ws/remote/' + sessionCode + '/');
 
+    const remoteScreen = document.getElementById('remote-screen');
+    const waitingUi = document.getElementById('waiting-ui');
+    const remoteUi = document.getElementById('remote-ui');
+
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'remote_message') {
             const msg = data.message;
             if (msg.action === 'authorized') {
-                const statusContainer = document.getElementById('status-container');
-                statusContainer.className = 'alert alert-success mb-4';
-                document.getElementById('status-text').innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Aluno autorizou o acesso!';
-                // Remove spinner
-                const spinner = statusContainer.querySelector('.spinner-border');
-                if (spinner) spinner.remove();
+                document.getElementById('status-container').className = 'alert alert-success mb-4';
+                document.getElementById('status-text').innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Aluno autorizou o acesso! Iniciando transmissão...';
+                
+                // Show remote UI after a brief delay
+                setTimeout(() => {
+                    waitingUi.style.display = 'none';
+                    remoteUi.style.display = 'flex';
+                }, 1500);
+
             } else if (msg.action === 'rejected') {
-                const statusContainer = document.getElementById('status-container');
-                statusContainer.className = 'alert alert-danger mb-4';
+                document.getElementById('status-container').className = 'alert alert-danger mb-4';
                 document.getElementById('status-text').innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Aluno recusou o acesso.';
-                const spinner = statusContainer.querySelector('.spinner-border');
-                if (spinner) spinner.remove();
+            } else if (msg.action === 'finished') {
+                alert("A sessão foi encerrada pelo aluno.");
+                window.location.href = "{% url 'core:home' %}";
+            } else if (msg.action === 'screen_frame') {
+                // Agent is sending a frame (base64)
+                remoteScreen.src = "data:image/jpeg;base64," + msg.image;
             }
         }
     };
 
     socket.onclose = function(e) {
         console.error('WebSocket closed unexpectedly');
+        // alert("Conexão perdida com o agente remoto."); // Commented out to prevent annoyance on refresh
     };
+
+    // --- Mouse Control Logic ---
+    function sendMouseEvent(action, e) {
+        if (!remoteScreen.src || socket.readyState !== WebSocket.OPEN) return;
+        
+        // Calculate coordinates relative to the original screen size
+        const rect = remoteScreen.getBoundingClientRect();
+        
+        // e.clientX is relative to the viewport. 
+        // We get x and y relative to the image element
+        const x_relative = Math.max(0, e.clientX - rect.left);
+        const y_relative = Math.max(0, e.clientY - rect.top);
+
+        // Normalize (0.0 to 1.0)
+        const x_normalized = x_relative / rect.width;
+        const y_normalized = y_relative / rect.height;
+
+        socket.send(JSON.stringify({
+            action: action,
+            x: x_normalized,
+            y: y_normalized,
+            button: e.button === 2 ? 'right' : (e.button === 1 ? 'middle' : 'left')
+        }));
+    }
+
+    remoteScreen.addEventListener('mousedown', (e) => sendMouseEvent('mousedown', e));
+    remoteScreen.addEventListener('mouseup', (e) => sendMouseEvent('mouseup', e));
+    // Optional: send mousemove, but we throttle it to avoid flooding the socket
+    let lastMove = 0;
+    remoteScreen.addEventListener('mousemove', (e) => {
+        const now = Date.now();
+        if (now - lastMove > 100) { // Max 10 updates per second
+            sendMouseEvent('mousemove', e);
+            lastMove = now;
+        }
+    });
+
+    // Disable context menu on the image to allow right clicks
+    remoteScreen.addEventListener('contextmenu', e => e.preventDefault());
+
+    // --- Keyboard Control Logic ---
+    document.addEventListener('keydown', (e) => {
+        if (remoteUi.style.display !== 'none' && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'keydown',
+                key: e.key
+            }));
+            e.preventDefault(); // Prevent scrolling etc when controlling
+        }
+    });
 </script>
 {% endblock %}
