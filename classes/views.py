@@ -1875,14 +1875,35 @@ def set_lesson_mood_view(request, lesson_pk):
     # Ensure mood is valid
     if mood not in dict(LessonMood.MoodChoices.choices):
         messages.error(request, "Estado de espírito inválido.")
-        # If HTMX or Fetch, handle differently, but here we can just redirect
         return redirect('courses:lesson_detail', pk=lesson.module.course.pk, lesson_pk=lesson.pk)
         
-    lesson_mood, created = LessonMood.objects.update_or_create(
-        lesson=lesson,
+    # Check if student already submitted a mood today (globally)
+    from django.utils import timezone
+    today = timezone.localtime(timezone.now()).date()
+    
+    # Check if a mood was already recorded today by this student for ANY lesson
+    existing_mood_today = LessonMood.objects.filter(
         student=request.user,
-        defaults={'mood': mood}
-    )
+        created_at__date=today
+    ).first()
+    
+    if existing_mood_today and existing_mood_today.lesson != lesson:
+        messages.warning(request, "Você já registrou seu estado de espírito hoje em outra aula!")
+        if request.headers.get('HX-Request'):
+            return HttpResponse("<span class='text-warning small'>Você já registrou seu humor hoje!</span>")
+        return redirect('courses:lesson_detail', pk=lesson.module.course.pk, lesson_pk=lesson.pk)
+    elif existing_mood_today and existing_mood_today.lesson == lesson:
+        # Update existing mood for today's lesson
+        existing_mood_today.mood = mood
+        existing_mood_today.save()
+        lesson_mood = existing_mood_today
+    else:
+        # Create new mood
+        lesson_mood = LessonMood.objects.create(
+            lesson=lesson,
+            student=request.user,
+            mood=mood
+        )
     
     messages.success(request, f"Seu estado de espírito ({lesson_mood.get_mood_display()}) foi registrado!")
     

@@ -514,3 +514,46 @@ def admin_toggle_promote_teacher_view(request, user_pk):
     messages.success(request, f"O status do usuário '{user.username}' foi alterado para: {status_str}.")
     return redirect('core:home')
 
+
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def recent_moods_api_view(request):
+    if not (request.user.is_teacher() or request.user.is_superadmin()):
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+    since_timestamp = request.GET.get('since')
+    if not since_timestamp:
+        # Default to last 10 seconds if not provided
+        since = timezone.now() - timedelta(seconds=10)
+    else:
+        try:
+            since = timezone.datetime.fromtimestamp(float(since_timestamp), tz=timezone.utc)
+        except ValueError:
+            since = timezone.now() - timedelta(seconds=10)
+            
+    from classes.models import LessonMood
+    
+    # Get moods created since the timestamp
+    qs = LessonMood.objects.filter(created_at__gt=since)
+    
+    # If not superadmin, only get moods from classes they teach
+    if not request.user.is_superadmin():
+        qs = qs.filter(lesson__target_class__teacher=request.user)
+        
+    moods = []
+    for m in qs:
+        # Extract the emoji from the display name (e.g. 'Focado 🎯' -> '🎯')
+        display = m.get_mood_display()
+        emoji = display.split(' ')[-1] if ' ' in display else '😊'
+        moods.append({
+            'id': m.pk,
+            'emoji': emoji,
+            'student': m.student.get_full_name() or m.student.username,
+            'created_at': m.created_at.timestamp()
+        })
+        
+    return JsonResponse({'moods': moods})

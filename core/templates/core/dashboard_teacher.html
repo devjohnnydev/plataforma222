@@ -468,7 +468,39 @@
             </div>
         </div>
     </div>
+    
+    <!-- Emoji Container for Interactive Moods -->
+    <div id="emoji-container" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 100vh; pointer-events: none; overflow: hidden; z-index: 9999;"></div>
 </div>
+
+<style>
+    .floating-emoji {
+        position: absolute;
+        bottom: -50px;
+        font-size: 2.5rem;
+        animation: floatUp 4s ease-in forwards;
+        opacity: 1;
+    }
+    
+    @keyframes floatUp {
+        0% {
+            transform: translateY(0) scale(0.8);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+            transform: translateY(-50px) scale(1.2);
+        }
+        80% {
+            opacity: 0.8;
+            transform: translateY(-80vh) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-100vh) scale(1);
+        }
+    }
+</style>
 
 <script id="calendar-events-json" type="application/json">
     {{ events_json|safe }}
@@ -479,6 +511,46 @@
 <!-- Live Search, Copy and Calendar scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Emojis floating logic
+    let lastPollTime = (Date.now() / 1000) - 5; // Start polling from 5 seconds ago
+    
+    function pollMoods() {
+        fetch(`/api/recent-moods/?since=${lastPollTime}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.moods && data.moods.length > 0) {
+                    const container = document.getElementById('emoji-container');
+                    data.moods.forEach(mood => {
+                        const emojiEl = document.createElement('div');
+                        emojiEl.className = 'floating-emoji';
+                        emojiEl.textContent = mood.emoji;
+                        // Random horizontal position
+                        emojiEl.style.left = Math.random() * 90 + 5 + '%';
+                        // Random slight delay
+                        emojiEl.style.animationDelay = (Math.random() * 0.5) + 's';
+                        
+                        container.appendChild(emojiEl);
+                        
+                        // Remove after animation finishes (4s + 1s buffer)
+                        setTimeout(() => {
+                            if(emojiEl.parentNode === container) {
+                                container.removeChild(emojiEl);
+                            }
+                        }, 5000);
+                        
+                        // Update last poll time to the newest mood's time
+                        if (mood.created_at > lastPollTime) {
+                            lastPollTime = mood.created_at;
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error('Error polling moods:', err));
+    }
+    
+    // Poll every 5 seconds
+    setInterval(pollMoods, 5000);
+    
     const searchInput = document.getElementById('classSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
