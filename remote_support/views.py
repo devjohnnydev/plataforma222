@@ -52,9 +52,16 @@ def waiting_room(request, session_code):
     return render(request, 'remote_support/waiting_room.html', {'session': session})
 
 
+from notifications.models import Notification
 @login_required
 def student_request_view(request, session_code):
     session = get_object_or_404(RemoteSession, session_code=session_code, student=request.user)
+    
+    # Mark the notification as read so it disappears from the bell
+    Notification.objects.filter(
+        recipient=request.user, 
+        notification_type=f'RS_{session_code}'
+    ).update(is_read=True)
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -103,6 +110,6 @@ def student_active_session(request, session_code):
             f'remote_{session_code}',
             {'type': 'remote_message', 'message': {'action': 'finished'}}
         )
-        return redirect('core:dashboard')
+        return redirect('core:home')
         
     return render(request, 'remote_support/student_active_session.html', {'session': session})
