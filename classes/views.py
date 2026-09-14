@@ -496,13 +496,13 @@ def class_lessons_view(request, pk):
             )
         ).order_by('sort_priority', 'order', 'created_at')
     else:
-        lessons = cls.lessons.filter(is_published=True).annotate(
+        # Students: exclude "Materiais do Curso" (order=0) — professor-only section
+        lessons = cls.lessons.filter(is_published=True).exclude(order=0).annotate(
             sort_priority=Case(
-                When(order=0, then=Value(0)),
                 default=Value(1),
                 output_field=IntegerField(),
             )
-        ).order_by('sort_priority', 'order', 'created_at')
+        ).order_by('order', 'created_at')
 
     total_lessons = cls.lessons.exclude(order=0).count()
     
