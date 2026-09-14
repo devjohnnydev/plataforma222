@@ -23,11 +23,26 @@
     
     .chat-panel {
         width: 350px;
-        background-color: #1e1e1e;
+        height: 600px;
+        max-height: 80vh;
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
         display: flex;
         flex-direction: column;
-        border-left: 1px solid #333;
-        transition: transform 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 15px;
+        position: absolute;
+        right: 20px;
+        top: 80px;
+        z-index: 40;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .chat-panel.collapsed {
+        transform: translateX(400px);
+        opacity: 0;
+        pointer-events: none;
     }
     
     .video-header {
@@ -52,8 +67,8 @@
     }
     
     #remote-screen {
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
     }
     
@@ -230,6 +245,24 @@
         justify-content: center;
         align-items: center;
         z-index: 5;
+    /* Glass Modal */
+    .glass-modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .glass-modal {
+        background: rgba(40, 40, 40, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        max-width: 400px;
     }
 </style>
 
@@ -280,6 +313,10 @@
             <button class="toolbar-btn" onclick="toggleFullscreen()" title="Tela Cheia">
                 <i class="bi bi-arrows-fullscreen"></i>
                 <span>Expandir</span>
+            </button>
+            <button class="toolbar-btn" onclick="toggleChat()" title="Mostrar/Esconder Chat">
+                <i class="bi bi-chat-left-text"></i>
+                <span>Chat</span>
             </button>
             <button class="toolbar-btn" onclick="popOutChat()" title="Abrir Chat em Nova Janela">
                 <i class="bi bi-box-arrow-up-right"></i>
@@ -336,6 +373,29 @@
     let chatPoppedOut = false;
     let screenshotCounter = 1;
 
+    function toggleChat() {
+        const panel = document.getElementById('main-chat-panel');
+        if (chatPoppedOut) {
+            showGlassModal("Chat Pop-out", "O chat já está aberto em uma nova janela.");
+            return;
+        }
+        panel.classList.toggle('collapsed');
+    }
+
+    function showGlassModal(title, message, isError=false) {
+        const overlay = document.createElement('div');
+        overlay.className = 'glass-modal-overlay';
+        overlay.innerHTML = `
+            <div class="glass-modal">
+                <i class="bi ${isError ? 'bi-x-circle text-danger' : 'bi-info-circle text-info'}" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">${title}</h4>
+                <p class="mt-2 text-light">${message}</p>
+                <button class="btn btn-primary rounded-pill px-4 mt-3" onclick="window.location.href='{% url 'core:home' %}'">Voltar ao Início</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
     // --- SCREENSHOT LOGIC ---
     function toggleGallery() {
         screenshotsPanel.classList.toggle('open');
@@ -378,7 +438,7 @@
         const layout = document.getElementById('video-container');
         if (!document.fullscreenElement) {
             layout.requestFullscreen().catch(err => {
-                alert(`Erro ao tentar tela cheia: ${err.message}`);
+                console.error(`Erro ao tentar tela cheia: ${err.message}`);
             });
         } else {
             document.exitFullscreen();
@@ -437,8 +497,7 @@
                 statusBadge.innerText = 'Recusado';
             } else if (msg.action === 'finished') {
                 appendMessage("O aluno encerrou o compartilhamento.", 'msg-system');
-                alert("A sessão foi encerrada pelo aluno.");
-                window.location.href = "{% url 'core:home' %}";
+                showGlassModal("Sessão Encerrada", "O aluno encerrou o compartilhamento da tela.", true);
             } else if (msg.action === 'screen_frame') {
                 if (waitingOverlay.style.display !== 'none') {
                     waitingOverlay.style.display = 'none';
@@ -457,6 +516,7 @@
         appendMessage("Conexão perdida com o servidor.", 'msg-system');
         statusBadge.className = 'badge bg-secondary';
         statusBadge.innerText = 'Desconectado';
+        showGlassModal("Desconectado", "Conexão perdida com o servidor.", true);
     };
 
     function endSession() {

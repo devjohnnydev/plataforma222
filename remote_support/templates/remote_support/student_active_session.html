@@ -160,6 +160,26 @@
     .btn-end-call:hover {
         background-color: #bb2d3b !important;
     }
+    
+    /* Glass Modal */
+    .glass-modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .glass-modal {
+        background: rgba(40, 40, 40, 0.7);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        max-width: 400px;
+    }
 </style>
 
 <div class="session-layout">
@@ -252,6 +272,20 @@
     let captureInterval = null;
     let chatPoppedOut = false;
 
+    function showGlassModal(title, message, isError=false) {
+        const overlay = document.createElement('div');
+        overlay.className = 'glass-modal-overlay';
+        overlay.innerHTML = `
+            <div class="glass-modal">
+                <i class="bi ${isError ? 'bi-x-circle text-danger' : 'bi-info-circle text-info'}" style="font-size: 3rem;"></i>
+                <h4 class="mt-3">${title}</h4>
+                <p class="mt-2 text-light">${message}</p>
+                <button class="btn btn-primary rounded-pill px-4 mt-3" onclick="window.location.href='{% url 'core:home' %}'">Voltar ao Início</button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
     // -- POP-OUT CHAT LOGIC --
     function popOutChat() {
         const url = "{% url 'remote_support:chat_popup' session.session_code %}";
@@ -295,8 +329,7 @@
             const msg = data.message;
             if (msg.action === 'finished') {
                 appendMessage("O professor encerrou a sessão.", 'msg-system');
-                alert("A sessão foi encerrada pelo professor.");
-                window.location.href = "{% url 'core:home' %}";
+                showGlassModal("Sessão Encerrada", "O professor encerrou a sessão de suporte.", true);
             } else if (msg.action === 'chat_message' && msg.sender === 'teacher') {
                 appendMessage(msg.text, 'msg-received');
             }
@@ -305,6 +338,7 @@
 
     socket.onclose = function(e) {
         appendMessage("Conexão perdida com o servidor.", 'msg-system');
+        showGlassModal("Desconectado", "Conexão perdida com o servidor.", true);
     };
 
     // -- SCREEN SHARE LOGIC --
@@ -334,8 +368,8 @@
 
         } catch (err) {
             console.error("Erro ao compartilhar tela:", err);
-            alert("Você precisa permitir o compartilhamento de tela para prosseguir.");
-            endForm.submit();
+            showGlassModal("Permissão Negada", "Você precisa permitir o compartilhamento de tela para receber suporte.", true);
+            setTimeout(() => endForm.submit(), 3000);
         }
     }
 
