@@ -45,7 +45,11 @@ A plataforma conta com recursos interativos avançados desenvolvidos para otimiz
 ### 5. 🤖 Mister AI (Assistente de Conversação)
 * **Respostas Inteligentes e Sem Limites**: O assistente virtual Mister agora é capaz de responder a dúvidas de **qualquer assunto** solicitado pelos alunos e professores (ciências, matemática, curiosidades gerais) de forma prestativa, além de orientar sobre o uso do sistema.
 
-### 6. 📱 Responsividade e Barra Lateral Retrátil
+### 6. 🖼️ Personalização Visual (Banners Estilo Notion)
+* **Banners Dinâmicos**: Professores e administradores podem fazer upload de imagens personalizadas para o cabeçalho de cada turma.
+* **Reposicionamento Interativo**: Através de uma interface intuitiva, é possível clicar, arrastar e reposicionar a imagem de capa (ajuste de eixo Y) diretamente na tela da turma, com salvamento instantâneo via AJAX, proporcionando uma experiência semelhante à do Notion.
+
+### 7. 📱 Responsividade e Barra Lateral Retrátil
 * **Desktop**: Barra lateral retrátil que recolhe suavemente. Possui botão amarelo flutuante de controle que economiza espaço horizontal. O estado é persistido no `localStorage`.
 * **Mobile**: Menu gaveta elegante com desfoque de fundo e ativador no topo, garantindo que o sistema funcione perfeitamente em qualquer dispositivo.
 
