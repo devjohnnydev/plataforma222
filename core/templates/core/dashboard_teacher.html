@@ -251,7 +251,7 @@
                     
                     <!-- Class Banner / Header -->
                     <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden d-flex flex-column justify-content-end cursor-pointer"
-                         style="min-height: 120px; cursor: pointer; {% if cls.banner_image %}background: linear-gradient(180deg, rgba(18,18,22,0.2) 0%, rgba(18,18,22,0.85) 100%), url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat;{% else %}background: linear-gradient(135deg, {{ cls.color }}dd 0%, #121216 100%);{% endif %}"
+                         style="min-height: 120px; cursor: pointer; {% if cls.banner_image %}background-image: linear-gradient(180deg, rgba(18,18,22,0.2) 0%, rgba(18,18,22,0.85) 100%), url('{{ cls.banner_image.url }}'); background-position: center, {{ cls.banner_alignment|default:'center' }}; background-size: cover, cover; background-repeat: no-repeat, no-repeat;{% else %}background: linear-gradient(135deg, {{ cls.color }}dd 0%, #121216 100%);{% endif %}"
                          onclick="if (!event.target.closest('.join-code-badge') && !event.target.closest('a')) { window.location='{% url 'classes:detail' pk=cls.pk %}'; }">
                         
                         <!-- Floating Dot indicators & Right Arrow -->

@@ -49,7 +49,7 @@
                 <div class="card bg-body-tertiary border-0 shadow-sm rounded-4 h-100 overflow-hidden class-card">
                     <a href="{% url 'classes:detail' pk=cls.pk %}" class="text-decoration-none">
                         <div class="card-header border-0 py-4 px-4 position-relative overflow-hidden"
-                             style="{% if cls.banner_image %}background: linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.55) 100%),url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat;min-height:100px;{% else %}background-color:{{ cls.color }};{% endif %}">
+                             style="{% if cls.banner_image %}background-image: linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.55) 100%),url('{{ cls.banner_image.url }}'); background-position: center, {{ cls.banner_alignment|default:'center' }}; background-size: cover, cover; background-repeat: no-repeat, no-repeat; min-height:100px;{% else %}background-color:{{ cls.color }};{% endif %}">
                             <div class="position-absolute top-0 end-0 p-3 opacity-50" style="transform:scale(3.5) translate(10px,-5px);">
                                 <i class="bi bi-mortarboard {% if cls.banner_image %}text-light{% else %}text-dark{% endif %}"></i>
                             </div>

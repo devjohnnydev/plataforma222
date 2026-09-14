@@ -23,7 +23,7 @@
 {% endif %}
 
 <!-- ── Class Banner ── -->
-<div class="class-banner mb-0 rounded-bottom-0" style="{% if cls.banner_image %}background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%), url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat; min-height: 180px;{% else %}background-color: {{ cls.color }};{% endif %}">
+<div class="class-banner mb-0 rounded-bottom-0" style="{% if cls.banner_image %}background-image: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%), url('{{ cls.banner_image.url }}'); background-position: center, {{ cls.banner_alignment|default:'center' }}; background-size: cover, cover; background-repeat: no-repeat, no-repeat; min-height: 180px;{% else %}background-color: {{ cls.color }};{% endif %}">
     <div class="d-flex justify-content-between align-items-start">
         <div>
             <p class="mb-1">
@@ -2185,11 +2185,10 @@
                     <label class="form-label fw-semibold">Alinhamento da Imagem</label>
                     <input type="hidden" name="banner_alignment" id="banner_alignment_input" value="{{ cls.banner_alignment|default:'center' }}">
                     
-                    {% if cls.banner_image %}
-                    <div class="mt-2 p-2 border rounded bg-body-tertiary">
+                    <div class="mt-2 p-2 border rounded bg-body-tertiary" id="banner-drag-wrapper" style="{% if not cls.banner_image %}display: none;{% endif %}">
                         <small class="text-muted d-block mb-2"><i class="bi bi-arrows-collapse me-1"></i>Clique e arraste a imagem abaixo para ajustar o recorte vertical:</small>
                         <div id="banner-drag-container" style="height: 120px; width: 100%; overflow: hidden; position: relative; border-radius: 8px; cursor: ns-resize;">
-                            <div id="banner-drag-image" style="width: 100%; height: 100%; background: url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat;"></div>
+                            <div id="banner-drag-image" style="width: 100%; height: 100%; {% if cls.banner_image %}background: url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat;{% endif %}"></div>
                         </div>
                     </div>
                     
@@ -2198,11 +2197,28 @@
                             const container = document.getElementById('banner-drag-container');
                             const image = document.getElementById('banner-drag-image');
                             const input = document.getElementById('banner_alignment_input');
+                            const wrapper = document.getElementById('banner-drag-wrapper');
+                            const fileInput = document.querySelector('input[name="banner_image"]');
                             
                             if(!container) return;
                             
                             let isDragging = false;
                             let startY = 0;
+                            
+                            // Preview imediato ao selecionar arquivo
+                            if(fileInput) {
+                                fileInput.addEventListener('change', function(e) {
+                                    if(e.target.files && e.target.files[0]) {
+                                        const url = URL.createObjectURL(e.target.files[0]);
+                                        image.style.backgroundImage = `url('${url}')`;
+                                        image.style.backgroundSize = 'cover';
+                                        image.style.backgroundRepeat = 'no-repeat';
+                                        image.style.backgroundPosition = 'center 50%';
+                                        input.value = 'center 50%';
+                                        wrapper.style.display = 'block';
+                                    }
+                                });
+                            }
                             
                             // Extrair o Y atual
                             let currentPos = input.value || 'center'; // ex: 'center 45%'
@@ -2218,9 +2234,12 @@
                             }
                             
                             // Inicializar
-                            image.style.backgroundPosition = `center ${currentYPercent}%`;
+                            if (image.style.backgroundImage) {
+                                image.style.backgroundPosition = `center ${currentYPercent}%`;
+                            }
 
                             container.addEventListener('mousedown', function(e) {
+                                e.preventDefault(); // Evitar seleção de texto e drag nativo
                                 isDragging = true;
                                 startY = e.clientY;
                                 container.style.cursor = 'grabbing';
@@ -2235,28 +2254,20 @@
                                 if (!isDragging) return;
                                 
                                 const deltaY = e.clientY - startY;
-                                // Invertido porque arrastar para baixo move a imagem para baixo (offset Y menor)
-                                // Quanto maior a sensibilidade, menor o divisor. Ajuste conforme necessário.
-                                const percentChange = (deltaY / container.clientHeight) * 50; 
+                                const percentChange = (deltaY / container.clientHeight) * 100; 
                                 
                                 currentYPercent -= percentChange;
                                 
-                                // Limitar entre 0% e 100%
                                 if (currentYPercent < 0) currentYPercent = 0;
                                 if (currentYPercent > 100) currentYPercent = 100;
                                 
-                                startY = e.clientY; // Reseta pro proximo frame
+                                startY = e.clientY;
                                 
-                                // Atualizar visual
                                 image.style.backgroundPosition = `center ${currentYPercent}%`;
-                                // Atualizar input form (arredondar para inteiro)
                                 input.value = `center ${Math.round(currentYPercent)}%`;
                             });
                         });
                     </script>
-                    {% else %}
-                        <div class="text-muted small">Faça o upload de uma imagem e salve para ajustar o alinhamento.</div>
-                    {% endif %}
                 </div>
             </div>
             <div class="modal-footer border-secondary d-flex justify-content-between">
