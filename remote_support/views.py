@@ -83,7 +83,7 @@ def student_request_view(request, session_code):
                 f'remote_{session_code}',
                 {'type': 'remote_message', 'message': {'action': 'rejected'}}
             )
-            return redirect('core:dashboard')
+            return redirect('core:home')
             
     return render(request, 'remote_support/student_request.html', {'session': session})
 
