@@ -1,156 +1,263 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div id="waiting-ui" class="container py-5 mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card bg-body border-secondary shadow-lg">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <i class="bi bi-display text-info" style="font-size: 4rem;"></i>
-                    </div>
-                    
-                    <h3 class="fw-bold mb-3">Suporte Remoto</h3>
-                    <p class="text-secondary mb-4">Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong></p>
-
-                    <div id="status-container" class="alert alert-warning mb-4">
-                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                        <span id="status-text">Aguardando autorização do aluno...</span>
-                    </div>
-
-                    <p class="small text-muted mb-4">
-                        O aluno recebeu uma notificação e precisa liberar o acesso no computador dele. 
-                        A tela será compartilhada assim que a autorização for concedida.
-                    </p>
-
-                    <button class="btn btn-outline-danger rounded-pill" onclick="window.history.back()">
-                        Cancelar Solicitação
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div id="remote-ui" style="display: none; height: calc(100vh - 60px); width: 100%; flex-direction: column;" class="bg-dark mt-5">
-    <div class="d-flex justify-content-between align-items-center p-2 bg-black border-bottom border-secondary">
-        <div class="text-light">
-            <i class="bi bi-record-circle-fill text-danger me-2 shadow-pulse"></i> 
-            Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong>
-        </div>
-        <div>
-            <button class="btn btn-sm btn-outline-light" onclick="document.documentElement.requestFullscreen()"><i class="bi bi-arrows-fullscreen"></i> Tela Cheia</button>
-            <button class="btn btn-sm btn-danger ms-2" onclick="window.location.href='{% url 'core:home' %}'">Encerrar</button>
-        </div>
-    </div>
-    <div class="flex-grow-1 position-relative overflow-hidden" id="canvas-container" style="display: flex; justify-content: center; align-items: center;">
-        <!-- Display remote screen here -->
-        <img id="remote-screen" style="max-width: 100%; max-height: 100%; object-fit: contain; cursor: crosshair;" draggable="false" />
-    </div>
-</div>
-
+<!-- Remover navbar/footer nativos se quisermos tela cheia (opcional, mas aqui vamos tentar usar a tela toda) -->
 <style>
-    @keyframes pulse {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(1.1); }
-        100% { opacity: 1; transform: scale(1); }
+    /* Ocultar navegação global para foco total na sessão */
+    nav.navbar { display: none !important; }
+    footer { display: none !important; }
+    body { background-color: #121212; color: #fff; height: 100vh; overflow: hidden; margin: 0; padding: 0; }
+    
+    .session-layout {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
     }
-    .shadow-pulse {
-        animation: pulse 2s infinite;
+    
+    .video-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #000;
+        position: relative;
+    }
+    
+    .chat-panel {
+        width: 350px;
+        background-color: #1e1e1e;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid #333;
+    }
+    
+    .video-header {
+        padding: 15px;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+        z-index: 10;
+    }
+    
+    .video-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    
+    #remote-screen {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+    
+    .chat-header {
+        padding: 15px;
+        background-color: #252526;
+        border-bottom: 1px solid #333;
+        font-weight: bold;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .msg-sent {
+        background-color: #0d6efd;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+    
+    .msg-received {
+        background-color: #333;
+        color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+    
+    .msg-system {
+        align-self: center;
+        background-color: transparent;
+        color: #888;
+        font-size: 0.8rem;
+        font-style: italic;
+    }
+    
+    .chat-input {
+        padding: 15px;
+        background-color: #252526;
+        border-top: 1px solid #333;
+    }
+    
+    .chat-input input {
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+    }
+    
+    .chat-input input:focus {
+        background-color: #444;
+        color: white;
+        border-color: #0d6efd;
+        box-shadow: none;
+    }
+    
+    /* Waiting Overlay */
+    #waiting-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #121212;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 20;
     }
 </style>
 
+<div class="session-layout">
+    <!-- VIDEO PANEL -->
+    <div class="video-panel">
+        <div class="video-header">
+            <div>
+                <i class="bi bi-broadcast text-danger me-2"></i> 
+                Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-light me-2" onclick="document.documentElement.requestFullscreen()"><i class="bi bi-arrows-fullscreen"></i></button>
+                <form method="POST" action="{% url 'remote_support:student_active_session' session.session_code %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="endSession()">Encerrar Sala</button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="video-container">
+            <img id="remote-screen" style="display: none;" draggable="false" />
+            
+            <div id="waiting-overlay">
+                <i class="bi bi-display text-info mb-3" style="font-size: 4rem;"></i>
+                <h4 class="mb-3">Aguardando aluno...</h4>
+                <div class="spinner-border text-info" role="status"></div>
+                <p class="text-secondary mt-3 small text-center px-4">O aluno recebeu a notificação.<br>Aguardando aprovação e início do compartilhamento de tela.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- CHAT PANEL -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <i class="bi bi-chat-dots me-2"></i> Chat
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message-bubble msg-system">Sessão iniciada. Você está na sala.</div>
+        </div>
+        
+        <div class="chat-input">
+            <form id="chat-form" onsubmit="sendChat(event)">
+                <div class="input-group">
+                    <input type="text" id="chat-input-field" class="form-control" placeholder="Mensagem..." autocomplete="off">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     const sessionCode = "{{ session.session_code }}";
-    
-    // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const socket = new WebSocket(protocol + window.location.host + '/ws/remote/' + sessionCode + '/');
 
     const remoteScreen = document.getElementById('remote-screen');
-    const waitingUi = document.getElementById('waiting-ui');
-    const remoteUi = document.getElementById('remote-ui');
+    const waitingOverlay = document.getElementById('waiting-overlay');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input-field');
+
+    // Nomes para o chat
+    const myName = "Você";
+    const otherName = "{{ session.student.get_full_name|default:session.student.username }}";
+
+    function appendMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = 'message-bubble ' + type;
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendChat(e) {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'chat_message',
+                sender: 'teacher',
+                text: text
+            }));
+            appendMessage(text, 'msg-sent');
+            chatInput.value = '';
+        } else {
+            alert("Chat desconectado. Tentando reconectar...");
+        }
+    }
 
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'remote_message') {
             const msg = data.message;
+            
             if (msg.action === 'authorized') {
-                document.getElementById('status-container').className = 'alert alert-success mb-4';
-                document.getElementById('status-text').innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Aluno autorizou o acesso! Iniciando transmissão...';
-                
-                // Show remote UI after a brief delay
-                setTimeout(() => {
-                    waitingUi.style.display = 'none';
-                    remoteUi.style.display = 'flex';
-                }, 1500);
-
+                appendMessage("O aluno autorizou o acesso.", 'msg-system');
             } else if (msg.action === 'rejected') {
-                document.getElementById('status-container').className = 'alert alert-danger mb-4';
-                document.getElementById('status-text').innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Aluno recusou o acesso.';
+                appendMessage("O aluno recusou a conexão.", 'msg-system');
+                waitingOverlay.innerHTML = '<h4 class="text-danger">Acesso Recusado</h4><p>O aluno cancelou a solicitação.</p>';
             } else if (msg.action === 'finished') {
+                appendMessage("O aluno encerrou o compartilhamento.", 'msg-system');
                 alert("A sessão foi encerrada pelo aluno.");
                 window.location.href = "{% url 'core:home' %}";
             } else if (msg.action === 'screen_frame') {
-                // Agent is sending a frame (base64)
+                // Primeira vez que recebemos frame, escondemos o overlay
+                if (waitingOverlay.style.display !== 'none') {
+                    waitingOverlay.style.display = 'none';
+                    remoteScreen.style.display = 'block';
+                    appendMessage("A transmissão de tela começou.", 'msg-system');
+                }
                 remoteScreen.src = "data:image/jpeg;base64," + msg.image;
+            } else if (msg.action === 'chat_message' && msg.sender === 'student') {
+                appendMessage(msg.text, 'msg-received');
             }
         }
     };
 
     socket.onclose = function(e) {
-        console.error('WebSocket closed unexpectedly');
-        // alert("Conexão perdida com o agente remoto."); // Commented out to prevent annoyance on refresh
+        appendMessage("Conexão perdida com o servidor.", 'msg-system');
     };
 
-    // --- Mouse Control Logic ---
-    function sendMouseEvent(action, e) {
-        if (!remoteScreen.src || socket.readyState !== WebSocket.OPEN) return;
-        
-        // Calculate coordinates relative to the original screen size
-        const rect = remoteScreen.getBoundingClientRect();
-        
-        // e.clientX is relative to the viewport. 
-        // We get x and y relative to the image element
-        const x_relative = Math.max(0, e.clientX - rect.left);
-        const y_relative = Math.max(0, e.clientY - rect.top);
-
-        // Normalize (0.0 to 1.0)
-        const x_normalized = x_relative / rect.width;
-        const y_normalized = y_relative / rect.height;
-
-        socket.send(JSON.stringify({
-            action: action,
-            x: x_normalized,
-            y: y_normalized,
-            button: e.button === 2 ? 'right' : (e.button === 1 ? 'middle' : 'left')
-        }));
+    function endSession() {
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ action: 'finished' }));
+        }
+        window.location.href = "{% url 'core:home' %}";
     }
-
-    remoteScreen.addEventListener('mousedown', (e) => sendMouseEvent('mousedown', e));
-    remoteScreen.addEventListener('mouseup', (e) => sendMouseEvent('mouseup', e));
-    // Optional: send mousemove, but we throttle it to avoid flooding the socket
-    let lastMove = 0;
-    remoteScreen.addEventListener('mousemove', (e) => {
-        const now = Date.now();
-        if (now - lastMove > 100) { // Max 10 updates per second
-            sendMouseEvent('mousemove', e);
-            lastMove = now;
-        }
-    });
-
-    // Disable context menu on the image to allow right clicks
-    remoteScreen.addEventListener('contextmenu', e => e.preventDefault());
-
-    // --- Keyboard Control Logic ---
-    document.addEventListener('keydown', (e) => {
-        if (remoteUi.style.display !== 'none' && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                action: 'keydown',
-                key: e.key
-            }));
-            e.preventDefault(); // Prevent scrolling etc when controlling
-        }
-    });
 </script>
 {% endblock %}

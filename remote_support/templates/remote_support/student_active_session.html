@@ -1,44 +1,167 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5 mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card bg-body border-success shadow-lg">
-                <div class="card-body text-center p-5">
-                    <div class="mb-4">
-                        <div class="spinner-grow text-success" role="status" style="width: 3rem; height: 3rem;">
-                          <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
-                    
-                    <h3 class="fw-bold mb-3 text-success">Suporte Remoto Ativo</h3>
-                    <p class="text-secondary mb-4">Professor conectado: <strong>{{ session.teacher.get_full_name|default:session.teacher.username }}</strong></p>
+<style>
+    /* Ocultar navegação global para foco total na sessão */
+    nav.navbar { display: none !important; }
+    footer { display: none !important; }
+    body { background-color: #121212; color: #fff; height: 100vh; overflow: hidden; margin: 0; padding: 0; }
+    
+    .session-layout {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+    }
+    
+    .status-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: #000;
+        position: relative;
+    }
+    
+    .chat-panel {
+        width: 350px;
+        background-color: #1e1e1e;
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid #333;
+    }
+    
+    .status-header {
+        padding: 15px;
+        background-color: rgba(0, 0, 0, 0.7);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #333;
+    }
+    
+    .status-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        padding: 15px;
+        background-color: #252526;
+        border-bottom: 1px solid #333;
+        font-weight: bold;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .msg-sent {
+        background-color: #0d6efd;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+    
+    .msg-received {
+        background-color: #333;
+        color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+    
+    .msg-system {
+        align-self: center;
+        background-color: transparent;
+        color: #888;
+        font-size: 0.8rem;
+        font-style: italic;
+    }
+    
+    .chat-input {
+        padding: 15px;
+        background-color: #252526;
+        border-top: 1px solid #333;
+    }
+    
+    .chat-input input {
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+    }
+    
+    .chat-input input:focus {
+        background-color: #444;
+        color: white;
+        border-color: #0d6efd;
+        box-shadow: none;
+    }
+</style>
 
-                    <div class="p-3 mb-4 rounded bg-dark border border-secondary text-start">
-                        <h6 class="fw-bold mb-3 text-light">Estado atual:</h6>
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-circle-fill text-success small me-2"></i>
-                            <span class="text-light">Transmitindo Tela via Navegador</span>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-circle-fill text-warning small me-2"></i>
-                            <span class="text-light">Apenas Visualização (Controle Remoto desativado)</span>
-                        </div>
-                    </div>
-
-                    <p class="small text-muted mb-4">
-                        O professor está visualizando sua tela no momento.
-                    </p>
-
-                    <form method="POST" id="end-session-form">
-                        {% csrf_token %}
-                        <button type="submit" name="action" value="end" class="btn btn-danger rounded-pill px-5 fw-bold">
-                            ENCERRAR ACESSO
-                        </button>
-                    </form>
+<div class="session-layout">
+    <!-- STATUS PANEL -->
+    <div class="status-panel">
+        <div class="status-header">
+            <div>
+                <i class="bi bi-broadcast text-success me-2"></i> 
+                Conectado com Professor <strong>{{ session.teacher.get_full_name|default:session.teacher.username }}</strong>
+            </div>
+            <div>
+                <form method="POST" id="end-session-form" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="stopScreenShare()">Encerrar Transmissão</button>
+                    <!-- Input oculto para o form submit não falhar no action end -->
+                    <input type="hidden" name="action" value="end">
+                </form>
+            </div>
+        </div>
+        
+        <div class="status-container px-4 text-center">
+            <i class="bi bi-shield-check text-success mb-3" style="font-size: 4rem;"></i>
+            <h4 class="mb-3 text-success">Transmissão Ativa</h4>
+            <div class="alert alert-dark bg-transparent border-secondary text-start d-inline-block">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="spinner-grow spinner-grow-sm text-danger me-2" role="status"></div>
+                    <span class="text-light">A sua tela está sendo compartilhada.</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle text-info me-2"></i>
+                    <span class="text-secondary small">O professor tem apenas permissão de visualização.</span>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- CHAT PANEL -->
+    <div class="chat-panel">
+        <div class="chat-header">
+            <i class="bi bi-chat-dots me-2"></i> Chat
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="message-bubble msg-system">Sessão iniciada.</div>
+        </div>
+        
+        <div class="chat-input">
+            <form id="chat-form" onsubmit="sendChat(event)">
+                <div class="input-group">
+                    <input type="text" id="chat-input-field" class="form-control" placeholder="Mensagem..." autocomplete="off">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i></button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -57,12 +180,59 @@
     const ctx = canvas.getContext('2d');
     const endForm = document.getElementById('end-session-form');
 
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input-field');
+
     let stream = null;
     let captureInterval = null;
 
+    // -- CHAT LOGIC --
+    function appendMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = 'message-bubble ' + type;
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendChat(e) {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'chat_message',
+                sender: 'student',
+                text: text
+            }));
+            appendMessage(text, 'msg-sent');
+            chatInput.value = '';
+        }
+    }
+
+    // -- WEBSOCKET LISTENERS --
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'remote_message') {
+            const msg = data.message;
+            if (msg.action === 'finished') {
+                appendMessage("O professor encerrou a sessão.", 'msg-system');
+                alert("A sessão foi encerrada pelo professor.");
+                window.location.href = "{% url 'core:home' %}";
+            } else if (msg.action === 'chat_message' && msg.sender === 'teacher') {
+                appendMessage(msg.text, 'msg-received');
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        appendMessage("Conexão perdida com o servidor.", 'msg-system');
+    };
+
+    // -- SCREEN SHARE LOGIC --
     async function startScreenShare() {
         try {
-            // Solicita permissão para compartilhar a tela
             stream = await navigator.mediaDevices.getDisplayMedia({
                 video: { cursor: "always" },
                 audio: false
@@ -70,12 +240,10 @@
 
             video.srcObject = stream;
 
-            // Quando o aluno clicar no botão nativo "Parar compartilhamento" do navegador
             stream.getVideoTracks()[0].onended = function () {
                 stopScreenShare();
             };
 
-            // Inicia o envio de frames assim que o socket abrir
             if (socket.readyState === WebSocket.OPEN) {
                 beginStreaming();
             } else {
@@ -84,14 +252,12 @@
 
         } catch (err) {
             console.error("Erro ao compartilhar tela:", err);
-            alert("Você precisa permitir o compartilhamento de tela para o professor ver.");
-            // Se ele cancelar o pop-up, encerra a sessão
+            alert("Você precisa permitir o compartilhamento de tela para prosseguir.");
             endForm.submit();
         }
     }
 
     function beginStreaming() {
-        // Envia um frame a cada 100ms (~10 fps)
         captureInterval = setInterval(() => {
             if (video.videoWidth === 0) return;
 
@@ -102,7 +268,6 @@
 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Converte para JPEG com 50% de qualidade
             const base64Image = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
 
             if (socket.readyState === WebSocket.OPEN) {
@@ -120,14 +285,11 @@
             stream.getTracks().forEach(track => track.stop());
         }
         if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                action: 'finished'
-            }));
+            socket.send(JSON.stringify({ action: 'finished' }));
         }
         endForm.submit();
     }
 
-    // Dispara a requisição do navegador assim que a página carrega
     window.addEventListener('load', startScreenShare);
 </script>
 {% endblock %}
