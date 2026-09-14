@@ -462,6 +462,10 @@ function calendarData() {
         },
         
         selectDay(day) {
+            if (day.events.length === 1) {
+                window.location.href = day.events[0].url;
+                return;
+            }
             this.selectedDateEvents = day.events;
             const parts = day.dateStr.split('-');
             if (parts.length === 3) {
