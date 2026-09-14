@@ -2360,3 +2360,67 @@ document.querySelectorAll('.folder-header').forEach(header => {
     });
 </script>
 {% endblock %}
+
+<!-- Remote Support Modal -->
+<div class="modal fade" id="remoteSupportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-body border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-display me-2 text-info"></i>Suporte Remoto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Solicitar acesso remoto ao computador de <strong id="rs-student-name"></strong>?</p>
+                
+                <form id="remoteSupportForm" action="" method="POST">
+                    <!-- We will set action dynamically later -->
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <input type="hidden" name="student_id" id="rs-student-id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Motivo da solicitação</label>
+                        <input type="text" class="form-control bg-body" name="reason" placeholder="Ex: Ajuda no exercício de Python" required>
+                    </div>
+
+                    <h6 class="fw-bold mt-4 mb-3">Permissões solicitadas:</h6>
+                    
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="permScreen" name="request_screen_sharing" checked disabled>
+                        <label class="form-check-label" for="permScreen">
+                            Visualizar tela do aluno (Obrigatório)
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="permControl" name="request_control">
+                        <label class="form-check-label" for="permControl">
+                            Controlar mouse e teclado
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-info rounded-pill text-white fw-bold" onclick="document.getElementById('remoteSupportForm').submit()">Enviar Solicitação</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const remoteSupportModal = document.getElementById('remoteSupportModal');
+    if(remoteSupportModal) {
+        remoteSupportModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const studentId = button.getAttribute('data-student-id');
+            const studentName = button.getAttribute('data-student-name');
+            
+            document.getElementById('rs-student-name').textContent = studentName;
+            document.getElementById('rs-student-id').value = studentId;
+            
+            // In a real implementation, set the form action here:
+            // document.getElementById('remoteSupportForm').action = '/remote/request/' + studentId;
+        });
+    }
+});
+</script>
