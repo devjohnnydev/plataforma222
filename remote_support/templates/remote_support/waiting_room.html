@@ -314,13 +314,12 @@
                 <i class="bi bi-arrows-fullscreen"></i>
                 <span>Expandir</span>
             </button>
-            <button class="toolbar-btn" onclick="toggleChat()" title="Mostrar/Esconder Chat">
-                <i class="bi bi-chat-left-text"></i>
+            <button class="toolbar-btn position-relative" id="btn-open-chat" onclick="popOutChat()" title="Abrir Chat">
+                <i class="bi bi-chat-dots"></i>
                 <span>Chat</span>
-            </button>
-            <button class="toolbar-btn" onclick="popOutChat()" title="Abrir Chat em Nova Janela">
-                <i class="bi bi-box-arrow-up-right"></i>
-                <span>Pop-out</span>
+                <span id="chat-badge" class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle" style="display: none;">
+                    <span class="visually-hidden">Nova mensagem</span>
+                </span>
             </button>
             <form method="POST" action="{% url 'remote_support:student_active_session' session.session_code %}" style="display: inline; margin: 0;">
                 {% csrf_token %}
@@ -332,28 +331,7 @@
         </div>
     </div>
     
-    <!-- CHAT PANEL -->
-    <div class="chat-panel" id="main-chat-panel">
-        <div class="chat-header">
-            <div><i class="bi bi-chat-dots me-2"></i> Chat</div>
-            <button class="btn btn-sm btn-link text-light p-0" title="Pop-out Chat" onclick="popOutChat()">
-                <i class="bi bi-box-arrow-up-right"></i>
-            </button>
-        </div>
-        
-        <div class="chat-messages" id="chat-messages">
-            <div class="message-bubble msg-system">Sessão iniciada. Você está na sala.</div>
-        </div>
-        
-        <div class="chat-input">
-            <form id="chat-form" onsubmit="sendChat(event)">
-                <div class="input-group">
-                    <input type="text" id="chat-input-field" class="form-control" placeholder="Mensagem..." autocomplete="off">
-                    <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i></button>
-                </div>
-            </form>
-        </div>
-    </div>
+    <!-- NO CHAT PANEL (Pop-out only) -->
 </div>
 
 <script>
@@ -363,8 +341,6 @@
 
     const remoteScreen = document.getElementById('remote-screen');
     const waitingOverlay = document.getElementById('waiting-overlay');
-    const chatMessages = document.getElementById('chat-messages');
-    const chatInput = document.getElementById('chat-input-field');
     const statusBadge = document.getElementById('connection-status');
     const screenshotsPanel = document.getElementById('screenshots-panel');
     const galleryContent = document.getElementById('gallery-content');
@@ -373,13 +349,25 @@
     let chatPoppedOut = false;
     let screenshotCounter = 1;
 
-    function toggleChat() {
-        const panel = document.getElementById('main-chat-panel');
-        if (chatPoppedOut) {
-            showGlassModal("Chat Pop-out", "O chat já está aberto em uma nova janela.");
-            return;
+    // --- NOTIFICATIONS LOGIC ---
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+    
+    function playNotificationSound() {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    }
+
+    function notifyNewMessage(senderName, text) {
+        document.getElementById('chat-badge').style.display = 'block';
+        playNotificationSound();
+        if (Notification.permission === 'granted') {
+            new Notification('Nova mensagem de ' + senderName, {
+                body: text,
+                icon: 'https://cdn-icons-png.flaticon.com/512/1041/1041916.png'
+            });
         }
-        panel.classList.toggle('collapsed');
     }
 
     function showGlassModal(title, message, isError=false) {
@@ -450,36 +438,8 @@
         const url = "{% url 'remote_support:chat_popup' session.session_code %}";
         window.open(url, "ChatWindow", "width=400,height=600,left=100,top=100");
         
-        // Hide the local chat panel to give more space to video
-        document.getElementById('main-chat-panel').style.display = 'none';
+        document.getElementById('chat-badge').style.display = 'none';
         chatPoppedOut = true;
-        appendMessage("Chat aberto em nova janela.", 'msg-system');
-    }
-
-    // --- CHAT LOGIC ---
-    function appendMessage(text, type) {
-        if (chatPoppedOut) return; // Se estiver no pop-out, não renderiza aqui
-        const div = document.createElement('div');
-        div.className = 'message-bubble ' + type;
-        div.textContent = text;
-        chatMessages.appendChild(div);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    function sendChat(e) {
-        e.preventDefault();
-        const text = chatInput.value.trim();
-        if (!text) return;
-        
-        if (socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({
-                action: 'chat_message',
-                sender: 'teacher',
-                text: text
-            }));
-            appendMessage(text, 'msg-sent');
-            chatInput.value = '';
-        }
     }
 
     // --- WEBSOCKET LOGIC ---
@@ -506,7 +466,7 @@
                 }
                 remoteScreen.src = "data:image/jpeg;base64," + msg.image;
             } else if (msg.action === 'chat_message' && msg.sender === 'student') {
-                appendMessage(msg.text, 'msg-received');
+                notifyNewMessage('Aluno', msg.text);
             }
         }
     };
