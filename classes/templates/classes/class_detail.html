@@ -2183,11 +2183,80 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Alinhamento da Imagem</label>
-                    <select class="form-select bg-body" name="banner_alignment">
-                        <option value="top" {% if cls.banner_alignment == 'top' %}selected{% endif %}>Topo (Ideal para textos no alto)</option>
-                        <option value="center" {% if cls.banner_alignment == 'center' %}selected{% endif %}>Centro</option>
-                        <option value="bottom" {% if cls.banner_alignment == 'bottom' %}selected{% endif %}>Fundo</option>
-                    </select>
+                    <input type="hidden" name="banner_alignment" id="banner_alignment_input" value="{{ cls.banner_alignment|default:'center' }}">
+                    
+                    {% if cls.banner_image %}
+                    <div class="mt-2 p-2 border rounded bg-body-tertiary">
+                        <small class="text-muted d-block mb-2"><i class="bi bi-arrows-collapse me-1"></i>Clique e arraste a imagem abaixo para ajustar o recorte vertical:</small>
+                        <div id="banner-drag-container" style="height: 120px; width: 100%; overflow: hidden; position: relative; border-radius: 8px; cursor: ns-resize;">
+                            <div id="banner-drag-image" style="width: 100%; height: 100%; background: url('{{ cls.banner_image.url }}') {{ cls.banner_alignment|default:'center' }}/cover no-repeat;"></div>
+                        </div>
+                    </div>
+                    
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const container = document.getElementById('banner-drag-container');
+                            const image = document.getElementById('banner-drag-image');
+                            const input = document.getElementById('banner_alignment_input');
+                            
+                            if(!container) return;
+                            
+                            let isDragging = false;
+                            let startY = 0;
+                            
+                            // Extrair o Y atual
+                            let currentPos = input.value || 'center'; // ex: 'center 45%'
+                            let currentYPercent = 50;
+                            
+                            if (currentPos === 'top') currentYPercent = 0;
+                            else if (currentPos === 'bottom') currentYPercent = 100;
+                            else if (currentPos.includes('%')) {
+                                const parts = currentPos.split(' ');
+                                if (parts.length > 1) {
+                                    currentYPercent = parseFloat(parts[1].replace('%', ''));
+                                }
+                            }
+                            
+                            // Inicializar
+                            image.style.backgroundPosition = `center ${currentYPercent}%`;
+
+                            container.addEventListener('mousedown', function(e) {
+                                isDragging = true;
+                                startY = e.clientY;
+                                container.style.cursor = 'grabbing';
+                            });
+
+                            window.addEventListener('mouseup', function() {
+                                isDragging = false;
+                                container.style.cursor = 'ns-resize';
+                            });
+
+                            window.addEventListener('mousemove', function(e) {
+                                if (!isDragging) return;
+                                
+                                const deltaY = e.clientY - startY;
+                                // Invertido porque arrastar para baixo move a imagem para baixo (offset Y menor)
+                                // Quanto maior a sensibilidade, menor o divisor. Ajuste conforme necessário.
+                                const percentChange = (deltaY / container.clientHeight) * 50; 
+                                
+                                currentYPercent -= percentChange;
+                                
+                                // Limitar entre 0% e 100%
+                                if (currentYPercent < 0) currentYPercent = 0;
+                                if (currentYPercent > 100) currentYPercent = 100;
+                                
+                                startY = e.clientY; // Reseta pro proximo frame
+                                
+                                // Atualizar visual
+                                image.style.backgroundPosition = `center ${currentYPercent}%`;
+                                // Atualizar input form (arredondar para inteiro)
+                                input.value = `center ${Math.round(currentYPercent)}%`;
+                            });
+                        });
+                    </script>
+                    {% else %}
+                        <div class="text-muted small">Faça o upload de uma imagem e salve para ajustar o alinhamento.</div>
+                    {% endif %}
                 </div>
             </div>
             <div class="modal-footer border-secondary d-flex justify-content-between">

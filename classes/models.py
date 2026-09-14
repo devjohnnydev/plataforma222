@@ -22,13 +22,8 @@ class Class(models.Model):
     color = models.CharField(max_length=7, default='#4285f4', verbose_name='Cor da Turma')
     banner_image = models.ImageField(upload_to='banners/', blank=True, null=True, verbose_name='Imagem de Banner')
     banner_alignment = models.CharField(
-        max_length=20, 
+        max_length=50, 
         default='center',
-        choices=[
-            ('top', 'Topo'),
-            ('center', 'Centro'),
-            ('bottom', 'Fundo')
-        ],
         verbose_name='Alinhamento do Banner'
     )
     is_active = models.BooleanField(default=True, verbose_name='Ativa')
