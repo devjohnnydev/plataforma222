@@ -1753,7 +1753,7 @@ def class_notes_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
     _check_access(request.user, cls)
     
-    notes = cls.notes.all().select_related('author')
+    notes = cls.notes.filter(author=request.user).select_related('author')
     
     context = {
         'cls': cls,
@@ -1767,12 +1767,11 @@ def class_notes_view(request, pk):
 @require_POST
 def create_note_view(request, pk):
     cls = get_object_or_404(Class, pk=pk)
-    if not (request.user == cls.teacher or request.user.is_superadmin()):
-        messages.error(request, "Acesso restrito ao professor.")
-        return redirect('classes:detail', pk=pk)
+    _check_access(request.user, cls)
         
     date_str = request.POST.get('date', '').strip()
     content = request.POST.get('content', '').strip()
+    color = request.POST.get('color', '#ffeb3b').strip()
     
     if not content:
         messages.error(request, "O conteúdo da anotação não pode ser vazio.")
@@ -1793,7 +1792,8 @@ def create_note_view(request, pk):
         target_class=cls,
         author=request.user,
         date=date_obj,
-        content=content
+        content=content,
+        color=color
     )
     
     messages.success(request, "Anotação/Lembrete adicionado com sucesso!")
@@ -1804,11 +1804,14 @@ def create_note_view(request, pk):
 @require_POST
 def delete_note_view(request, pk, note_pk):
     cls = get_object_or_404(Class, pk=pk)
-    if not (request.user == cls.teacher or request.user.is_superadmin()):
-        return HttpResponse(status=403)
+    _check_access(request.user, cls)
         
     from .models import ClassNote
     note = get_object_or_404(ClassNote, pk=note_pk, target_class=cls)
+    
+    if note.author != request.user and not request.user.is_superadmin():
+        return HttpResponse(status=403)
+        
     note.delete()
     
     messages.warning(request, "Anotação/Lembrete removido com sucesso.")

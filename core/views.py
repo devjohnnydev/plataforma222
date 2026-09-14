@@ -230,14 +230,14 @@ def _teacher_dashboard(request):
         })
         
     from classes.models import ClassNote
-    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False).select_related('target_class')
+    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False, author=request.user).select_related('target_class')
     for n in notes:
         events.append({
             'date': n.date.strftime('%Y-%m-%d'),
             'title': f"Lembrete: {n.content}",
             'class_name': n.target_class.name,
-            'color': '#ffc107',
-            'url': reverse('classes:notes', args=[n.target_class.pk])
+            'color': n.color,
+            'url': reverse('classes:notes', args=[n.target_class.pk]) + f"#note-{n.pk}"
         })
     
     events_json = json.dumps(events)
@@ -342,14 +342,14 @@ def _student_dashboard(request):
         })
         
     from classes.models import ClassNote
-    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False).select_related('target_class')
+    notes = ClassNote.objects.filter(target_class__in=my_classes, date__isnull=False, author=request.user).select_related('target_class')
     for n in notes:
         events.append({
             'date': n.date.strftime('%Y-%m-%d'),
             'title': f"Lembrete: {n.content}",
             'class_name': n.target_class.name,
-            'color': '#ffc107',
-            'url': reverse('classes:notes', args=[n.target_class.pk])
+            'color': n.color,
+            'url': reverse('classes:notes', args=[n.target_class.pk]) + f"#note-{n.pk}"
         })
     
     events_json = json.dumps(events)

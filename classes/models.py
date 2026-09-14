@@ -222,6 +222,7 @@ class ClassNote(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='class_notes', verbose_name='Autor')
     date = models.DateField(verbose_name='Data')
     content = models.TextField(verbose_name='Anotação / Lembrete')
+    color = models.CharField(max_length=7, default='#ffeb3b', verbose_name='Cor')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
