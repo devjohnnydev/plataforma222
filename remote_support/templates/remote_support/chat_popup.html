@@ -165,5 +165,17 @@
     socket.onclose = function(e) {
         window.close();
     };
+    // --- LOAD HISTORY FROM PARENT ---
+    window.onload = function() {
+        if (window.opener && window.opener.chatHistory) {
+            window.opener.chatHistory.forEach(msg => {
+                if (msg.sender === myRole) {
+                    appendMessage(msg.text, 'msg-sent');
+                } else {
+                    appendMessage(msg.text, 'msg-received');
+                }
+            });
+        }
+    };
 </script>
 {% endblock %}

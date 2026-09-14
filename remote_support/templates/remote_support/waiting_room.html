@@ -443,6 +443,7 @@
     }
 
     // --- WEBSOCKET LOGIC ---
+    window.chatHistory = [];
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'remote_message') {
@@ -465,8 +466,11 @@
                     statusBadge.innerText = 'Conectado';
                 }
                 remoteScreen.src = "data:image/jpeg;base64," + msg.image;
-            } else if (msg.action === 'chat_message' && msg.sender === 'student') {
-                notifyNewMessage('Aluno', msg.text);
+            } else if (msg.action === 'chat_message') {
+                window.chatHistory.push(msg);
+                if (msg.sender === 'student') {
+                    notifyNewMessage('Aluno', msg.text);
+                }
             }
         }
     };

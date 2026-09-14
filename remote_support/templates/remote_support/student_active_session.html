@@ -296,6 +296,7 @@
     }
 
     // -- WEBSOCKET LOGIC --
+    window.chatHistory = [];
 
     // -- WEBSOCKET LISTENERS --
     socket.onmessage = function(e) {
@@ -304,8 +305,11 @@
             const msg = data.message;
             if (msg.action === 'finished') {
                 window.location.href = "{% url 'core:home' %}";
-            } else if (msg.action === 'chat_message' && msg.sender === 'teacher') {
-                notifyNewMessage('Professor', msg.text);
+            } else if (msg.action === 'chat_message') {
+                window.chatHistory.push(msg);
+                if (msg.sender === 'teacher') {
+                    notifyNewMessage('Professor', msg.text);
+                }
             }
         }
     };
