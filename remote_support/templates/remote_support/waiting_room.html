@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-body border-secondary shadow-lg">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-display text-info" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h3 class="fw-bold mb-3">Suporte Remoto</h3>
+                    <p class="text-secondary mb-4">Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong></p>
+
+                    <div id="status-container" class="alert alert-warning mb-4">
+                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                        <span id="status-text">Aguardando autorização do aluno...</span>
+                    </div>
+
+                    <p class="small text-muted mb-4">
+                        O aluno recebeu uma notificação e precisa liberar o acesso no computador dele. 
+                        A tela será compartilhada assim que a autorização for concedida.
+                    </p>
+
+                    <button class="btn btn-outline-danger rounded-pill" onclick="window.history.back()">
+                        Cancelar Solicitação
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sessionCode = "{{ session.session_code }}";
+    
+    // Connect to WebSocket
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/remote/' + sessionCode + '/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'remote_message') {
+            const msg = data.message;
+            if (msg.action === 'authorized') {
+                const statusContainer = document.getElementById('status-container');
+                statusContainer.className = 'alert alert-success mb-4';
+                document.getElementById('status-text').innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Aluno autorizou o acesso!';
+                // Remove spinner
+                const spinner = statusContainer.querySelector('.spinner-border');
+                if (spinner) spinner.remove();
+            } else if (msg.action === 'rejected') {
+                const statusContainer = document.getElementById('status-container');
+                statusContainer.className = 'alert alert-danger mb-4';
+                document.getElementById('status-text').innerHTML = '<i class="bi bi-x-circle-fill me-2"></i>Aluno recusou o acesso.';
+                const spinner = statusContainer.querySelector('.spinner-border');
+                if (spinner) spinner.remove();
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        console.error('WebSocket closed unexpectedly');
+    };
+</script>
+{% endblock %}

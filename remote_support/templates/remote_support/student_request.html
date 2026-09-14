@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-body border-secondary shadow-lg">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-lock text-warning" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h3 class="fw-bold mb-3 text-center text-warning">Solicitação de Suporte Remoto</h3>
+                    <p class="text-secondary text-center mb-4">
+                        O professor <strong>{{ session.teacher.get_full_name|default:session.teacher.username }}</strong> 
+                        solicitou acesso ao seu computador.
+                    </p>
+
+                    <div class="p-3 mb-4 rounded bg-dark border border-secondary text-light">
+                        <h6 class="fw-bold mb-2">Permissões solicitadas:</h6>
+                        <ul class="mb-0 text-success">
+                            <li><i class="bi bi-check-circle me-1"></i> Visualização da tela</li>
+                            {% if session.request_control %}
+                            <li><i class="bi bi-check-circle me-1"></i> Controle do mouse</li>
+                            <li><i class="bi bi-check-circle me-1"></i> Controle do teclado</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <p class="small text-muted mb-4 text-center">
+                        O acesso somente será iniciado após sua autorização. Você pode encerrar o acesso a qualquer momento.
+                    </p>
+
+                    <form method="POST" class="d-flex justify-content-between">
+                        {% csrf_token %}
+                        <button type="submit" name="action" value="reject" class="btn btn-outline-danger rounded-pill px-4">
+                            Recusar
+                        </button>
+                        <button type="submit" name="action" value="accept" class="btn btn-success rounded-pill px-4 fw-bold text-white">
+                            Permitir Acesso
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
