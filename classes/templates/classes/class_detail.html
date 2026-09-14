@@ -1374,6 +1374,9 @@
                         <thead>
                             <tr class="border-secondary text-secondary small">
                                 <th scope="col" style="min-width: 250px;">Aluno</th>
+                                {% if user == cls.teacher or user.is_superadmin %}
+                                <th scope="col" class="text-center" style="min-width: 140px;">Humor (Último)</th>
+                                {% endif %}
                                 <th scope="col" class="text-center">Faltas Acumuladas</th>
                                 <th scope="col" class="text-center">Presenças Acumuladas</th>
                                 <th scope="col" class="text-center">Frequência (%)</th>
@@ -1403,6 +1406,20 @@
                                             </div>
                                         </div>
                                     </td>
+                                    
+                                    {% if user == cls.teacher or user.is_superadmin %}
+                                    <td class="text-center align-middle">
+                                        {% with mood=student_moods|dict_get:enroll.student.pk %}
+                                            {% if mood %}
+                                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 px-2 py-1">
+                                                    {{ mood }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted small">-</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    {% endif %}
                                     
                                     <td class="text-center font-monospace text-danger fw-semibold">
                                         {{ stats.absent }}

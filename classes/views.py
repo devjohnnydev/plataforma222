@@ -347,17 +347,24 @@ def class_members_view(request, pk):
 
     # Fetch today's attendance status for students
     today_attendance = {}
+    student_moods = {}
     if request.user.pk == cls.teacher.pk or request.user.is_superadmin():
-        from .models import Attendance
+        from .models import Attendance, LessonMood
         today = timezone.localtime(timezone.now()).date()
         att_list = Attendance.objects.filter(enrolled_class=cls, date=today)
         today_attendance = {att.student_id: att.present for att in att_list}
+        
+        all_moods = LessonMood.objects.filter(lesson__target_class=cls).order_by('-created_at')
+        for m in all_moods:
+            if m.student_id not in student_moods:
+                student_moods[m.student_id] = m.get_mood_display()
 
     context = {
         'cls': cls,
         'enrollments': enrollments,
         'active_tab': 'members',
         'today_attendance': today_attendance,
+        'student_moods': student_moods,
     }
 
     if request.user.is_student():
