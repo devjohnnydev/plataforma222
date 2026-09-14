@@ -113,3 +113,19 @@ def student_active_session(request, session_code):
         return redirect('core:home')
         
     return render(request, 'remote_support/student_active_session.html', {'session': session})
+
+@login_required
+def chat_popup_view(request, session_code):
+    session = get_object_or_404(RemoteSession, session_code=session_code)
+    
+    # Check if user is either student or teacher
+    is_teacher = request.user == session.teacher
+    is_student = request.user == session.student
+    if not (is_teacher or is_student):
+        messages.error(request, 'Você não tem permissão para acessar este chat.')
+        return redirect('core:home')
+        
+    return render(request, 'remote_support/chat_popup.html', {
+        'session': session,
+        'is_teacher': is_teacher
+    })

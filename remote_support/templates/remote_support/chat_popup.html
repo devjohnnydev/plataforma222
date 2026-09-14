@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    nav.navbar { display: none !important; }
+    footer { display: none !important; }
+    body { background-color: #121212; color: #fff; height: 100vh; overflow: hidden; margin: 0; padding: 0; }
+    
+    .chat-panel {
+        width: 100vw;
+        height: 100vh;
+        background-color: #1e1e1e;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-header {
+        padding: 15px;
+        background-color: #252526;
+        border-bottom: 1px solid #333;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .msg-sent {
+        background-color: #0d6efd;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 2px;
+    }
+    
+    .msg-received {
+        background-color: #333;
+        color: white;
+        align-self: flex-start;
+        border-bottom-left-radius: 2px;
+    }
+    
+    .msg-system {
+        align-self: center;
+        background-color: transparent;
+        color: #888;
+        font-size: 0.8rem;
+        font-style: italic;
+    }
+    
+    .chat-input {
+        padding: 15px;
+        background-color: #252526;
+        border-top: 1px solid #333;
+    }
+    
+    .chat-input input {
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+    }
+    
+    .chat-input input:focus {
+        background-color: #444;
+        color: white;
+        border-color: #0d6efd;
+        box-shadow: none;
+    }
+</style>
+
+<div class="chat-panel">
+    <div class="chat-header">
+        <div>
+            <i class="bi bi-chat-dots me-2"></i> Chat da Sessão
+        </div>
+        <button class="btn btn-sm btn-outline-light" onclick="window.close()">Fechar</button>
+    </div>
+    
+    <div class="chat-messages" id="chat-messages">
+        <div class="message-bubble msg-system">Conectado ao chat da sessão.</div>
+    </div>
+    
+    <div class="chat-input">
+        <form id="chat-form" onsubmit="sendChat(event)">
+            <div class="input-group">
+                <input type="text" id="chat-input-field" class="form-control" placeholder="Mensagem..." autocomplete="off">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-send"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const sessionCode = "{{ session.session_code }}";
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const socket = new WebSocket(protocol + window.location.host + '/ws/remote/' + sessionCode + '/');
+
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input-field');
+
+    // Is it teacher or student?
+    const isTeacher = {{ is_teacher|yesno:"true,false" }};
+    const myRole = isTeacher ? 'teacher' : 'student';
+
+    function appendMessage(text, type) {
+        const div = document.createElement('div');
+        div.className = 'message-bubble ' + type;
+        div.textContent = text;
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendChat(e) {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+        
+        if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                action: 'chat_message',
+                sender: myRole,
+                text: text
+            }));
+            appendMessage(text, 'msg-sent');
+            chatInput.value = '';
+        }
+    }
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'remote_message') {
+            const msg = data.message;
+            if (msg.action === 'finished') {
+                appendMessage("A sessão foi encerrada.", 'msg-system');
+                chatInput.disabled = true;
+            } else if (msg.action === 'chat_message') {
+                if (msg.sender !== myRole) {
+                    appendMessage(msg.text, 'msg-received');
+                }
+            }
+        }
+    };
+
+    socket.onclose = function(e) {
+        appendMessage("Conexão perdida com o servidor.", 'msg-system');
+    };
+</script>
+{% endblock %}

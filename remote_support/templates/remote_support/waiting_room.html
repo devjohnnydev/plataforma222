@@ -1,9 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Remover navbar/footer nativos se quisermos tela cheia (opcional, mas aqui vamos tentar usar a tela toda) -->
 <style>
-    /* Ocultar navegação global para foco total na sessão */
     nav.navbar { display: none !important; }
     footer { display: none !important; }
     body { background-color: #121212; color: #fff; height: 100vh; overflow: hidden; margin: 0; padding: 0; }
@@ -12,6 +10,7 @@
         display: flex;
         height: 100vh;
         width: 100vw;
+        position: relative;
     }
     
     .video-panel {
@@ -28,6 +27,7 @@
         display: flex;
         flex-direction: column;
         border-left: 1px solid #333;
+        transition: transform 0.3s ease;
     }
     
     .video-header {
@@ -38,6 +38,8 @@
         align-items: center;
         border-bottom: 1px solid #333;
         z-index: 10;
+        position: absolute;
+        top: 0; left: 0; right: 0;
     }
     
     .video-container {
@@ -46,6 +48,7 @@
         justify-content: center;
         align-items: center;
         overflow: hidden;
+        position: relative;
     }
     
     #remote-screen {
@@ -54,13 +57,125 @@
         object-fit: contain;
     }
     
+    /* Toolbar estilo Teams */
+    .teams-toolbar {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(30, 30, 30, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 8px;
+        padding: 10px 20px;
+        display: flex;
+        gap: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        z-index: 30;
+        border: 1px solid #444;
+    }
+
+    .toolbar-btn {
+        background: transparent;
+        border: none;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 50px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .toolbar-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .toolbar-btn i {
+        font-size: 1.2rem;
+        margin-bottom: 3px;
+    }
+
+    .toolbar-btn span {
+        font-size: 0.65rem;
+    }
+
+    .btn-end-call {
+        background-color: #dc3545 !important;
+    }
+    .btn-end-call:hover {
+        background-color: #bb2d3b !important;
+    }
+
+    /* Galeria de Prints */
+    #screenshots-panel {
+        position: absolute;
+        left: -300px;
+        top: 0;
+        bottom: 0;
+        width: 300px;
+        background-color: #1e1e1e;
+        border-right: 1px solid #333;
+        z-index: 20;
+        transition: left 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+    #screenshots-panel.open {
+        left: 0;
+    }
+    .gallery-header {
+        padding: 15px;
+        background-color: #252526;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+    }
+    .gallery-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .screenshot-item {
+        border: 1px solid #444;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    .screenshot-item img {
+        width: 100%;
+        display: block;
+    }
+    .screenshot-actions {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        background: rgba(0,0,0,0.7);
+        padding: 5px;
+        display: flex;
+        justify-content: space-around;
+    }
+    .screenshot-actions a {
+        color: white;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+
+    /* Chat Elements */
     .chat-header {
         padding: 15px;
         background-color: #252526;
         border-bottom: 1px solid #333;
         font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
-    
     .chat-messages {
         flex: 1;
         padding: 15px;
@@ -69,28 +184,24 @@
         flex-direction: column;
         gap: 10px;
     }
-    
     .message-bubble {
         max-width: 85%;
         padding: 10px 15px;
         border-radius: 15px;
         font-size: 0.9rem;
     }
-    
     .msg-sent {
         background-color: #0d6efd;
         color: white;
         align-self: flex-end;
         border-bottom-right-radius: 2px;
     }
-    
     .msg-received {
         background-color: #333;
         color: white;
         align-self: flex-start;
         border-bottom-left-radius: 2px;
     }
-    
     .msg-system {
         align-self: center;
         background-color: transparent;
@@ -98,24 +209,15 @@
         font-size: 0.8rem;
         font-style: italic;
     }
-    
     .chat-input {
         padding: 15px;
         background-color: #252526;
         border-top: 1px solid #333;
     }
-    
     .chat-input input {
         background-color: #333;
         color: white;
         border: 1px solid #444;
-    }
-    
-    .chat-input input:focus {
-        background-color: #444;
-        color: white;
-        border-color: #0d6efd;
-        box-shadow: none;
     }
     
     /* Waiting Overlay */
@@ -127,28 +229,34 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 20;
+        z-index: 5;
     }
 </style>
 
-<div class="session-layout">
+<div class="session-layout" id="main-layout">
+    
+    <!-- GALLERY PANEL (Hidden by default, slides in from left) -->
+    <div id="screenshots-panel">
+        <div class="gallery-header">
+            <span><i class="bi bi-images me-2"></i> Galeria de Prints</span>
+            <button class="btn btn-sm btn-link text-light p-0" onclick="toggleGallery()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="gallery-content" id="gallery-content">
+            <p class="text-muted small text-center mt-3" id="no-prints-msg">Nenhum print capturado.</p>
+        </div>
+    </div>
+
     <!-- VIDEO PANEL -->
-    <div class="video-panel">
+    <div class="video-panel" id="video-panel">
         <div class="video-header">
             <div>
                 <i class="bi bi-broadcast text-danger me-2"></i> 
                 Sessão com <strong>{{ session.student.get_full_name|default:session.student.username }}</strong>
             </div>
-            <div>
-                <button class="btn btn-sm btn-outline-light me-2" onclick="document.documentElement.requestFullscreen()"><i class="bi bi-arrows-fullscreen"></i></button>
-                <form method="POST" action="{% url 'remote_support:student_active_session' session.session_code %}" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="button" class="btn btn-sm btn-danger fw-bold" onclick="endSession()">Encerrar Sala</button>
-                </form>
-            </div>
+            <div id="connection-status" class="badge bg-warning">Aguardando...</div>
         </div>
         
-        <div class="video-container">
+        <div class="video-container" id="video-container">
             <img id="remote-screen" style="display: none;" draggable="false" />
             
             <div id="waiting-overlay">
@@ -158,12 +266,42 @@
                 <p class="text-secondary mt-3 small text-center px-4">O aluno recebeu a notificação.<br>Aguardando aprovação e início do compartilhamento de tela.</p>
             </div>
         </div>
+
+        <!-- TOOLBAR (Teams Style) -->
+        <div class="teams-toolbar">
+            <button class="toolbar-btn" onclick="toggleGallery()" title="Ver Prints">
+                <i class="bi bi-images"></i>
+                <span>Galeria</span>
+            </button>
+            <button class="toolbar-btn" onclick="takeScreenshot()" title="Tirar Print da Tela Atual">
+                <i class="bi bi-camera"></i>
+                <span>Print</span>
+            </button>
+            <button class="toolbar-btn" onclick="toggleFullscreen()" title="Tela Cheia">
+                <i class="bi bi-arrows-fullscreen"></i>
+                <span>Expandir</span>
+            </button>
+            <button class="toolbar-btn" onclick="popOutChat()" title="Abrir Chat em Nova Janela">
+                <i class="bi bi-box-arrow-up-right"></i>
+                <span>Pop-out</span>
+            </button>
+            <form method="POST" action="{% url 'remote_support:student_active_session' session.session_code %}" style="display: inline; margin: 0;">
+                {% csrf_token %}
+                <button type="button" class="toolbar-btn btn-end-call" onclick="endSession()">
+                    <i class="bi bi-telephone-x-fill"></i>
+                    <span>Encerrar</span>
+                </button>
+            </form>
+        </div>
     </div>
     
     <!-- CHAT PANEL -->
-    <div class="chat-panel">
+    <div class="chat-panel" id="main-chat-panel">
         <div class="chat-header">
-            <i class="bi bi-chat-dots me-2"></i> Chat
+            <div><i class="bi bi-chat-dots me-2"></i> Chat</div>
+            <button class="btn btn-sm btn-link text-light p-0" title="Pop-out Chat" onclick="popOutChat()">
+                <i class="bi bi-box-arrow-up-right"></i>
+            </button>
         </div>
         
         <div class="chat-messages" id="chat-messages">
@@ -190,12 +328,77 @@
     const waitingOverlay = document.getElementById('waiting-overlay');
     const chatMessages = document.getElementById('chat-messages');
     const chatInput = document.getElementById('chat-input-field');
+    const statusBadge = document.getElementById('connection-status');
+    const screenshotsPanel = document.getElementById('screenshots-panel');
+    const galleryContent = document.getElementById('gallery-content');
+    const noPrintsMsg = document.getElementById('no-prints-msg');
+    
+    let chatPoppedOut = false;
+    let screenshotCounter = 1;
 
-    // Nomes para o chat
-    const myName = "Você";
-    const otherName = "{{ session.student.get_full_name|default:session.student.username }}";
+    // --- SCREENSHOT LOGIC ---
+    function toggleGallery() {
+        screenshotsPanel.classList.toggle('open');
+    }
 
+    function takeScreenshot() {
+        if (remoteScreen.style.display === 'none' || !remoteScreen.src) {
+            alert("Aguarde a tela do aluno aparecer antes de tirar um print.");
+            return;
+        }
+
+        // The image src is already base64 JPEG data!
+        const imgSrc = remoteScreen.src;
+        const timestamp = new Date().toLocaleTimeString();
+        const filename = `Print_Aluno_${timestamp.replace(/:/g, '-')}.jpg`;
+
+        if (noPrintsMsg) noPrintsMsg.style.display = 'none';
+
+        const item = document.createElement('div');
+        item.className = 'screenshot-item';
+        item.innerHTML = `
+            <img src="${imgSrc}" alt="Screenshot">
+            <div class="screenshot-actions">
+                <span class="text-light small">${timestamp}</span>
+                <a href="${imgSrc}" download="${filename}"><i class="bi bi-download"></i> Baixar</a>
+            </div>
+        `;
+        galleryContent.prepend(item);
+
+        // Open gallery to show it was taken
+        if (!screenshotsPanel.classList.contains('open')) {
+            toggleGallery();
+        }
+        
+        appendMessage(`Print tirado às ${timestamp}`, 'msg-system');
+    }
+
+    // --- FULLSCREEN LOGIC ---
+    function toggleFullscreen() {
+        const layout = document.getElementById('video-container');
+        if (!document.fullscreenElement) {
+            layout.requestFullscreen().catch(err => {
+                alert(`Erro ao tentar tela cheia: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    // --- POP-OUT CHAT LOGIC ---
+    function popOutChat() {
+        const url = "{% url 'remote_support:chat_popup' session.session_code %}";
+        window.open(url, "ChatWindow", "width=400,height=600,left=100,top=100");
+        
+        // Hide the local chat panel to give more space to video
+        document.getElementById('main-chat-panel').style.display = 'none';
+        chatPoppedOut = true;
+        appendMessage("Chat aberto em nova janela.", 'msg-system');
+    }
+
+    // --- CHAT LOGIC ---
     function appendMessage(text, type) {
+        if (chatPoppedOut) return; // Se estiver no pop-out, não renderiza aqui
         const div = document.createElement('div');
         div.className = 'message-bubble ' + type;
         div.textContent = text;
@@ -216,11 +419,10 @@
             }));
             appendMessage(text, 'msg-sent');
             chatInput.value = '';
-        } else {
-            alert("Chat desconectado. Tentando reconectar...");
         }
     }
 
+    // --- WEBSOCKET LOGIC ---
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
         if (data.type === 'remote_message') {
@@ -231,16 +433,18 @@
             } else if (msg.action === 'rejected') {
                 appendMessage("O aluno recusou a conexão.", 'msg-system');
                 waitingOverlay.innerHTML = '<h4 class="text-danger">Acesso Recusado</h4><p>O aluno cancelou a solicitação.</p>';
+                statusBadge.className = 'badge bg-danger';
+                statusBadge.innerText = 'Recusado';
             } else if (msg.action === 'finished') {
                 appendMessage("O aluno encerrou o compartilhamento.", 'msg-system');
                 alert("A sessão foi encerrada pelo aluno.");
                 window.location.href = "{% url 'core:home' %}";
             } else if (msg.action === 'screen_frame') {
-                // Primeira vez que recebemos frame, escondemos o overlay
                 if (waitingOverlay.style.display !== 'none') {
                     waitingOverlay.style.display = 'none';
                     remoteScreen.style.display = 'block';
-                    appendMessage("A transmissão de tela começou.", 'msg-system');
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.innerText = 'Conectado';
                 }
                 remoteScreen.src = "data:image/jpeg;base64," + msg.image;
             } else if (msg.action === 'chat_message' && msg.sender === 'student') {
@@ -251,6 +455,8 @@
 
     socket.onclose = function(e) {
         appendMessage("Conexão perdida com o servidor.", 'msg-system');
+        statusBadge.className = 'badge bg-secondary';
+        statusBadge.innerText = 'Desconectado';
     };
 
     function endSession() {
