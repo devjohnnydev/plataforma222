@@ -2370,7 +2370,7 @@ document.querySelectorAll('.folder-header').forEach(header => {
             <div class="modal-body">
                 <p>Solicitar acesso remoto ao computador de <strong id="rs-student-name"></strong>?</p>
                 
-                <form id="remoteSupportForm" action="" method="POST">
+                <form id="remoteSupportForm" action="{% url 'remote_support:create_request' %}" method="POST">
                     <!-- We will set action dynamically later -->
                     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
                     <input type="hidden" name="student_id" id="rs-student-id">
