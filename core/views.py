@@ -557,3 +557,74 @@ def recent_moods_api_view(request):
         })
         
     return JsonResponse({'moods': moods})
+
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@login_required
+@csrf_exempt
+def sticky_notes_api_view(request, note_id=None):
+    from classes.models import ClassNote
+    
+    if request.method == 'GET':
+        notes = ClassNote.objects.filter(author=request.user).order_by('-created_at')
+        data = []
+        for n in notes:
+            data.append({
+                'id': n.pk,
+                'content': n.content,
+                'color': n.color,
+                'target_class_name': n.target_class.name if n.target_class else None
+            })
+        return JsonResponse({'notes': data})
+        
+    elif request.method == 'POST':
+        try:
+            body = json.loads(request.body)
+            content = body.get('content', '').strip()
+            color = body.get('color', '#ffeb3b')
+            
+            if not content:
+                return JsonResponse({'error': 'Content is required'}, status=400)
+                
+            note = ClassNote.objects.create(
+                author=request.user,
+                content=content,
+                color=color,
+                target_class=None,
+                date=None
+            )
+            return JsonResponse({'id': note.pk, 'content': note.content, 'color': note.color, 'target_class_name': None})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+            
+    elif request.method in ['PUT', 'PATCH']:
+        if not note_id:
+            return JsonResponse({'error': 'Note ID required'}, status=400)
+            
+        try:
+            note = ClassNote.objects.get(pk=note_id, author=request.user)
+            body = json.loads(request.body)
+            if 'content' in body:
+                note.content = body['content']
+            if 'color' in body:
+                note.color = body['color']
+            note.save()
+            return JsonResponse({'success': True})
+        except ClassNote.DoesNotExist:
+            return JsonResponse({'error': 'Not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+            
+    elif request.method == 'DELETE':
+        if not note_id:
+            return JsonResponse({'error': 'Note ID required'}, status=400)
+            
+        try:
+            note = ClassNote.objects.get(pk=note_id, author=request.user)
+            note.delete()
+            return JsonResponse({'success': True})
+        except ClassNote.DoesNotExist:
+            return JsonResponse({'error': 'Not found'}, status=404)
+            
+    return JsonResponse({'error': 'Method not allowed'}, status=405)

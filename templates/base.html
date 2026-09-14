@@ -363,6 +363,15 @@
                                 </ul>
                             </div>
                         {% endif %}
+                        
+                        <!-- Sticky Notes Toggle Button -->
+                        <button class="btn btn-link text-warning text-decoration-none p-0 d-flex align-items-center me-3" 
+                                id="sticky-notes-toggle" 
+                                title="Anotações (Sticky Notes)"
+                                style="height: 38px;">
+                            <i class="bi bi-stickies-fill fs-5"></i>
+                        </button>
+
                         <!-- Notifications Dropdown -->
                         <div class="dropdown me-1">
                             <button class="btn btn-link text-light text-decoration-none position-relative p-0 d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notificações" style="height: 38px;">
@@ -818,6 +827,348 @@
         });
     });
     </script>
+    
+    <!-- Sticky Notes System UI and Engine -->
+    <div id="sticky-notes-hub" class="shadow-lg rounded-3 border border-secondary" style="display: none; position: fixed; right: 20px; top: 70px; width: 300px; max-height: 400px; background: var(--bs-body-bg); z-index: 1050; overflow-y: auto;">
+        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center bg-body-tertiary sticky-top">
+            <h6 class="m-0 fw-bold"><i class="bi bi-stickies me-2"></i>Minhas Notas</h6>
+            <button class="btn btn-sm btn-brand rounded-pill" onclick="createNewStickyNote()"><i class="bi bi-plus-lg"></i></button>
+        </div>
+        <div class="p-2" id="sticky-notes-list">
+            <div class="text-center text-muted small py-3">Carregando notas...</div>
+        </div>
+    </div>
+
+    <!-- Container where the floating sticky notes will be injected -->
+    <div id="sticky-notes-container" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1040;"></div>
+
+    <style>
+        .sticky-note-card {
+            pointer-events: auto;
+            position: absolute;
+            width: 250px;
+            min-height: 200px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            resize: both;
+            overflow: hidden;
+            transition: transform 0.1s;
+        }
+        .sticky-note-header {
+            cursor: grab;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        .sticky-note-header:active {
+            cursor: grabbing;
+        }
+        .sticky-note-body {
+            flex-grow: 1;
+            padding: 10px;
+            outline: none;
+            overflow-y: auto;
+            font-family: 'Segoe Print', 'Kalam', cursive, sans-serif;
+            font-size: 0.95rem;
+            color: #000;
+        }
+        .sticky-note-color-picker {
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .sticky-note-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+        .sticky-note-color-picker::-webkit-color-swatch { border: none; border-radius: 50%; }
+        
+        .sticky-note-card.minimized {
+            min-height: auto !important;
+            height: 35px !important;
+            resize: none;
+        }
+        .sticky-note-card.minimized .sticky-note-body {
+            display: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleBtn = document.getElementById('sticky-notes-toggle');
+            const hub = document.getElementById('sticky-notes-hub');
+            const listContainer = document.getElementById('sticky-notes-list');
+            const notesContainer = document.getElementById('sticky-notes-container');
+            
+            if(!toggleBtn) return;
+
+            let allNotes = [];
+            let activeDragNote = null;
+            let startX, startY, initialX, initialY;
+
+            // Load saved state from LocalStorage
+            let savedNoteStates = JSON.parse(localStorage.getItem('sticky_notes_state') || '{}');
+
+            function saveState() {
+                localStorage.setItem('sticky_notes_state', JSON.stringify(savedNoteStates));
+            }
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                hub.style.display = hub.style.display === 'none' ? 'block' : 'none';
+                if(hub.style.display === 'block') {
+                    fetchNotes();
+                }
+            });
+
+            window.fetchNotes = function() {
+                fetch('/api/sticky-notes/')
+                    .then(res => res.json())
+                    .then(data => {
+                        allNotes = data.notes;
+                        renderHub();
+                        restoreOpenNotes();
+                    });
+            };
+
+            function renderHub() {
+                listContainer.innerHTML = '';
+                if(allNotes.length === 0) {
+                    listContainer.innerHTML = '<div class="text-center text-muted small py-3">Nenhuma nota encontrada. Crie uma!</div>';
+                    return;
+                }
+                
+                allNotes.forEach(note => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2 mb-2 rounded-2 border border-secondary shadow-sm';
+                    item.style.backgroundColor = note.color;
+                    item.style.cursor = 'pointer';
+                    item.style.color = '#000';
+                    
+                    const title = note.content ? note.content.substring(0, 30) + '...' : 'Nota Vazia';
+                    const subtitle = note.target_class_name ? `Turma: ${note.target_class_name}` : 'Global';
+                    
+                    item.innerHTML = `
+                        <div class="fw-bold small mb-1">${title}</div>
+                        <div style="font-size: 0.65rem; opacity: 0.7;">${subtitle}</div>
+                    `;
+                    
+                    item.addEventListener('click', () => openStickyNote(note));
+                    listContainer.appendChild(item);
+                });
+            }
+
+            window.createNewStickyNote = function() {
+                fetch('/api/sticky-notes/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({content: 'Nova anotação...', color: '#ffeb3b'})
+                })
+                .then(res => res.json())
+                .then(newNote => {
+                    allNotes.unshift(newNote);
+                    renderHub();
+                    openStickyNote(newNote);
+                });
+            };
+
+            function openStickyNote(note) {
+                // If already open, just bring to front
+                if(document.getElementById(`sticky-note-${note.id}`)) {
+                    bringToFront(document.getElementById(`sticky-note-${note.id}`));
+                    return;
+                }
+                
+                // Set default state if not saved
+                if(!savedNoteStates[note.id]) {
+                    // Randomize position slightly
+                    const offset = Math.floor(Math.random() * 50);
+                    savedNoteStates[note.id] = {
+                        x: 100 + offset, y: 100 + offset, 
+                        w: 250, h: 250, 
+                        open: true, minimized: false
+                    };
+                } else {
+                    savedNoteStates[note.id].open = true;
+                }
+                saveState();
+
+                createNoteDOM(note);
+            }
+
+            function restoreOpenNotes() {
+                allNotes.forEach(note => {
+                    if(savedNoteStates[note.id] && savedNoteStates[note.id].open) {
+                        if(!document.getElementById(`sticky-note-${note.id}`)) {
+                            createNoteDOM(note);
+                        }
+                    }
+                });
+            }
+
+            function createNoteDOM(note) {
+                const state = savedNoteStates[note.id];
+                const noteEl = document.createElement('div');
+                noteEl.id = `sticky-note-${note.id}`;
+                noteEl.className = 'sticky-note-card';
+                if(state.minimized) noteEl.classList.add('minimized');
+                
+                noteEl.style.backgroundColor = note.color;
+                noteEl.style.left = `${state.x}px`;
+                noteEl.style.top = `${state.y}px`;
+                noteEl.style.width = `${state.w}px`;
+                if(!state.minimized) noteEl.style.height = `${state.h}px`;
+
+                noteEl.innerHTML = `
+                    <div class="sticky-note-header" style="background-color: rgba(0,0,0,0.05);">
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="color" class="sticky-note-color-picker" value="${note.color}" title="Mudar cor">
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-link text-dark p-0 btn-minimize" style="line-height: 1;"><i class="bi bi-dash-lg"></i></button>
+                            <button class="btn btn-link text-dark p-0 btn-close-note" style="line-height: 1;"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+                    <div class="sticky-note-body" contenteditable="true" spellcheck="false">${note.content}</div>
+                `;
+
+                notesContainer.appendChild(noteEl);
+                bringToFront(noteEl);
+
+                // Events
+                noteEl.addEventListener('mousedown', () => bringToFront(noteEl));
+                
+                const header = noteEl.querySelector('.sticky-note-header');
+                header.addEventListener('mousedown', (e) => {
+                    if(e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'i') return;
+                    activeDragNote = noteEl;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = parseInt(noteEl.style.left) || 0;
+                    initialY = parseInt(noteEl.style.top) || 0;
+                    document.addEventListener('mousemove', dragNote);
+                    document.addEventListener('mouseup', stopDragNote);
+                });
+
+                // Resize observer to save dimensions
+                const resizer = new ResizeObserver(entries => {
+                    if(state.minimized) return;
+                    for(let entry of entries) {
+                        state.w = entry.contentRect.width;
+                        state.h = entry.contentRect.height + 35; // approx header
+                        saveState();
+                    }
+                });
+                resizer.observe(noteEl);
+
+                // Auto-save content
+                const body = noteEl.querySelector('.sticky-note-body');
+                let timeoutId;
+                body.addEventListener('input', () => {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        saveNoteToBackend(note.id, {content: body.innerHTML});
+                        // update locally for hub
+                        const n = allNotes.find(x => x.id === note.id);
+                        if(n) { n.content = body.innerHTML; renderHub(); }
+                    }, 1000);
+                });
+
+                // Color picker
+                const colorPicker = noteEl.querySelector('.sticky-note-color-picker');
+                colorPicker.addEventListener('change', (e) => {
+                    const newColor = e.target.value;
+                    noteEl.style.backgroundColor = newColor;
+                    saveNoteToBackend(note.id, {color: newColor});
+                    const n = allNotes.find(x => x.id === note.id);
+                    if(n) { n.color = newColor; renderHub(); }
+                });
+
+                // Minimize
+                noteEl.querySelector('.btn-minimize').addEventListener('click', () => {
+                    state.minimized = !state.minimized;
+                    noteEl.classList.toggle('minimized');
+                    saveState();
+                });
+
+                // Close (hide)
+                noteEl.querySelector('.btn-close-note').addEventListener('click', () => {
+                    state.open = false;
+                    saveState();
+                    noteEl.remove();
+                });
+            }
+
+            function dragNote(e) {
+                if(!activeDragNote) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                const newX = initialX + dx;
+                const newY = initialY + dy;
+                
+                activeDragNote.style.left = `${newX}px`;
+                activeDragNote.style.top = `${newY}px`;
+                
+                // Save position
+                const id = parseInt(activeDragNote.id.replace('sticky-note-', ''));
+                if(savedNoteStates[id]) {
+                    savedNoteStates[id].x = newX;
+                    savedNoteStates[id].y = newY;
+                    saveState();
+                }
+            }
+
+            function stopDragNote() {
+                activeDragNote = null;
+                document.removeEventListener('mousemove', dragNote);
+                document.removeEventListener('mouseup', stopDragNote);
+            }
+
+            function bringToFront(el) {
+                const all = document.querySelectorAll('.sticky-note-card');
+                let maxZ = 1000;
+                all.forEach(n => {
+                    const z = parseInt(window.getComputedStyle(n).zIndex) || 1000;
+                    if(z > maxZ) maxZ = z;
+                });
+                el.style.zIndex = maxZ + 1;
+            }
+
+            function saveNoteToBackend(id, data) {
+                fetch(`/api/sticky-notes/${id}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken') // Function from base.html if exists, or handled by csrf_exempt
+                    },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            // Function to get CSRF token if needed
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Fetch once silently to preload open notes
+            fetchNotes();
+        });
+    </script>
 </body>
 </html>
-
