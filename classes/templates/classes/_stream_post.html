@@ -1,46 +1,51 @@
 {% load tz %}
 {% load custom_filters %}
-<div class="stream-card border-bottom border-secondary p-4 bg-body" id="post-{{ post.pk }}">
-    <div class="w-100">
-        <div class="d-flex align-items-start gap-3 w-100">
+<div class="card stream-card mb-3 bg-body-tertiary overflow-hidden" id="post-{{ post.pk }}">
+    <!-- HEADER SECTION -->
+    <div class="p-3 bg-dark bg-opacity-10 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-start">
+        <div class="d-flex align-items-center gap-3">
             <!-- Avatar -->
             {% if post.author.profile_picture %}
-                <img src="{{ post.author.profile_picture }}" alt="Avatar" class="rounded-circle flex-shrink-0" style="width:40px;height:40px;object-fit:cover;">
+                <img src="{{ post.author.profile_picture }}" alt="Avatar" class="rounded-circle flex-shrink-0" style="width:48px;height:48px;object-fit:cover;">
             {% else %}
                 <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-dark flex-shrink-0"
-                     style="width:40px;height:40px;background-color:{{ cls.color }};font-size:0.85rem;">
+                     style="width:48px;height:48px;background-color:{{ cls.color }};font-size:1.2rem;">
                     {{ post.author.get_full_name|first|upper|default:post.author.username|first|upper }}
                 </div>
             {% endif %}
 
-            <div class="flex-grow-1">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
-                        <span class="ms-2 badge {% if post.post_type == 'ANNOUNCEMENT' %}bg-primary bg-opacity-25 text-primary{% elif post.post_type == 'MATERIAL' %}bg-success bg-opacity-25 text-success{% elif post.post_type == 'MEETING' %}bg-info bg-opacity-25 text-info{% else %}bg-secondary bg-opacity-25 text-secondary{% endif %} small">
-                            {% if post.post_type == 'ANNOUNCEMENT' %}📢 Aviso{% elif post.post_type == 'MATERIAL' %}📎 Material{% elif post.post_type == 'MEETING' %}🎥 Reunião{% else %}{{ post.get_post_type_display }}{% endif %}
-                        </span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <small class="text-muted">{{ post.created_at|date:"d/m/Y H:i" }}</small>
-                        {% if request.user == post.author or request.user.is_superadmin %}
-                        <form method="POST" action="{% url 'classes:delete_post' pk=cls.pk post_pk=post.pk %}"
-                              hx-post="{% url 'classes:delete_post' pk=cls.pk post_pk=post.pk %}"
-                              hx-target="#post-{{ post.pk }}"
-                              hx-swap="outerHTML"
-                              class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-sm btn-link text-muted p-0"
-                                    data-confirm="Excluir esta publicação?"
-                                    title="Excluir">
-                                <i class="bi bi-trash3"></i>
-                            </button>
-                        </form>
-                        {% endif %}
-                    </div>
+            <div>
+                <strong class="fs-6">{{ post.author.get_full_name|default:post.author.username }}</strong>
+                <span class="ms-2 badge {% if post.post_type == 'ANNOUNCEMENT' %}bg-primary bg-opacity-25 text-primary{% elif post.post_type == 'MATERIAL' %}bg-success bg-opacity-25 text-success{% elif post.post_type == 'MEETING' %}bg-info bg-opacity-25 text-info{% else %}bg-secondary bg-opacity-25 text-secondary{% endif %} small">
+                    {% if post.post_type == 'ANNOUNCEMENT' %}📢 Aviso{% elif post.post_type == 'MATERIAL' %}📎 Material{% elif post.post_type == 'MEETING' %}🎥 Reunião{% else %}{{ post.get_post_type_display }}{% endif %}
+                </span>
+                <div class="text-muted mt-1" style="font-size: 0.95rem;">
+                    <i class="bi bi-clock me-1"></i> {{ post.created_at|date:"d/m/Y H:i" }}
                 </div>
+            </div>
+        </div>
 
-                <p class="mt-2 mb-0" style="white-space: pre-wrap;">{{ post.content|urlize }}</p>
+        <div class="d-flex align-items-center">
+            {% if request.user == post.author or request.user.is_superadmin %}
+            <form method="POST" action="{% url 'classes:delete_post' pk=cls.pk post_pk=post.pk %}"
+                  hx-post="{% url 'classes:delete_post' pk=cls.pk post_pk=post.pk %}"
+                  hx-target="#post-{{ post.pk }}"
+                  hx-swap="outerHTML"
+                  class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-link text-muted p-0 ms-2"
+                        data-confirm="Excluir esta publicação?"
+                        title="Excluir">
+                    <i class="bi bi-trash3 fs-5"></i>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CONTENT SECTION -->
+    <div class="card-body p-4">
+        <p class="mb-0 fs-5" style="white-space: pre-wrap; line-height: 1.6;">{{ post.content|urlize }}</p>
 
                 <!-- Attached materials and links display -->
                 {% if post.link_url or post.attachment or post.folder %}
@@ -127,7 +132,5 @@
                     </form>
                 </div>
             </div>
-        </div>
     </div>
 </div>
-
