@@ -273,7 +273,7 @@ def profile_view(request):
 @login_required
 def switch_role_view(request):
     # Check if the user is a teacher, has a promoted teacher flag, or is a superadmin
-    if request.user.role == 'TEACHER' or getattr(request.user, 'is_promoted_teacher', False) or request.user.is_superuser:
+    if getattr(request.user, 'original_role', request.user.role) == 'TEACHER' or getattr(request.user, 'is_promoted_teacher', False) or request.user.is_superuser:
         from accounts.models import User
         # Fetch the actual user from DB to know their database role
         actual_user = User.objects.get(pk=request.user.pk)

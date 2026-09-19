@@ -4,8 +4,9 @@ class RoleSwitchMiddleware:
 
     def __call__(self, request):
         if request.user.is_authenticated:
+            request.user.original_role = request.user.role
             # If the user is a teacher, has been promoted, or is superadmin, check session switch
-            if request.user.role == 'TEACHER' or getattr(request.user, 'is_promoted_teacher', False) or request.user.is_superuser:
+            if request.user.original_role == 'TEACHER' or getattr(request.user, 'is_promoted_teacher', False) or request.user.is_superuser:
                 view_as = request.session.get('view_as')
                 if view_as in ['TEACHER', 'STUDENT']:
                     request.user.role = view_as

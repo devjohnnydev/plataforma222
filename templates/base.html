@@ -416,7 +416,7 @@
                                 <li><span class="dropdown-item-text small text-muted">{{ user.email }}</span></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i>Perfil</a></li>
-                                {% if user.role == 'TEACHER' or user.is_promoted_teacher or user.is_superadmin %}
+                                {% if user.original_role == 'TEACHER' or user.is_promoted_teacher or user.is_superadmin %}
                                     <li>
                                         <a class="dropdown-item text-brand fw-semibold" href="{% url 'accounts:switch_role' %}">
                                             <i class="bi bi-arrow-left-right me-2 text-brand"></i>
