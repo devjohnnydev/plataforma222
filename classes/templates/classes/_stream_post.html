@@ -1,7 +1,7 @@
 {% load tz %}
 {% load custom_filters %}
-<div class="stream-card border-bottom border-secondary p-4 bg-body" id="post-{{ post.pk }}">
-    <div class="w-100">
+<div class="card stream-card mb-3 bg-body-tertiary" id="post-{{ post.pk }}">
+    <div class="card-body p-4">
         <div class="d-flex align-items-start gap-3 w-100">
             <!-- Avatar -->
             {% if post.author.profile_picture %}
