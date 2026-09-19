@@ -216,6 +216,21 @@
 
     <!-- Stream Posts -->
     <div class="col-12">
+        <style>
+            #stream-list {
+                border: 1px solid var(--bs-border-color);
+                border-radius: 0.5rem;
+                overflow: hidden;
+                background-color: var(--bs-body-bg);
+            }
+            #stream-list .stream-card:last-child {
+                border-bottom: none !important;
+            }
+            #stream-list .stream-card:first-child {
+                background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+                border-left: 3px solid var(--bs-primary) !important;
+            }
+        </style>
         <div id="stream-list">
             {% if posts %}
                 {% for post in posts %}
