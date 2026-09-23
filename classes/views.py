@@ -16,9 +16,8 @@ def _get_user_classes(user):
     if user.is_teacher() or user.is_superadmin():
         return Class.objects.filter(teacher=user).select_related('course', 'teacher')
     return Class.objects.filter(
-        enrollments__student=user,
-        enrollments__status='ACTIVE'
-    ).select_related('course', 'teacher')
+        Q(teacher=user) | Q(enrollments__student=user, enrollments__status='ACTIVE')
+    ).select_related('course', 'teacher').distinct()
 
 
 # ── Class List ────────────────────────────────────────────────────────────────
@@ -463,6 +462,9 @@ def delete_post_view(request, pk, post_pk):
 def _check_access(user, cls):
     """Raise 404 if user has no access to this class."""
     if user.is_superadmin():
+        return
+    # Allow the teacher to access their own class even if they switched to student view
+    if cls.teacher == user:
         return
     if user.is_teacher() and cls.teacher == user:
         return
