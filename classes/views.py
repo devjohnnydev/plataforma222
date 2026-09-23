@@ -618,6 +618,16 @@ def publish_class_lesson_view(request, pk, lesson_pk):
     lesson.save()
 
     from notifications.utils import send_notification
+    from classes.models import StreamPost
+
+    # Create a post on the mural
+    StreamPost.objects.create(
+        target_class=cls,
+        author=request.user,
+        content=f"🎓 Nova aula publicada: **{lesson.title}**\nAcesse a aba de Aulas para conferir o conteúdo.",
+        post_type=StreamPost.PostType.ANNOUNCEMENT
+    )
+
     for enrollment in cls.enrollments.filter(status='ACTIVE').select_related('student'):
         send_notification(
             recipient=enrollment.student,
